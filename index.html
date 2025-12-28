@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>RSVP — Mars & Bianca</title>
+  <style>
+    :root{
+      --font-min: 14px;
+      --font-pref: 1.6vw;
+      --font-max: 18px;
+      --base-font: clamp(var(--font-min), var(--font-pref), var(--font-max));
+      --space-xs: 0.5rem;
+      --space-sm: 1rem;
+      --space-md: 1.25rem;
+      --space-lg: 2rem;
+      --accent: #f7e7f2;
+      --max-width: 820px;
+    }
+    html { font-size: var(--base-font); -webkit-text-size-adjust:100%; }
+    body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; color:#111; background:#fff; padding: calc(var(--space-md) + 2vw); display:flex; justify-content:center; }
+    .wrap { width: min(96%, var(--max-width)); background: #fff; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.06); padding: var(--space-md); }
+
+    h2 { margin:0 0 var(--space-sm) 0; font-size: clamp(1.1rem, 2.8vw, 1.6rem); }
+    .search { display:flex; gap: .5rem; margin-bottom: var(--space-sm); }
+    .search input[type="text"] { flex:1; padding: .6rem; font-size: 1rem; border:1px solid #e6e6e6; border-radius:6px; }
+    .search button { padding: .55rem .75rem; font-size: 1rem; border-radius: 6px; border:0; background:#222; color:#fff; cursor:pointer; }
+
+    .matches { margin-bottom: var(--space-md); }
+    .match { padding: .6rem; border:1px solid #f0f0f0; margin-bottom:.5rem; display:flex; gap:.5rem; justify-content:space-between; align-items:center; border-radius:6px; background:#fff; }
+    .match small { color:#666; display:block; }
+
+    .hidden { display:none !important; }
+
+    .invite { display:block; width:100%; }
+    .invite h3 { margin:0 0 .5rem 0; font-size:1.05rem; }
+    .message { padding:.75rem; background:#e7f7e7; border:1px solid #bfe6bf; border-radius:6px; margin: .5rem 0; }
+    .error { padding:.75rem; background:#ffecec; border:1px solid #f5c2c2; border-radius:6px; margin:.5rem 0; color:#800; }
+
+    form { margin-top: .5rem; display:grid; gap: .6rem; }
+    .form-row { display:flex; flex-direction:column; gap:.35rem; }
+    label { font-size:.95rem; color:#333; }
+    input, select, textarea { padding:.6rem; font-size:1rem; border:1px solid #e6e6e6; border-radius:6px; width:100%; box-sizing:border-box; }
+    textarea { min-height:80px; resize:vertical; }
+
+    .two-col {
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:.6rem;
+    }
+    @media (min-width:800px) {
+      .two-col { grid-template-columns: 1fr 280px; align-items:start; }
+    }
+
+    .actions { display:flex; gap:.6rem; margin-top:.6rem; }
+    .actions button { padding:.6rem .9rem; border-radius:6px; border:0; cursor:pointer; font-size:1rem; }
+    .actions .primary { background:#222; color:#fff; }
+    .actions .muted { background:#f3f3f3; color:#111; }
+
+    .small-note { font-size:.9rem; color:#666; }
+
+  </style>
+</head>
+<body>
+  <div class="wrap" id="app">
+    <h2>RSVP — Mars & Bianca</h2>
+
+    <div id="searchArea">
+      <div class="search">
+        <input id="nameInput" type="text" placeholder="Type your name (or family name)"/>
+        <button id="findBtn">Find</button>
+      </div>
+      <div id="findError" class="error hidden"></div>
+      <div id="matches" class="matches"></div>
+    </div>
+
+    <div id="inviteArea" class="hidden">
+      <div class="invite">
+        <h3 id="inviteName"></h3>
+        <div id="inviteLockedNotice" class="message hidden">This invitation has already been answered.</div>
+      </div>
+
+      <form id="rsvpForm" class="two-col" onsubmit="return false;">
+        <div>
+          <div class="form-row">
+            <label for="status">Status</label>
+            <select id="status">
+              <option value="">-- choose --</option>
+              <option value="Attending">Attending</option>
+              <option value="Declined">Declined</option>
+            </select>
+          </div>
+
+          <div class="form-row" id="attendeesNamesRow">
+            <label for="attendees">Attendee names (one per line)</label>
+            <textarea id="attendees" placeholder="First Last&#10;Another Name"></textarea>
+          </div>
+
+          <div class="form-row">
+            <label for="notes">Notes (optional)</label>
+            <textarea id="notes"></textarea>
+          </div>
+        </div>
+
+        <div>
+          <div class="form-row">
+            <label>Attending count (max <span id="maxSeats">1</span>)</label>
+            <input id="attendingCount" type="number" min="1" value="1" />
+            <div class="small-note">Adjust if you're bringing more than one guest (if allowed)</div>
+          </div>
+
+          <div class="form-row">
+            <label>Phone (11 digits, starts with 09)</label>
+            <input id="phone" type="text" placeholder="0917XXXXXXXX" />
+          </div>
+
+          <div class="form-row">
+            <label>Transportation (optional)</label>
+            <input id="transportation" type="text" />
+          </div>
+
+          <div id="submitError" class="error hidden"></div>
+          <div id="submitSuccess" class="message hidden"></div>
+
+          <div class="actions">
+            <button id="submitBtn" class="primary">Submit RSVP</button>
+            <button id="cancelBtn" type="button" class="muted">Cancel</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    // CONFIG — replace with your Apps Script Web App URL and parent origin
+    var API_URL = "https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec"; // <-- REPLACE
+    var PARENT_ORIGIN = "https://marsnbianca.github.io"; // <-- REPLACE if your parent differs
+    var RSVP_SECRET = ""; // optional secret
+
+    // DOM refs
+    var nameInput = document.getElementById("nameInput");
+    var findBtn = document.getElementById("findBtn");
+    var matchesEl = document.getElementById("matches");
+    var findError = document.getElementById("findError");
+
+    var inviteArea = document.getElementById("inviteArea");
+    var inviteNameEl = document.getElementById("inviteName");
+    var inviteLockedNotice = document.getElementById("inviteLockedNotice");
+    var rsvpForm = document.getElementById("rsvpForm");
+
+    var statusEl = document.getElementById("status");
+    var attendingCountEl = document.getElementById("attendingCount");
+    var attendeesEl = document.getElementById("attendees");
+    var phoneEl = document.getElementById("phone");
+    var transportationEl = document.getElementById("transportation");
+    var notesEl = document.getElementById("notes");
+
+    var submitBtn = document.getElementById("submitBtn");
+    var cancelBtn = document.getElementById("cancelBtn");
+    var submitError = document.getElementById("submitError");
+    var submitSuccess = document.getElementById("submitSuccess");
+
+    var currentInvite = null;
+
+    function show(el) { el.classList.remove("hidden"); el.style.display = ""; }
+    function hide(el) { el.classList.add("hidden"); el.style.display = "none"; }
+    function setError(el, msg) { if (msg) { el.textContent = msg; show(el); } else { hide(el); el.textContent = ""; } }
+
+    async function callApi(payload) {
+      if (RSVP_SECRET) payload.secret = RSVP_SECRET;
+      var res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      return res.json();
+    }
+
+    async function doFind() {
+      setError(findError, "");
+      matchesEl.innerHTML = "";
+      var name = nameInput.value.trim();
+      if (!name) { setError(findError, "Please type your name."); return; }
+      findBtn.disabled = true;
+      try {
+        var r = await callApi({ action: "find", name: name, client_id: "guest-" + Date.now() });
+        findBtn.disabled = false;
+        if (!r.ok) { setError(findError, r.error || "Server error"); return; }
+        if (!r.matches || r.matches.length === 0) { matchesEl.innerHTML = "<div class='message'>No matches found.</div>"; return; }
+        r.matches.forEach(function (m) {
+          var div = document.createElement("div");
+          div.className = "match";
+          div.innerHTML = "<div><strong>" + escapeHtml(m.display_name) + "</strong><small>invite id: " + escapeHtml(m.invite_id) + "</small></div>";
+          var btn = document.createElement("button");
+          btn.textContent = "Select";
+          btn.style.border = "0";
+          btn.style.padding = ".5rem .6rem";
+          btn.style.borderRadius = "6px";
+          btn.style.background = "#222";
+          btn.style.color = "#fff";
+          btn.addEventListener("click", function () { selectInvite(m.invite_id, m.display_name, m.max_seats); });
+          div.appendChild(btn);
+          matchesEl.appendChild(div);
+        });
+      } catch (err) {
+        findBtn.disabled = false;
+        setError(findError, "Network or server error. See console for details.");
+        console.error(err);
+      }
+    }
+
+    async function selectInvite(invite_id, display_name, max_seats) {
+      setError(submitError, "");
+      try {
+        var r = await callApi({ action: "get", invite_id: invite_id });
+        if (!r.ok) { setError(submitError, r.error || "Server error"); return; }
+        currentInvite = { invite_id: invite_id, display_name: display_name, max_seats: r.invite.max_seats || max_seats || 1 };
+        renderInvite();
+      } catch (err) {
+        setError(submitError, "Network error");
+        console.error(err);
+      }
+    }
+
+    function renderInvite() {
+      inviteNameEl.textContent = currentInvite.display_name + " (invite)";
+      document.getElementById("maxSeats").textContent = currentInvite.max_seats;
+      attendingCountEl.max = currentInvite.max_seats;
+      attendingCountEl.value = Math.min(1, currentInvite.max_seats);
+
+      statusEl.value = "";
+      attendingCountEl.value = 1;
+      attendeesEl.value = "";
+      phoneEl.value = "";
+      transportationEl.value = "";
+      notesEl.value = "";
+      setError(submitError, "");
+      setError(submitSuccess, "");
+      hide(inviteLockedNotice);
+
+      hide(document.getElementById("searchArea"));
+      show(inviteArea);
+      show(rsvpForm);
+    }
+
+    function resetToSearch() {
+      currentInvite = null;
+      hide(inviteArea);
+      show(document.getElementById("searchArea"));
+      setError(findError, "");
+    }
+
+    statusEl.addEventListener("change", function () {
+      var v = statusEl.value;
+      // in this responsive layout we don't hide rows; the server requires fields appropriately — still guide the user
+      if (v === "Attending") {
+        // no-op; user will fill attendees and phone
+      } else {
+        // no-op
+      }
+    });
+
+    submitBtn.addEventListener("click", async function () {
+      setError(submitError, "");
+      setError(submitSuccess, "");
+      if (!currentInvite) { setError(submitError, "No invite selected."); return; }
+
+      var status = statusEl.value;
+      if (status !== "Attending" && status !== "Declined") { setError(submitError, "Please select Attending or Declined."); return; }
+
+      var attending_count = parseInt(attendingCountEl.value, 10) || 0;
+      var rawNames = (attendeesEl.value || "").split("\n").map(function (x) { return x.trim(); }).filter(Boolean);
+
+      var payload = {
+        action: "submit",
+        invite_id: currentInvite.invite_id,
+        status: status,
+        attending_count: attending_count,
+        attendees: rawNames,
+        phone: phoneEl.value.trim(),
+        transportation: transportationEl.value.trim(),
+        notes: notesEl.value.trim()
+      };
+
+      submitBtn.disabled = true;
+      try {
+        var r = await callApi(payload);
+        submitBtn.disabled = false;
+        if (!r.ok) { setError(submitError, r.error || "Server error"); return; }
+        if (r.locked) {
+          inviteLockedNotice.textContent = "This invitation has already been responded to. Thank you.";
+          show(inviteLockedNotice);
+          return;
+        }
+        setError(submitSuccess, "Thanks — your RSVP has been recorded.");
+        try { window.parent.postMessage("RSVP:CLOSE", PARENT_ORIGIN); } catch (_) {}
+      } catch (err) {
+        submitBtn.disabled = false;
+        setError(submitError, "Network or server error. See console.");
+        console.error(err);
+      }
+    });
+
+    cancelBtn.addEventListener("click", function () {
+      try { window.parent.postMessage("RSVP:CLOSE", PARENT_ORIGIN); } catch (_) {}
+    });
+
+    findBtn.addEventListener("click", doFind);
+    nameInput.addEventListener("keydown", function (e) { if (e.key === "Enter") doFind(); });
+    nameInput.focus();
+
+    function escapeHtml(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  })();
+  </script>
+</body>
+</html>
