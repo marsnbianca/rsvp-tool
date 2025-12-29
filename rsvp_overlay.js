@@ -1,7 +1,7 @@
 <script>
 (function () {
-  var RSVP_ORIGIN = "https://marsnbianca.github.io";
-  var RSVP_URL = RSVP_ORIGIN + "/rsvp/";
+  var RSVP_ORIGIN = "https://marsnbianca.github.io"; // parent site origin (for origin checks)
+  var RSVP_URL = "https://script.google.com/macros/s/AKfycbzdV48pD-cQn5O_lNhnqh1ijjaTbyMG0IIAu2HAWLe2BXxBAWfpTl2Evc1w2S6uX3VP/exec"; // <-- your deployed Apps Script URL
 
   var host = document.createElement("div");
   host.id = "rsvpHostOverlay";
@@ -91,10 +91,11 @@
   }, true);
 
   window.addEventListener("message", function (e) {
-    if (!e) return;
-    if (e.origin !== RSVP_ORIGIN) return;
-    if (e.data === "RSVP:CLOSE") closeRSVP();
-  });
+  if (!e) return;
+  // accept messages from your github pages OR from Apps Script origin
+  if (e.origin !== RSVP_ORIGIN && !e.origin.startsWith("https://script.google.com")) return;
+  if (e.data === "RSVP:CLOSE") closeRSVP();
+});
 
   window.addEventListener("keydown", function (e) {
     if (e && e.key === "Escape" && host.style.display === "block") closeRSVP();
