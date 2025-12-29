@@ -5,72 +5,62 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>RSVP — Mars & Bianca</title>
 
-  <!-- Early embed detection -->
+  <!-- Mark embedded frames early so CSS can adapt before paint -->
   <script>
-    try {
-      if (window.self !== window.top) document.documentElement.setAttribute('data-embedded', 'true');
-    } catch (e) {}
+    try { if (window.self !== window.top) document.documentElement.setAttribute('data-embedded', 'true'); } catch (e) {}
   </script>
 
   <style>
     :root{
-      --bg:#ffffff; --muted:#666; --accent:#222; --danger:#c0392b;
-      --card-radius:12px; --content-max:680px;
+      --bg: #ffffff;
+      --muted: #666;
+      --accent: #222;
+      --danger: #c0392b;
+      --card-radius: 12px;
+      --content-max: 720px;
     }
     html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;color:#111;background:var(--bg);}
     .page-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:4vw 2vw;}
-    .app-box{
-      width:100%; max-width:var(--content-max);
-      background:#fff; border-radius:var(--card-radius);
-      box-shadow:0 10px 30px rgba(0,0,0,0.12);
-      padding:1.25rem; box-sizing:border-box; position:relative;
-    }
+    .app-box{width:100%;max-width:var(--content-max);background:#fff;border-radius:var(--card-radius);box-shadow:0 10px 30px rgba(0,0,0,0.12);padding:1.25rem;box-sizing:border-box;position:relative;}
+    /* if embedded let parent draw card */
+    :root[data-embedded="true"] .app-box{background:transparent;box-shadow:none;border-radius:0;padding:1rem;max-width:100%;}
 
-    /* If embedded remove duplicate outer card look so parent provides it */
-    :root[data-embedded="true"] .app-box{
-      background:transparent; box-shadow:none; border-radius:0; padding:1rem;
-      max-width:100%;
-    }
-
-    h2{margin:0 0 .5rem;font-size:clamp(1.05rem,2.6vw,1.4rem)}
-    .content-column{max-width:620px;margin:0 auto}
-    .intro{margin-bottom:.6rem;color:var(--muted)}
-    .search-row{display:flex;gap:.5rem;margin-bottom:.15rem;align-items:center}
-    .search-row input{flex:1;padding:.6rem;border:1px solid #e5e5e5;border-radius:8px;font-size:1rem}
+    .content-column{max-width:640px;margin:0 auto;text-align:center;}
+    h2{margin:0 0 .5rem;font-size:clamp(1.05rem,2.6vw,1.4rem);text-align:center}
+    .search-row{display:flex;gap:.5rem;margin-bottom:.15rem;justify-content:center}
+    .search-row input{flex:1;max-width:420px;padding:.6rem;border:1px solid #e5e5e5;border-radius:8px;font-size:1rem}
     .search-row button{padding:.55rem .9rem;border-radius:8px;border:0;background:var(--accent);color:#fff;cursor:pointer}
 
-    .matches{margin:0 auto 1rem; display:flex;flex-direction:column;gap:.5rem;align-items:center}
-    .matches-subtext{font-size:.95rem;color:var(--muted);margin-bottom:.5rem;text-align:center}
-    .match-btn{display:block;min-width:280px;max-width:520px;width:100%;padding:.7rem;border:1px solid #f0f0f0;border-radius:8px;background:#fff;cursor:pointer;text-align:left;transition:all .12s}
+    .error{color:var(--danger);font-size:0.95rem;margin-top:8px;display:none;text-align:center}
+
+    .matches{margin:0 auto 1rem;display:flex;flex-direction:column;gap:.5rem;align-items:center}
+    .match-btn{display:block;width:100%;max-width:480px;padding:.75rem;border:1px solid #f0f0f0;border-radius:8px;background:#fff;cursor:pointer;text-align:center;transition:all .12s}
     .match-btn:hover{background:#fafafa;transform:translateY(-2px)}
-    .message{padding:.6rem;background:#e7f7e7;border:1px solid #bfe6bf;border-radius:8px;margin:.5rem 0}
-    .error{color:var(--danger);font-size:.95rem;margin-top:.4rem;display:none}
+    .message{padding:.6rem;background:#e7f7e7;border:1px solid #bfe6bf;border-radius:8px;margin:.5rem 0;text-align:center}
 
-    .step{display:none}
-    .step.active{display:block}
-
-    .form-row{display:flex;flex-direction:column;gap:.35rem;margin-bottom:.6rem}
-    label{font-size:.95rem;color:#333}
-    input,select,textarea{padding:.6rem;font-size:1rem;border:1px solid #e6e6e6;border-radius:8px;width:100%;box-sizing:border-box}
+    .form-row{display:flex;flex-direction:column;gap:.35rem;margin-bottom:.6rem;align-items:center}
+    label{font-size:.95rem;color:#333;text-align:left;width:100%;max-width:480px}
+    select,input,textarea{padding:.6rem;font-size:1rem;border:1px solid #e6e6e6;border-radius:8px;width:100%;max-width:480px;box-sizing:border-box}
     textarea{min-height:80px;resize:vertical}
-    .small{font-size:.92rem;color:var(--muted)}
+    .small{font-size:.92rem;color:var(--muted);margin-top:6px}
 
-    .actions{display:flex;gap:.6rem;margin-top:.6rem;justify-content:space-between;align-items:center}
-    .actions-right{margin-left:auto;display:flex;gap:.6rem}
+    .actions{display:flex;gap:.6rem;margin-top:.6rem;justify-content:center;align-items:center}
+    .actions-right{display:flex;gap:.6rem}
     .btn{padding:.56rem .9rem;border-radius:8px;border:0;cursor:pointer}
     .btn.primary{background:var(--accent);color:#fff}
     .btn.ghost{background:#f3f3f3;color:#111}
     .btn.text{background:transparent;color:var(--accent)}
 
-    /* Loading overlay */
     .loading-overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(255,255,255,0.7);border-radius:inherit;z-index:999}
     .spinner{width:36px;height:36px;border-radius:50%;border:4px solid #eee;border-top-color:var(--accent);animation:spin 1s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
 
     @media (max-width:540px){
-      .match-btn{min-width:unset;max-width:unset;width:100%}
       .app-box{padding:.9rem}
+      .match-btn{max-width:100%}
+      label,select,input,textarea{max-width:100%}
     }
+
     input[type=tel]{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace}
   </style>
 </head>
@@ -92,11 +82,10 @@
         </div>
 
         <!-- Matches -->
-        <div id="step-matches" class="step">
-          <div class="matches-subtext" id="matchesSubtext" style="display:none">We found you in the guest list! Please select your name below to RSVP.</div>
+        <div id="step-matches" class="step" style="display:none">
           <div id="matches" class="matches" aria-live="polite"></div>
 
-          <div class="actions">
+          <div class="actions" style="margin-top:12px">
             <button id="dontSeeBtn" class="btn ghost">I don't see my name</button>
             <div class="actions-right">
               <button id="backToSearch" class="btn ghost">Back</button>
@@ -105,17 +94,16 @@
         </div>
 
         <!-- Not in list -->
-        <div id="step-not-in-list" class="step">
+        <div id="step-not-in-list" class="step" style="display:none">
           <div class="message">
             <strong>Can't find your name?</strong>
-            <div class="small" style="margin-top:.5rem">If you believe you should be on the guest list, please contact us and we'll check.</div>
-            <div style="margin-top:.6rem"><strong>Contact:</strong> +1 778 977 4975 (WhatsApp / Viber)</div>
+            <div class="small" style="margin-top:.5rem">If you believe you should be on the guest list, please contact us: +1 778 977 4975 (WhatsApp / Viber)</div>
           </div>
-          <div class="actions"><button id="notInListBack" class="btn ghost">Back</button></div>
+          <div class="actions" style="margin-top:12px"><button id="notInListBack" class="btn ghost">Back</button></div>
         </div>
 
         <!-- Attendance combined -->
-        <div id="step-attendance" class="step">
+        <div id="step-attendance" class="step" style="display:none">
           <div class="form-row">
             <label>Will you be joining us?</label>
             <select id="attendanceSelect">
@@ -128,16 +116,14 @@
           <div id="attendanceDynamic" style="margin-top:.6rem"></div>
           <div id="attendeeError" class="error"></div>
 
-          <div class="actions">
+          <div class="actions" style="margin-top:8px">
             <button id="attendanceBack" class="btn ghost">Back</button>
-            <div class="actions-right">
-              <button id="attendanceNext" class="btn primary">Next</button>
-            </div>
+            <div class="actions-right"><button id="attendanceNext" class="btn primary">Next</button></div>
           </div>
         </div>
 
         <!-- Transport -->
-        <div id="step-transport" class="step">
+        <div id="step-transport" class="step" style="display:none">
           <div class="form-row">
             <label>Do you need airport transfer from NAIA to Club Balai Isabel (Batangas)?</label>
             <select id="transportSelect">
@@ -146,63 +132,63 @@
               <option value="No">No — we don't need airport transfer</option>
             </select>
           </div>
-          <div class="actions">
+          <div class="actions" style="margin-top:8px">
             <button id="transportBack" class="btn ghost">Back</button>
             <div class="actions-right"><button id="transportNext" class="btn primary">Next</button></div>
           </div>
         </div>
 
         <!-- Phone -->
-        <div id="step-phone" class="step">
+        <div id="step-phone" class="step" style="display:none">
           <div class="form-row">
             <label>Phone (PH format)</label>
             <input id="phoneInput" type="tel" placeholder="09" />
             <div id="phoneErr" class="error"></div>
           </div>
-          <div class="actions">
+          <div class="actions" style="margin-top:8px">
             <button id="phoneBack" class="btn ghost">Back</button>
             <div class="actions-right"><button id="phoneNext" class="btn primary">Next</button></div>
           </div>
         </div>
 
         <!-- Notes -->
-        <div id="step-notes" class="step">
+        <div id="step-notes" class="step" style="display:none">
           <div class="form-row">
             <label>Notes (optional — dietary, song requests)</label>
             <textarea id="notesInput" placeholder="E.g. vegetarian, song request..."></textarea>
           </div>
-          <div class="actions">
+          <div class="actions" style="margin-top:8px">
             <button id="notesBack" class="btn ghost">Back</button>
             <div class="actions-right"><button id="notesNext" class="btn primary">Review</button></div>
           </div>
         </div>
 
         <!-- Review -->
-        <div id="step-review" class="step">
-          <div id="reviewSummary" class="form-row"></div>
-          <div id="statusLine" style="font-weight:600;margin-bottom:.5rem"></div>
-          <div id="reviewError" class="error"></div>
-          <div class="actions">
+        <div id="step-review" class="step" style="display:none">
+          <div id="reviewSummary" class="form-row" style="text-align:center"></div>
+          <div id="statusLine" style="font-weight:700;margin-bottom:.5rem;text-align:center"></div>
+          <div id="reviewError" class="error" style="text-align:center"></div>
+          <div class="actions" style="margin-top:8px">
             <button id="reviewBack" class="btn ghost">Back</button>
             <div class="actions-right"><button id="submitBtn" class="btn primary">Submit RSVP</button></div>
           </div>
         </div>
 
         <!-- Thanks -->
-        <div id="step-thanks" class="step">
-          <div id="thanksMessage" class="message"></div>
-          <div style="margin-top:.7rem;display:flex;justify-content:center">
-            <button id="thanksClose" class="btn primary">Close</button>
-          </div>
+        <div id="step-thanks" class="step" style="display:none">
+          <div id="thanksMessage" class="message" style="text-align:center"></div>
+          <div style="margin-top:.7rem;display:flex;justify-content:center"><button id="thanksClose" class="btn primary">Close</button></div>
         </div>
-      </div><!-- .content-column -->
-    </div><!-- .app-box -->
-  </div><!-- .page-wrap -->
+
+      </div><!-- content-column -->
+    </div><!-- app-box -->
+  </div><!-- page-wrap -->
 
   <script>
   (function () {
-    const API_URL = "https://rsvp-proxy.marsnbianca.workers.dev/"; // replace
+    const API_URL = "https://rsvp-proxy.marsnbianca.workers.dev/"; // <-- set your worker URL
 
+    // Steps map
     const steps = {
       search: document.getElementById('step-search'),
       matches: document.getElementById('step-matches'),
@@ -215,11 +201,12 @@
       thanks: document.getElementById('step-thanks')
     };
 
+    // Elements
     const nameInput = document.getElementById('nameInput');
     const findBtn = document.getElementById('findBtn');
     const searchErr = document.getElementById('searchErr');
     const matchesEl = document.getElementById('matches');
-    const matchesSubtext = document.getElementById('matchesSubtext');
+    const matchesSubtext = document.getElementById('matchesSubtext'); // unused (we removed subtitle)
     const dontSeeBtn = document.getElementById('dontSeeBtn');
     const backToSearch = document.getElementById('backToSearch');
 
@@ -254,6 +241,7 @@
     const notInListBack = document.getElementById('notInListBack');
     const loadingOverlay = document.getElementById('loading');
 
+    // State
     let currentInvite = null;
     let currentMaxSeats = 1;
     let selectedStatus = "";
@@ -264,98 +252,116 @@
     let selectedNotes = "";
 
     function showStep(name){
-      Object.values(steps).forEach(s=>s.classList.remove('active'));
-      if(steps[name]) steps[name].classList.add('active');
+      Object.values(steps).forEach(s=>s.style.display='none');
+      if(steps[name]) steps[name].style.display = '';
       try { document.getElementById('appBox').scrollTop = 0; } catch(_) {}
     }
-    function setError(el, msg){ if(!el) return; if(msg){ el.textContent = msg; el.style.display = ''; } else { el.textContent = ''; el.style.display = 'none'; } }
+    function setError(el, msg){
+      if(!el) return;
+      if(msg){ el.textContent = msg; el.style.display = ''; } else { el.textContent = ''; el.style.display = 'none'; }
+    }
     function loading(on){ loadingOverlay.style.display = on ? 'flex' : 'none'; }
 
     async function jsonFetch(payload){
       loading(true);
       try {
-        const res = await fetch(API_URL, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload) });
+        const res = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
         const txt = await res.text();
-        try { return JSON.parse(txt); } catch(e) { return { ok:false, error:"Invalid server response" }; }
-      } catch (err) { console.error(err); return { ok:false, error:"Network error" }; } finally { loading(false); }
+        try { return JSON.parse(txt); } catch(e){ return { ok:false, error:'Invalid server response' }; }
+      } catch (err) { console.error(err); return { ok:false, error:'Network error' }; } finally { loading(false); }
     }
 
-    function titleCaseName(s){ s=String(s||'').replace(/\s+/g,' ').trim().toLowerCase(); if(!s) return ""; return s.split(/([\s\-'])/).map(p=> /[\s\-']/.test(p)?p: p.charAt(0).toUpperCase()+p.slice(1)).join(''); }
+    function titleCaseName(s){ s=String(s||'').replace(/\s+/g,' ').trim().toLowerCase(); if(!s) return ''; return s.split(/([\s\-'])/).map(p=> /[\s\-']/.test(p)?p: p.charAt(0).toUpperCase()+p.slice(1)).join(''); }
     function formatPhoneInput(v){ var d=String(v||'').replace(/\D+/g,''); if(d.indexOf('63')===0 && d.length>=12) d='0'+d.slice(2); if(d.indexOf('9')===0 && d.length===10) d='0'+d; d=d.slice(0,11); if(d.length<=2) return d; if(d.length<=4) return d.slice(0,4); if(d.length<=7) return d.slice(0,4)+' '+d.slice(4); return d.slice(0,4)+' '+d.slice(4,7)+' '+d.slice(7,11); }
-    function normalizePhoneToStored(input){ var d=String(input||'').replace(/\D+/g,''); if(!d) return ""; if(d.indexOf('63')===0 && d.length>=12) d='0'+d.slice(2); if(d.indexOf('9')===0 && d.length===10) d='0'+d; d=d.slice(0,11); if(!/^09\d{9}$/.test(d)) return ""; return d.slice(0,4)+' '+d.slice(4,7)+' '+d.slice(7,11); }
+    function normalizePhoneToStored(input){ var d=String(input||'').replace(/\D+/g,''); if(!d) return ''; if(d.indexOf('63')===0 && d.length>=12) d='0'+d.slice(2); if(d.indexOf('9')===0 && d.length===10) d='0'+d; d=d.slice(0,11); if(!/^09\d{9}$/.test(d)) return ''; return d.slice(0,4)+' '+d.slice(4,7)+' '+d.slice(7,11); }
 
+    // Search
     async function doFind(){
-      setError(searchErr,''); matchesEl.innerHTML=''; matchesSubtext.style.display='none';
-      const q=(nameInput.value||'').trim();
-      if(q.length<3){ setError(searchErr,'Please type at least 3 characters.'); return; }
-      findBtn.disabled=true;
-      const r = await jsonFetch({ action:'find', name:q, client_id:'guest-'+Date.now() });
-      findBtn.disabled=false;
-      if(!r || !r.ok){ setError(searchErr, r && r.error? r.error: 'Server error'); return; }
-      if(!r.matches || r.matches.length===0){ setError(searchErr, 'No matches found. Please try again or contact us.'); return; }
-      matchesEl.innerHTML='';
+      setError(searchErr,''); matchesEl.innerHTML='';
+      const q = (nameInput.value||'').trim();
+      if(q.length < 3){ setError(searchErr,'Please type at least 3 characters.'); return; }
+      findBtn.disabled = true;
+      const r = await jsonFetch({ action:'find', name: q, client_id: 'guest-'+Date.now() });
+      findBtn.disabled = false;
+      if(!r || !r.ok){ setError(searchErr, r && r.error ? r.error : 'Server error'); return; }
+      if(!r.matches || r.matches.length === 0){ setError(searchErr, 'No matches found. Please try again or contact us.'); return; }
+      // render matches centered, equal buttons
+      matchesEl.innerHTML = '';
       r.matches.forEach(m=>{
-        const btn=document.createElement('button'); btn.type='button'; btn.className='match-btn';
+        const btn = document.createElement('button'); btn.type='button'; btn.className='match-btn';
         btn.innerHTML = "<div><strong>"+escapeHtml(m.display_name)+"</strong></div>";
         btn.addEventListener('click', ()=> onSelectMatch(m.invite_id, m.display_name, m.max_seats));
         matchesEl.appendChild(btn);
       });
-      matchesSubtext.style.display='';
       showStep('matches');
     }
 
+    // matches controls
     dontSeeBtn.addEventListener('click', ()=> showStep('notInList'));
     backToSearch.addEventListener('click', ()=> showStep('search'));
     notInListBack.addEventListener('click', ()=> showStep('matches'));
 
+    // select match
     async function onSelectMatch(invite_id, display_name, max_seats){
-      const r = await jsonFetch({ action:'get', invite_id:invite_id });
-      if(!r || !r.ok){ setError(searchErr, r && r.error? r.error:'Server error'); return; }
+      setError(searchErr,'');
+      const r = await jsonFetch({ action:'get', invite_id: invite_id });
+      if(!r || !r.ok){ setError(searchErr, r && r.error ? r.error : 'Server error'); return; }
       if(r.locked){
+        // locked: show locked message and remove bottom controls; also ask parent to hide top X
         matchesEl.innerHTML = "<div class='message'>This invitation has already been answered. If you need to make changes, please contact us: +1 778 977 4975 (WhatsApp/Viber)</div>";
-        const closeBtn=document.createElement('button'); closeBtn.className='btn primary'; closeBtn.style.marginTop='10px'; closeBtn.textContent='Close';
-        closeBtn.addEventListener('click', ()=> { try{ window.parent.postMessage('RSVP:CLOSE','*'); }catch(_){ } try{ window.close(); }catch(_){ }});
-        matchesEl.appendChild(closeBtn);
+        // remove bottom controls for matches screen
+        const actions = document.querySelector('#step-matches .actions');
+        if(actions) actions.style.display = 'none';
+        // notify parent to hide close X (parent must handle this)
+        try { window.parent.postMessage({ type: 'RSVP:LOCKED' }, '*'); } catch (_) {}
         return;
       }
-      currentInvite = { invite_id:invite_id, display_name:display_name, max_seats: Math.max(1, r.invite && r.invite.max_seats ? parseInt(r.invite.max_seats,10) : (max_seats||1)) };
-      currentMaxSeats = Math.min(currentInvite.max_seats, 4);
-      selectedStatus=''; selectedNumber=1; selectedAttendees=[]; selectedTransport=''; selectedPhoneStored=''; selectedNotes='';
-      attendanceSelect.value=''; attendanceDynamic.innerHTML=''; setError(attendeeError,'');
+      // normal flow
+      currentInvite = { invite_id: invite_id, display_name: display_name, max_seats: Math.max(1, r.invite && r.invite.max_seats ? parseInt(r.invite.max_seats,10) : (max_seats || 1)) };
+      currentMaxSeats = Math.min(currentInvite.max_seats, 4); // cap UI to 4
+      // reset
+      selectedStatus = ''; selectedNumber = 1; selectedAttendees = []; selectedTransport = ''; selectedPhoneStored = ''; selectedNotes = '';
+      attendanceSelect.value = ''; attendanceDynamic.innerHTML = ''; setError(attendeeError,'');
       showStep('attendance');
+      // ensure parent close button enabled (in case it was hidden earlier)
+      try { window.parent.postMessage({ type: 'RSVP:UNLOCKED' }, '*'); } catch (_) {}
     }
 
+    // attendance
     attendanceBack.addEventListener('click', ()=> showStep('matches'));
     attendanceSelect.addEventListener('change', function(){
       setError(attendeeError,''); attendanceDynamic.innerHTML='';
-      const v=(attendanceSelect.value||'').trim();
+      const v = (attendanceSelect.value||'').trim();
       if(v === 'Attending'){
-        if(currentMaxSeats <=1){
-          // nothing to render (single seat)
+        if(currentMaxSeats <= 1){
+          // single-seat: inform and no inputs
+          const info = document.createElement('div'); info.className='small'; info.textContent = 'This invitation is for 1 person; we will record your name automatically.';
+          attendanceDynamic.appendChild(info);
           return;
         }
-        // render number selector + guest inputs
+        // render number selector only; inputs shown after selection
         const row=document.createElement('div'); row.className='form-row';
-        const lbl=document.createElement('label'); lbl.textContent='How many people are attending (including you)?';
+        const lbl=document.createElement('label'); lbl.textContent = 'How many people are attending (including you)?';
         const sel=document.createElement('select'); sel.id='numSelect';
         for(let i=1;i<=currentMaxSeats;i++){ const opt=document.createElement('option'); opt.value=String(i); opt.textContent=String(i); sel.appendChild(opt); }
         sel.value='1';
         sel.addEventListener('change', ()=> renderGuestInputs(parseInt(sel.value,10)));
         row.appendChild(lbl); row.appendChild(sel);
         attendanceDynamic.appendChild(row);
+        // guest inputs container
         const gdiv=document.createElement('div'); gdiv.id='guestInputs'; gdiv.style.marginTop='8px';
         attendanceDynamic.appendChild(gdiv);
         renderGuestInputs(1);
       } else {
-        attendanceDynamic.innerHTML='';
+        attendanceDynamic.innerHTML = '';
       }
     });
 
     function renderGuestInputs(n){
-      const gdiv=document.getElementById('guestInputs'); if(!gdiv) return;
-      gdiv.innerHTML='';
+      const gdiv = document.getElementById('guestInputs'); if(!gdiv) return;
+      gdiv.innerHTML = '';
       for(let i=0;i<n;i++){ const input=document.createElement('input'); input.type='text'; input.placeholder='Guest full name'; input.className='guest-name-input'; input.style.marginBottom='8px'; gdiv.appendChild(input); }
-      selectedNumber=n;
+      selectedNumber = n;
     }
 
     attendanceNext.addEventListener('click', function(){
@@ -363,15 +369,14 @@
       const val=(attendanceSelect.value||'').trim();
       if(!val){ setError(attendeeError,'Please choose whether you will attend or decline.'); return; }
       selectedStatus = val;
-      if(selectedStatus === 'Declined'){ selectedAttendees=[]; buildReview(); showStep('review'); return; }
+      if(selectedStatus === 'Declined'){ selectedAttendees = []; buildReview(); showStep('review'); return; }
       // Attending
-      if(currentMaxSeats <=1){
+      if(currentMaxSeats <= 1){
         selectedAttendees = [ titleCaseName(currentInvite.display_name) ];
         showStep('transport'); return;
       }
-      // collect inputs
-      const gdiv=document.getElementById('guestInputs');
-      if(!gdiv){ setError(attendeeError,'Please select number of attendees.'); return; }
+      // multi-seat -> ensure guestInputs exist and filled after selecting number
+      const gdiv = document.getElementById('guestInputs'); if(!gdiv){ setError(attendeeError,'Please select number of attendees.'); return; }
       const inputs = Array.from(gdiv.querySelectorAll('.guest-name-input'));
       const names = inputs.map(i=>i.value.trim()).filter(Boolean);
       if(names.length < selectedNumber){ setError(attendeeError,'Please fill all guest name boxes for the number you selected.'); return; }
@@ -379,40 +384,68 @@
       showStep('transport');
     });
 
+    // transport
     transportBack.addEventListener('click', ()=> showStep('attendance'));
     transportNext.addEventListener('click', function(){ const v=(transportSelect.value||'').trim(); if(!v){ setError(attendeeError,'Please choose Yes or No for airport transfer.'); return; } selectedTransport = v==='Yes'?'Yes':'No'; setError(attendeeError,''); showStep('phone'); });
 
+    // phone
     phoneInput.addEventListener('input', ()=> phoneInput.value = formatPhoneInput(phoneInput.value));
     phoneBack.addEventListener('click', ()=> showStep('transport'));
-    phoneNext.addEventListener('click', function(){ setError(phoneErr,''); if(selectedStatus==='Attending'){ const s = normalizePhoneToStored(phoneInput.value); if(!s){ setError(phoneErr,'Phone must be 11 digits starting with 09 (e.g. 0917 123 4567)'); return; } selectedPhoneStored=s; } else selectedPhoneStored=''; showStep('notes'); });
+    phoneNext.addEventListener('click', function(){ setError(phoneErr,''); if(selectedStatus==='Attending'){ const s = normalizePhoneToStored(phoneInput.value); if(!s){ setError(phoneErr,'Phone must be 11 digits starting with 09 (e.g. 0917 123 4567)'); return; } selectedPhoneStored = s; } else selectedPhoneStored=''; showStep('notes'); });
 
+    // notes
     notesBack.addEventListener('click', ()=> showStep('phone'));
     notesNext.addEventListener('click', ()=> { selectedNotes = (notesInput.value||'').trim(); buildReview(); showStep('review'); });
 
+    // review & submit
     reviewBack.addEventListener('click', ()=> showStep('notes'));
-    function buildReview(){ let html="<div><strong>Invite:</strong> "+escapeHtml(currentInvite.display_name)+"</div>"; statusLine.textContent = selectedStatus==='Attending' ? 'Attending' : 'Declined'; statusLine.style.color = selectedStatus==='Attending' ? '#1b9b4a' : 'var(--danger)'; if(selectedStatus==='Attending'){ html += "<div style='margin-top:.4rem;'><strong>Attendees:</strong><ul>"; if(currentMaxSeats<=1) html += "<li>"+escapeHtml(titleCaseName(currentInvite.display_name))+"</li>"; else selectedAttendees.forEach(n=> html += "<li>"+escapeHtml(n)+"</li>"); html += "</ul></div>"; html += "<div><strong>Airport transfer:</strong> "+escapeHtml(selectedTransport)+"</div>"; html += "<div><strong>Phone:</strong> "+escapeHtml(selectedPhoneStored)+"</div>"; } if(selectedNotes) html += "<div style='margin-top:.4rem'><strong>Notes:</strong> "+escapeHtml(selectedNotes)+"</div>"; reviewSummary.innerHTML=html; reviewError.style.display='none'; }
+    function buildReview(){
+      let html = "<div><strong>"+escapeHtml(currentInvite.display_name)+"</strong></div>";
+      statusLine.textContent = selectedStatus === 'Attending' ? 'ATTENDING' : 'DECLINED';
+      if(selectedStatus === 'Attending'){
+        html += "<div style='margin-top:.6rem'><strong>Guest names:</strong><ul style='list-style:none;padding:0;margin:8px 0'>";
+        if(currentMaxSeats <= 1) html += "<li>"+escapeHtml(titleCaseName(currentInvite.display_name))+"</li>"; else selectedAttendees.forEach(n=> html += "<li>"+escapeHtml(n)+"</li>");
+        html += "</ul></div>";
+        html += "<div><strong>Airport transfer:</strong> "+escapeHtml(selectedTransport)+"</div>";
+        html += "<div><strong>Phone:</strong> "+escapeHtml(selectedPhoneStored)+"</div>";
+      }
+      if(selectedNotes) html += "<div style='margin-top:.4rem'><strong>Notes:</strong> "+escapeHtml(selectedNotes)+"</div>";
+      reviewSummary.innerHTML = html;
+      reviewError.style.display = 'none';
+    }
 
     submitBtn.addEventListener('click', async function(){
-      reviewError.style.display='none';
-      const payload = { action:'submit', invite_id: currentInvite.invite_id, status:selectedStatus, attending_count:(selectedStatus==='Attending'?(currentMaxSeats<=1?1:Math.min(selectedAttendees.length,currentMaxSeats)):0), attendees:(selectedStatus==='Attending'?(currentMaxSeats<=1?[titleCaseName(currentInvite.display_name)]:selectedAttendees.slice(0,currentMaxSeats)):[]), phone:(selectedStatus==='Attending'?selectedPhoneStored:''), transportation:(selectedStatus==='Attending'?selectedTransport:''), notes:selectedNotes||'' };
-      submitBtn.disabled=true;
+      reviewError.style.display = 'none';
+      const payload = {
+        action: 'submit',
+        invite_id: currentInvite.invite_id,
+        status: selectedStatus,
+        attending_count: (selectedStatus==='Attending' ? (currentMaxSeats<=1 ? 1 : Math.min(selectedAttendees.length,currentMaxSeats)) : 0),
+        attendees: (selectedStatus==='Attending' ? (currentMaxSeats<=1 ? [ titleCaseName(currentInvite.display_name) ] : selectedAttendees.slice(0,currentMaxSeats)) : []),
+        phone: (selectedStatus==='Attending' ? selectedPhoneStored : ""),
+        transportation: (selectedStatus==='Attending' ? selectedTransport : ""),
+        notes: selectedNotes || ""
+      };
+      submitBtn.disabled = true;
       const r = await jsonFetch(payload);
-      submitBtn.disabled=false;
-      if(!r || !r.ok){ reviewError.textContent=(r && r.error)?r.error:'Server error'; reviewError.style.display=''; return; }
-      if(r.locked){ reviewError.textContent="This invitation has already been responded to. If you need to change it please contact us: +1 778 977 4975 (WhatsApp/Viber)"; reviewError.style.display=''; return; }
-      if(selectedStatus==='Attending') thanksMessage.innerHTML = "<strong>See you there — we're excited to celebrate with you!</strong><div class='small' style='margin-top:.5rem'>If you need to make changes, contact us: +1 778 977 4975 (WhatsApp/Viber)</div>";
+      submitBtn.disabled = false;
+      if(!r || !r.ok){ reviewError.textContent = (r && r.error) ? r.error : 'Server error'; reviewError.style.display=''; return; }
+      if(r.locked){ reviewError.textContent = "This invitation has already been responded to. If you need to change it please contact us: +1 778 977 4975 (WhatsApp/Viber)"; reviewError.style.display=''; return; }
+      if(selectedStatus === 'Attending') thanksMessage.innerHTML = "<strong>See you there — we're excited to celebrate with you!</strong><div class='small' style='margin-top:.5rem'>If you need to make changes, contact us: +1 778 977 4975 (WhatsApp/Viber)</div>";
       else thanksMessage.innerHTML = "<strong>We're sorry you can't join us.</strong><div class='small' style='margin-top:.5rem'>If you need to make changes, contact us: +1 778 977 4975 (WhatsApp/Viber)</div>";
       showStep('thanks');
     });
 
-    thanksClose.addEventListener('click', function(){ try{ window.parent.postMessage('RSVP:CLOSE','*'); }catch(_){} try{ if(window.opener && !window.opener.closed) window.opener.postMessage('RSVP:CLOSE','*'); }catch(_){} try{ window.close(); }catch(_){} });
+    thanksClose.addEventListener('click', function(){ try{ window.parent.postMessage({ type:'RSVP:CLOSE' }, '*'); }catch(_){} try{ if(window.opener && !window.opener.closed) window.opener.postMessage({ type:'RSVP:CLOSE' }, '*'); }catch(_){} try{ window.close(); }catch(_){} });
 
+    // Enter triggers find
     nameInput.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); doFind(); } });
     findBtn.addEventListener('click', doFind);
 
     function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
 
-    showStep('search'); nameInput.focus();
+    showStep('search');
+    nameInput.focus();
   })();
   </script>
 </body>
