@@ -328,6 +328,12 @@
 
     // showStep now toggles 'active' class so CSS can center steps reliably
     function showStep(name) {
+      // restore the matches-screen action buttons by default (they may have been hidden for locked flow)
+      try {
+        if (dontSeeBtn) dontSeeBtn.style.display = '';
+        if (backToSearch) backToSearch.style.display = '';
+      } catch (_) {}
+
       Object.values(steps).forEach(function(s) {
         if (!s) return;
         s.classList.remove('active');
@@ -419,12 +425,20 @@
       if(!r || !r.ok){ setError(searchErr, r && r.error ? r.error : 'Server error'); postHeight(); return; }
 
       if(r.locked){
+        // show locked message and ONLY bottom Close
         matchesEl.innerHTML = "<div class='message'>This invitation has already been answered.</div>";
         const wrapper = document.createElement('div'); wrapper.style.marginTop='0.6rem'; wrapper.style.display='flex'; wrapper.style.justifyContent='center';
         const closeBtn = document.createElement('button'); closeBtn.className='btn primary'; closeBtn.textContent='Close';
         closeBtn.addEventListener('click', function(){ try{ window.parent.postMessage({ type:'RSVP:CLOSE' }, '*'); }catch(_){} try{ window.close(); }catch(_){} });
         wrapper.appendChild(closeBtn);
         matchesEl.appendChild(wrapper);
+
+        // Hide the "I don't see my name" and "Back" buttons for this locked view
+        try {
+          if (dontSeeBtn) dontSeeBtn.style.display = 'none';
+          if (backToSearch) backToSearch.style.display = 'none';
+        } catch(_) {}
+
         notifyParentHasBottomClose('matches', true);
         postHeight();
         return;
