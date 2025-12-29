@@ -285,7 +285,13 @@
         postTimer = setTimeout(function(){
           try {
             var h = document.documentElement.scrollHeight || document.body.scrollHeight;
-            window.parent.postMessage({ type:'RSVP:HEIGHT', height: h }, '*');
+            var w = document.documentElement.scrollWidth || document.body.scrollWidth || 0;
+            var activeStep = Array.from(document.querySelectorAll('.step')).find(s => s.style.display !== 'none');
+            var stepName = activeStep ? activeStep.id.replace(/^step-/, '') : '';
+            // send structured size message (width, height, active step)
+            try { window.parent.postMessage({ type: 'RSVP:SIZE', width: Math.round(w), height: Math.round(h), step: stepName }, '*'); } catch(_) {}
+            // backward-compatible height
+            try { window.parent.postMessage({ type: 'RSVP:HEIGHT', height: Math.round(h) }, '*'); } catch(_) {}
           } catch(e) {}
         }, 80);
       } catch(e){}
@@ -315,11 +321,9 @@
     if (dontSeeBtn) dontSeeBtn.addEventListener('click', ()=> showStep('notInList'));
     if (backToSearch) backToSearch.addEventListener('click', ()=> showStep('search'));
 
-    // FIX: ensure notInList Back button works
+    // ensure notInList Back button works
     if (notInListBack) {
       notInListBack.addEventListener('click', function(){
-        // Going back from "I don't see my name" should return to the matches screen
-        // and notify parent that bottom-close is not present on matches.
         showStep('matches');
       });
     }
