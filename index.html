@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Mars + Bianca — RSVP</title>
 
-  <!-- mark embedded frames early -->
   <script>try{ if(window.self !== window.top) document.documentElement.setAttribute('data-embedded','true'); }catch(e){} </script>
 
   <style>
@@ -13,6 +12,7 @@
       --bg:#fff; --muted:#666; --accent:#222; --danger:#c0392b;
       --card-radius:12px; --content-max:720px;
     }
+
     html,body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;color:#111;background:var(--bg);height:auto;}
     .page-wrap{display:flex;align-items:center;justify-content:center;padding:4vw 2vw;}
     .app-box{width:100%;max-width:var(--content-max);background:#fff;border-radius:var(--card-radius);box-shadow:0 10px 30px rgba(0,0,0,0.12);padding:1rem;box-sizing:border-box;position:relative;margin:0 auto}
@@ -20,7 +20,7 @@
     .content-column{max-width:640px;margin:0 auto;text-align:center;padding:6px 12px}
     h1{margin:0;font-size:1.25rem}
     .subhead{color:var(--muted);margin-top:6px;margin-bottom:12px;line-height:1.1}
-    .prompt{color:var(--muted);margin-bottom:10px;text-align:center}
+    .prompt{color:var(--muted);margin-bottom:10px;text-align:center;display:block}
     .search-row{display:flex;gap:.5rem;margin-bottom:.15rem;justify-content:center}
     .search-row input{flex:1;max-width:420px;padding:.6rem;border:1px solid #e5e5e5;border-radius:8px;font-size:1rem}
     .actions{display:flex;gap:.6rem;margin-top:18px;justify-content:center;align-items:center;padding-bottom:12px}
@@ -32,7 +32,8 @@
     .matches{margin:0 auto 1rem;display:flex;flex-direction:column;gap:.5rem;align-items:center}
     .match-btn{display:block;width:100%;max-width:480px;padding:.75rem;border:1px solid #f0f0f0;border-radius:8px;background:#fff;cursor:pointer;text-align:center;transition:all .12s}
     .match-btn:hover{background:#fafafa;transform:translateY(-2px)}
-    label{font-size:.95rem;color:#333;text-align:left;width:100%;max-width:480px}
+    .form-row{display:flex;flex-direction:column;gap:.35rem;margin-bottom:.6rem;align-items:center}
+    label{font-size:.95rem;color:#333;text-align:left;width:100%;max-width:480px;display:block}
     select,input,textarea{padding:.6rem;font-size:1rem;border:1px solid #e6e6e6;border-radius:8px;width:100%;max-width:480px;box-sizing:border-box}
     textarea{min-height:80px;resize:vertical}
     .message{padding:.6rem;background:#e7f7e7;border:1px solid #bfe6bf;border-radius:8px;margin:.5rem 0;text-align:center}
@@ -55,20 +56,25 @@
 
         <!-- Search -->
         <div id="step-search" class="step active">
-          <div class="prompt">Please enter the name shown on your invitation to find your RSVP record.</div>
+          <span class="prompt">Please enter the name shown on your invitation to find your RSVP record.</span>
+
           <div class="search-row">
             <input id="nameInput" placeholder="Type your name" autocomplete="name" />
           </div>
           <div id="searchErr" class="error" aria-live="polite"></div>
+
           <div class="actions">
-            <div class="actions-right"><button id="findBtn" class="btn primary">Find</button></div>
+            <div class="actions-right">
+              <button id="findBtn" class="btn primary">Find</button>
+            </div>
           </div>
         </div>
 
         <!-- Matches -->
         <div id="step-matches" class="step" style="display:none">
-          <div class="prompt">We found matching names — please select your name below to continue.</div>
+          <span class="prompt">We found matching names — please select your name below to continue.</span>
           <div id="matches" class="matches" aria-live="polite"></div>
+
           <div class="actions">
             <button id="dontSeeBtn" class="btn ghost">I don't see my name</button>
             <div class="actions-right"><button id="backToSearch" class="btn ghost">Back</button></div>
@@ -77,8 +83,9 @@
 
         <!-- Not in list -->
         <div id="step-not-in-list" class="step" style="display:none">
-          <div class="prompt">If your name isn't listed here, please contact us and we'll confirm your invitation status.</div>
+          <span class="prompt">If your name isn't listed here, please contact us and we'll confirm your invitation status.</span>
           <div class="message"><strong>Can't find your name?</strong><div class="small" style="margin-top:.5rem">Contact: +1 778 977 4975 (WhatsApp / Viber)</div></div>
+
           <div class="actions">
             <button id="notInListBack" class="btn ghost">Back</button>
             <div class="actions-right"><button id="notInListClose" class="btn primary">Close</button></div>
@@ -87,13 +94,16 @@
 
         <!-- Attendance -->
         <div id="step-attendance" class="step" style="display:none">
-          <div class="prompt">Please tell us whether you will join us for the celebration.</div>
+          <span class="prompt">Please tell us whether you will join us for the celebration.</span>
+
           <div class="form-row">
-            <label>Will you be joining us?</label>
+            <label for="attendanceSelect">Will you be joining us?</label>
             <select id="attendanceSelect"><option value="">-- choose --</option><option value="Attending">Yes — I/we will attend</option><option value="Declined">Regretfully decline</option></select>
           </div>
+
           <div id="attendanceDynamic" style="margin-top:.6rem"></div>
           <div id="attendeeError" class="error"></div>
+
           <div class="actions">
             <button id="attendanceBack" class="btn ghost">Back</button>
             <div class="actions-right"><button id="attendanceNext" class="btn primary">Next</button></div>
@@ -102,11 +112,13 @@
 
         <!-- Transport -->
         <div id="step-transport" class="step" style="display:none">
-          <div class="prompt">We offer airport transfer from NAIA to Club Balai Isabel. Please let us know if you need it.</div>
+          <span class="prompt">We offer airport transfer from NAIA to Club Balai Isabel. Please let us know if you need it.</span>
+
           <div class="form-row">
-            <label>Do you need airport transfer from NAIA to Club Balai Isabel (Batangas)?</label>
+            <label for="transportSelect">Do you need airport transfer from NAIA to Club Balai Isabel (Batangas)?</label>
             <select id="transportSelect"><option value="">-- choose --</option><option value="Yes">Yes — I/We need airport transfer</option><option value="No">No — we don't need airport transfer</option></select>
           </div>
+
           <div class="actions">
             <button id="transportBack" class="btn ghost">Back</button>
             <div class="actions-right"><button id="transportNext" class="btn primary">Next</button></div>
@@ -115,12 +127,14 @@
 
         <!-- Phone -->
         <div id="step-phone" class="step" style="display:none">
-          <div class="prompt">Please give the best Philippine mobile number where we can reach you if needed.</div>
+          <span class="prompt">Please give the best Philippine mobile number where we can reach you if needed.</span>
+
           <div class="form-row">
-            <label>Phone (PH format)</label>
+            <label for="phoneInput">Phone (PH format)</label>
             <input id="phoneInput" type="tel" placeholder="09" />
             <div id="phoneErr" class="error"></div>
           </div>
+
           <div class="actions">
             <button id="phoneBack" class="btn ghost">Back</button>
             <div class="actions-right"><button id="phoneNext" class="btn primary">Next</button></div>
@@ -129,11 +143,13 @@
 
         <!-- Notes -->
         <div id="step-notes" class="step" style="display:none">
-          <div class="prompt">Optional — share dietary restrictions, song requests, or a short message.</div>
+          <span class="prompt">Optional — share dietary restrictions, song requests, or a short message.</span>
+
           <div class="form-row">
-            <label>Notes (optional — dietary, song requests)</label>
+            <label for="notesInput">Notes (optional — dietary, song requests)</label>
             <textarea id="notesInput" placeholder="E.g. vegetarian, song request..."></textarea>
           </div>
+
           <div class="actions">
             <button id="notesBack" class="btn ghost">Back</button>
             <div class="actions-right"><button id="notesNext" class="btn primary">Review</button></div>
@@ -142,10 +158,12 @@
 
         <!-- Review -->
         <div id="step-review" class="step" style="display:none">
-          <div class="prompt">Please review your RSVP details before submitting.</div>
+          <span class="prompt">Please review your RSVP details before submitting.</span>
+
           <div id="reviewSummary" class="form-row" style="text-align:center"></div>
           <div id="statusLine" style="font-weight:700;margin-bottom:.5rem;text-align:center"></div>
           <div id="reviewError" class="error" style="text-align:center"></div>
+
           <div class="actions">
             <button id="reviewBack" class="btn ghost">Back</button>
             <div class="actions-right"><button id="submitBtn" class="btn primary">Submit RSVP</button></div>
@@ -154,7 +172,7 @@
 
         <!-- Thanks -->
         <div id="step-thanks" class="step" style="display:none">
-          <div class="prompt">Thank you — your response is recorded.</div>
+          <span class="prompt">Thank you — your response is recorded.</span>
           <div id="thanksMessage" class="message" style="text-align:center"></div>
           <div class="actions">
             <div class="actions-right"><button id="thanksClose" class="btn primary">Close</button></div>
@@ -187,6 +205,9 @@
     const findBtn = document.getElementById('findBtn');
     const searchErr = document.getElementById('searchErr');
     const matchesEl = document.getElementById('matches');
+
+    const dontSeeBtn = document.getElementById('dontSeeBtn');
+    const backToSearch = document.getElementById('backToSearch');
 
     const attendanceSelect = document.getElementById('attendanceSelect');
     const attendanceDynamic = document.getElementById('attendanceDynamic');
@@ -334,6 +355,10 @@
       showStep('matches');
     }
 
+    // wire "I don't see my name" and Back on matches
+    if (dontSeeBtn) dontSeeBtn.addEventListener('click', function(){ showStep('notInList'); });
+    if (backToSearch) backToSearch.addEventListener('click', function(){ showStep('search'); });
+
     // ----- select invite -----
     async function selectInvite(m) {
       setError(searchErr,'');
@@ -478,7 +503,8 @@
 
     function buildReview(){
       const statusText = selectedStatus === 'Attending' ? 'ATTENDING' : 'DECLINED';
-      let html = "<div><strong>" + escapeHtml(currentInvite.display_name) + " — " + statusText + "</strong></div>";
+      let html = "<div><strong>" + escapeHtml(currentInvite.display_name) + "</strong></div>";
+      html += "<div style='margin-top:6px;font-weight:700'>" + statusText + "</div>";
 
       if(selectedStatus === 'Attending'){
         if(currentMaxSeats > 1){
