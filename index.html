@@ -7,47 +7,128 @@
 
   <script>try{ if(window.self !== window.top) document.documentElement.setAttribute('data-embedded','true'); }catch(e){} </script>
 
-  <style>
-    :root {
-      --bg: #fff;
-      --muted: #666;
-      --accent: #222;
-      --danger: #c0392b;
-      --card-radius: 0.6rem;
-      --content-max: 42rem;
-    }
+<style>
+  :root {
+    --bg: #fff;
+    --muted: #666;
+    --accent: #222;
+    --danger: #c0392b;
+    --card-radius: 0.6rem;
+    --content-max: 42rem;
+    /* --dvh will be set by JS to 1% of the dynamic viewport height */
+  }
 
-    html,body { margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; color:#111; background:var(--bg); height:auto; }
-    .page-wrap { display:flex; align-items:center; justify-content:center; padding:3.5vw 2vw; }
-    .app-box { width:100%; max-width:var(--content-max); background:#fff; border-radius:var(--card-radius); box-shadow:0 0.5rem 1.5rem rgba(0,0,0,0.12); padding:0.9rem; box-sizing:border-box; margin:0 auto; }
-    :root[data-embedded="true"] .app-box { background:transparent; box-shadow:none; border-radius:0; padding:0.7rem; max-width:100%; }
-    .content-column { max-width:40rem; margin:0 auto; text-align:center; padding:0.4rem 0.6rem; }
-    h1 { margin:0; font-size:1.05rem; }
-    .subhead { color:var(--muted); margin-top:0.4rem; margin-bottom:0.6rem; line-height:1.05; font-size:0.95rem; }
-    .prompt { color:var(--muted); margin-bottom:0.6rem; text-align:center; display:block; font-size:0.95rem; }
-    .search-row { display:flex; gap:0.5rem; margin-bottom:0.25rem; justify-content:center; }
-    .search-row input { flex:1; max-width:24rem; padding:0.45rem; border:1px solid #e5e5e5; border-radius:0.5rem; font-size:0.95rem; }
-    .actions { display:flex; gap:0.5rem; margin-top:0.9rem; justify-content:center; align-items:center; padding-bottom:0.6rem; }
-    .actions-right { display:flex; gap:0.5rem; }
-    .btn { padding:0.45rem 0.75rem; border-radius:0.5rem; border:0; cursor:pointer; font-size:0.95rem; }
-    .btn.primary { background:var(--accent); color:#fff; }
-    .btn.ghost { background:#f3f3f3; color:#111; }
-    .error { color:var(--danger); font-size:0.92rem; margin-top:0.4rem; display:none; text-align:center; }
-    .matches { margin:0 auto 0.6rem; display:flex; flex-direction:column; gap:0.4rem; align-items:center; }
-    .match-btn { display:block; width:100%; max-width:28.75rem; padding:0.6rem; border:1px solid #f0f0f0; border-radius:0.5rem; background:#fff; cursor:pointer; text-align:center; transition:all .12s; font-size:0.95rem; }
-    .match-btn:hover { background:#fafafa; transform:translateY(-2px); }
-    .form-row { display:flex; flex-direction:column; gap:0.25rem; margin-bottom:0.6rem; align-items:center; }
-    label { font-size:0.95rem; color:#333; text-align:left; width:100%; max-width:28.75rem; display:block; }
-    select,input,textarea { padding:0.5rem; font-size:0.95rem; border:1px solid #e6e6e6; border-radius:0.5rem; width:100%; max-width:28.75rem; box-sizing:border-box; }
-    textarea { min-height:5rem; resize:vertical; }
-    .message { padding:0.5rem; background:#e7f7e7; border:1px solid #bfe6bf; border-radius:0.5rem; margin:0.4rem 0; text-align:center; }
-    .small { font-size:0.88rem; color:var(--muted); margin-top:0.4rem; }
-    .loading-overlay { position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(255,255,255,0.7); border-radius:inherit; z-index:999; }
-    .spinner { width:1.9rem; height:1.9rem; border-radius:50%; border:0.25rem solid #eee; border-top-color:var(--accent); animation:spin 1s linear infinite; }
-    @keyframes spin { to { transform:rotate(360deg); } }
-    @media (max-width:540px) { .content-column { padding:0.4rem 0.6rem } .match-btn { max-width:100% } label,select,input,textarea { max-width:100% } }
-    input[type=tel]{ font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,"Roboto Mono",monospace; }
-  </style>
+  /* Basic page reset and font */
+  html, body {
+    height: 100%;
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+    color: #111;
+    background: var(--bg);
+  }
+
+  /* Page wrap uses dynamic viewport so centering works with mobile address bars */
+  .page-wrap {
+    min-height: calc(var(--dvh, 1vh) * 100);
+    display: flex;
+    align-items: center;    /* vertical centering */
+    justify-content: center;/* horizontal centering */
+    padding: 3.5vw 2vw;
+    box-sizing: border-box;
+  }
+
+  /* Card: center its content and allow shrinking on small content */
+  .app-box {
+    width: 100%;
+    max-width: var(--content-max);
+    background: #fff;
+    border-radius: var(--card-radius);
+    box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.12);
+    padding: 0.9rem;
+    box-sizing: border-box;
+    margin: 0 auto;
+
+    display: flex;
+    align-items: center;     /* vertically center content-column */
+    justify-content: center; /* horizontally center content-column */
+    min-height: 0;           /* allow shrinking when content is small */
+  }
+
+  /* Embedded (when in iframe) remove outer card chrome */
+  :root[data-embedded="true"] .app-box {
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 0.7rem;
+    max-width: 100%;
+  }
+
+  /* Content column centers the active step vertically */
+  .content-column {
+    width: 100%;
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: 0.4rem 0.6rem;
+    text-align: center;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* vertical centering of active step content */
+    align-items: stretch;    /* inputs stretch to full width */
+    box-sizing: border-box;
+  }
+
+  /* Steps: hide by default, display active step as a centered flex column */
+  .step { display: none; }
+  .step.active {
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* centers content vertically inside step */
+    align-items: stretch;
+    box-sizing: border-box;
+    /* small relative minimum so very tiny layouts don't collapse */
+    min-height: calc(var(--dvh, 1vh) * 20);
+  }
+
+  /* Desktop/tablet tweaks for step minimum */
+  @media (min-width:641px) {
+    .step.active { min-height: 18rem; } /* slightly larger minimum on larger screens */
+  }
+
+  /* Preserve your visual styles (inputs, buttons, messages, etc.) */
+  h1 { margin:0; font-size:1.05rem; }
+  .subhead { color:var(--muted); margin-top:0.4rem; margin-bottom:0.6rem; line-height:1.05; font-size:0.95rem; }
+  .prompt { color:var(--muted); margin-bottom:0.6rem; text-align:center; display:block; font-size:0.95rem; }
+  .search-row { display:flex; gap:0.5rem; margin-bottom:0.25rem; justify-content:center; }
+  .search-row input { flex:1; max-width:24rem; padding:0.45rem; border:1px solid #e5e5e5; border-radius:0.5rem; font-size:0.95rem; }
+  .actions { display:flex; gap:0.5rem; margin-top:0.9rem; justify-content:center; align-items:center; padding-bottom:0.6rem; }
+  .actions-right { display:flex; gap:0.5rem; }
+  .btn { padding:0.45rem 0.75rem; border-radius:0.5rem; border:0; cursor:pointer; font-size:0.95rem; }
+  .btn.primary { background:var(--accent); color:#fff; }
+  .btn.ghost { background:#f3f3f3; color:#111; }
+  .error { color:var(--danger); font-size:0.92rem; margin-top:0.4rem; display:none; text-align:center; }
+  .matches { margin:0 auto 0.6rem; display:flex; flex-direction:column; gap:0.4rem; align-items:center; }
+  .match-btn { display:block; width:100%; max-width:28.75rem; padding:0.6rem; border:1px solid #f0f0f0; border-radius:0.5rem; background:#fff; cursor:pointer; text-align:center; transition:all .12s; font-size:0.95rem; }
+  .match-btn:hover { background:#fafafa; transform:translateY(-2px); }
+  .form-row { display:flex; flex-direction:column; gap:0.25rem; margin-bottom:0.6rem; align-items:center; }
+  label { font-size:0.95rem; color:#333; text-align:left; width:100%; max-width:28.75rem; display:block; }
+  select,input,textarea { padding:0.5rem; font-size:0.95rem; border:1px solid #e6e6e6; border-radius:0.5rem; width:100%; max-width:28.75rem; box-sizing:border-box; }
+  textarea { min-height:5rem; resize:vertical; }
+  .message { padding:0.5rem; background:#e7f7e7; border:1px solid #bfe6bf; border-radius:0.5rem; margin:0.4rem 0; text-align:center; }
+  .small { font-size:0.88rem; color:var(--muted); margin-top:0.4rem; }
+  .loading-overlay { position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(255,255,255,0.7); border-radius:inherit; z-index:999; }
+  .spinner { width:1.9rem; height:1.9rem; border-radius:50%; border:0.25rem solid #eee; border-top-color:var(--accent); animation:spin 1s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  /* When content grows taller than viewport, allow natural scrolling inside the iframe/page */
+  @media (max-width:540px) {
+    .content-column { padding:0.4rem 0.6rem; }
+    .match-btn { max-width:100%; }
+    label, select, input, textarea { max-width:100%; }
+  }
+
+  input[type=tel]{ font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,"Roboto Mono",monospace; }
+</style>
 </head>
 <body>
   <div class="page-wrap">
