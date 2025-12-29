@@ -19,6 +19,7 @@
     .content-column{max-width:640px;margin:0 auto;text-align:center;padding:8px 12px;}
     h1{margin:0;font-size:1.3rem}
     .subhead{color:var(--muted);margin-top:6px;margin-bottom:14px;line-height:1.1}
+    .prompt{color:var(--muted);margin-bottom:10px; max-width:480px; text-align:left; margin-left:auto; margin-right:auto;}
     .search-row{display:flex;gap:.5rem;margin-bottom:.15rem;justify-content:center}
     .search-row input{flex:1;max-width:420px;padding:.6rem;border:1px solid #e5e5e5;border-radius:8px;font-size:1rem}
     .search-row button{padding:.55rem .9rem;border-radius:8px;border:0;background:var(--accent);color:#fff;cursor:pointer}
@@ -32,7 +33,7 @@
     select,input,textarea{padding:.6rem;font-size:1rem;border:1px solid #e6e6e6;border-radius:8px;width:100%;max-width:480px;box-sizing:border-box}
     textarea{min-height:80px;resize:vertical}
     .small{font-size:.92rem;color:var(--muted);margin-top:6px}
-    .actions{display:flex;gap:.6rem;margin-top:.6rem;justify-content:center;align-items:center}
+    .actions{display:flex;gap:.6rem;margin-top:18px;justify-content:center;align-items:center;padding-bottom:12px}
     .actions-right{display:flex;gap:.6rem}
     .btn{padding:.56rem .9rem;border-radius:8px;border:0;cursor:pointer}
     .btn.primary{background:var(--accent);color:#fff}
@@ -55,6 +56,7 @@
 
         <!-- Search -->
         <div id="step-search" class="step active">
+          <div class="prompt">Please enter the name shown on your invitation to find your RSVP record.</div>
           <div class="search-row">
             <input id="nameInput" placeholder="Type your name" autocomplete="name" />
             <button id="findBtn" type="button">Find</button>
@@ -64,6 +66,7 @@
 
         <!-- Matches -->
         <div id="step-matches" class="step" style="display:none">
+          <div class="prompt">We found matching names — please select your name below to continue.</div>
           <div id="matches" class="matches" aria-live="polite"></div>
           <div class="actions" style="margin-top:12px">
             <button id="dontSeeBtn" class="btn ghost">I don't see my name</button>
@@ -73,12 +76,17 @@
 
         <!-- Not in list -->
         <div id="step-not-in-list" class="step" style="display:none">
-          <div class="message"><strong>Can't find your name?</strong><div class="small" style="margin-top:.5rem">If you believe you should be on the guest list, please contact us: +1 778 977 4975 (WhatsApp / Viber)</div></div>
-          <div class="actions" style="margin-top:12px"><button id="notInListBack" class="btn ghost">Back</button></div>
+          <div class="prompt">If your name isn't listed here, please contact us and we'll confirm your invitation status.</div>
+          <div class="message"><strong>Can't find your name?</strong><div class="small" style="margin-top:.5rem">Contact: +1 778 977 4975 (WhatsApp / Viber)</div></div>
+          <div class="actions" style="margin-top:12px">
+            <button id="notInListBack" class="btn ghost">Back</button>
+            <div class="actions-right"><button id="notInListClose" class="btn primary">Close</button></div>
+          </div>
         </div>
 
         <!-- Attendance combined -->
         <div id="step-attendance" class="step" style="display:none">
+          <div class="prompt">Please tell us whether you will join us for the celebration.</div>
           <div class="form-row">
             <label>Will you be joining us?</label>
             <select id="attendanceSelect"><option value="">-- choose --</option><option value="Attending">Yes — I/we will attend</option><option value="Declined">Regretfully decline</option></select>
@@ -95,6 +103,7 @@
 
         <!-- Transport -->
         <div id="step-transport" class="step" style="display:none">
+          <div class="prompt">We offer airport transfer from NAIA to Club Balai Isabel. Please let us know if you need it.</div>
           <div class="form-row">
             <label>Do you need airport transfer from NAIA to Club Balai Isabel (Batangas)?</label>
             <select id="transportSelect"><option value="">-- choose --</option><option value="Yes">Yes — I/We need airport transfer</option><option value="No">No — we don't need airport transfer</option></select>
@@ -107,6 +116,7 @@
 
         <!-- Phone -->
         <div id="step-phone" class="step" style="display:none">
+          <div class="prompt">Please give the best Philippine mobile number where we can reach you if needed.</div>
           <div class="form-row">
             <label>Phone (PH format)</label>
             <input id="phoneInput" type="tel" placeholder="09" />
@@ -120,6 +130,7 @@
 
         <!-- Notes -->
         <div id="step-notes" class="step" style="display:none">
+          <div class="prompt">Optional — share dietary restrictions, song requests, or a short message.</div>
           <div class="form-row">
             <label>Notes (optional — dietary, song requests)</label>
             <textarea id="notesInput" placeholder="E.g. vegetarian, song request..."></textarea>
@@ -132,6 +143,7 @@
 
         <!-- Review -->
         <div id="step-review" class="step" style="display:none">
+          <div class="prompt">Please review your RSVP details before submitting.</div>
           <div id="reviewSummary" class="form-row" style="text-align:center"></div>
           <div id="statusLine" style="font-weight:700;margin-bottom:.5rem;text-align:center"></div>
           <div id="reviewError" class="error" style="text-align:center"></div>
@@ -143,6 +155,7 @@
 
         <!-- Thanks -->
         <div id="step-thanks" class="step" style="display:none">
+          <div class="prompt">Thank you — your response is recorded.</div>
           <div id="thanksMessage" class="message" style="text-align:center"></div>
           <div style="margin-top:.7rem;display:flex;justify-content:center"><button id="thanksClose" class="btn primary">Close</button></div>
         </div>
@@ -153,17 +166,14 @@
 
   <script>
   (function () {
-    // CONFIG — set to your Cloudflare Worker URL (proxy)
     const API_URL = "https://rsvp-proxy.marsnbianca.workers.dev/"; // <-- replace with your Worker URL
 
-    // Steps mapping
     const steps = { search: document.getElementById('step-search'), matches: document.getElementById('step-matches'),
       notInList: document.getElementById('step-not-in-list'), attendance: document.getElementById('step-attendance'),
       transport: document.getElementById('step-transport'), phone: document.getElementById('step-phone'),
       notes: document.getElementById('step-notes'), review: document.getElementById('step-review'),
       thanks: document.getElementById('step-thanks') };
 
-    // Elements
     const nameInput = document.getElementById('nameInput'), findBtn = document.getElementById('findBtn'), searchErr = document.getElementById('searchErr'), matchesEl = document.getElementById('matches');
     const dontSeeBtn = document.getElementById('dontSeeBtn'), backToSearch = document.getElementById('backToSearch');
     const attendanceSelect = document.getElementById('attendanceSelect'), attendanceDynamic = document.getElementById('attendanceDynamic'), attendeeError = document.getElementById('attendeeError'), attendanceBack = document.getElementById('attendanceBack'), attendanceNext = document.getElementById('attendanceNext');
@@ -172,12 +182,10 @@
     const notesInput = document.getElementById('notesInput'), notesBack = document.getElementById('notesBack'), notesNext = document.getElementById('notesNext');
     const reviewSummary = document.getElementById('reviewSummary'), reviewError = document.getElementById('reviewError'), statusLine = document.getElementById('statusLine'), reviewBack = document.getElementById('reviewBack'), submitBtn = document.getElementById('submitBtn');
     const thanksMessage = document.getElementById('thanksMessage'), thanksClose = document.getElementById('thanksClose');
-    const notInListBack = document.getElementById('notInListBack'), loadingOverlay = document.getElementById('loading');
+    const notInListBack = document.getElementById('notInListBack'), notInListClose = document.getElementById('notInListClose'), loadingOverlay = document.getElementById('loading');
 
-    // State
     let currentInvite = null, currentMaxSeats = 1, selectedStatus = "", selectedNumber = 1, selectedAttendees = [], selectedTransport = "", selectedPhoneStored = "", selectedNotes = "";
 
-    // Show step + request parent resize
     function showStep(name){
       Object.values(steps).forEach(s=>s.style.display='none');
       if(steps[name]) steps[name].style.display = '';
@@ -201,7 +209,6 @@
     function formatPhoneInput(v){ var d=String(v||'').replace(/\D+/g,''); if(d.indexOf('63')===0 && d.length>=12) d='0'+d.slice(2); if(d.indexOf('9')===0 && d.length===10) d='0'+d; d=d.slice(0,11); if(d.length<=2) return d; if(d.length<=4) return d.slice(0,4); if(d.length<=7) return d.slice(0,4)+' '+d.slice(4); return d.slice(0,4)+' '+d.slice(4,7)+' '+d.slice(7,11); }
     function normalizePhoneToStored(input){ var d=String(input||'').replace(/\D+/g,''); if(!d) return ''; if(d.indexOf('63')===0 && d.length>=12) d='0'+d.slice(2); if(d.indexOf('9')===0 && d.length===10) d='0'+d; d=d.slice(0,11); if(!/^09\d{9}$/.test(d)) return ''; return d.slice(0,4)+' '+d.slice(4,7)+' '+d.slice(7,11); }
 
-    // Post height to parent (debounced)
     var postTimer = null;
     function postHeight() {
       try {
@@ -238,20 +245,20 @@
     dontSeeBtn.addEventListener('click', ()=> showStep('notInList'));
     backToSearch.addEventListener('click', ()=> showStep('search'));
     notInListBack.addEventListener('click', ()=> showStep('matches'));
+    if (notInListClose) notInListClose.addEventListener('click', function(){ try{ window.parent.postMessage({ type:'RSVP:CLOSE' }, '*'); }catch(_){} try{ window.close(); }catch(_){} });
 
     async function onSelectMatch(invite_id, display_name, max_seats){
       setError(searchErr,'');
       const r = await jsonFetch({ action:'get', invite_id: invite_id });
       if(!r || !r.ok){ setError(searchErr, r && r.error ? r.error : 'Server error'); postHeight(); return; }
       if(r.locked){
-        matchesEl.innerHTML = "<div class='message'>This invitation has already been answered. If you need to make changes, please contact us: +1 778 977 4975 (WhatsApp/Viber)</div>";
-        // hide bottom controls on matches
+        matchesEl.innerHTML = "<div class='message'>This invitation has already been answered.</div>";
         const actions = document.querySelector('#step-matches .actions'); if(actions) actions.style.display = 'none';
-        // show CLOSE button below message
-        const closeBtn = document.createElement('div'); closeBtn.style.marginTop = '12px'; closeBtn.innerHTML = '<button class=\"btn primary\" id=\"lockedClose\">Close</button>';
-        matchesEl.appendChild(closeBtn);
-        const lc = document.getElementById('lockedClose'); if(lc) lc.addEventListener('click', function(){ try{ window.parent.postMessage({ type:'RSVP:CLOSE' }, '*'); }catch(_){} try{ window.close(); }catch(_){} });
-        try { window.parent.postMessage({ type: 'RSVP:LOCKED' }, '*'); } catch (_) {}
+        const wrapper = document.createElement('div'); wrapper.style.marginTop = '12px'; wrapper.style.display = 'flex'; wrapper.style.justifyContent = 'center';
+        const closeBtn = document.createElement('button'); closeBtn.className = 'btn primary'; closeBtn.textContent = 'Close';
+        closeBtn.addEventListener('click', function(){ try{ window.parent.postMessage({ type:'RSVP:CLOSE' }, '*'); }catch(_){} try{ window.close(); }catch(_){} });
+        wrapper.appendChild(closeBtn);
+        matchesEl.appendChild(wrapper);
         postHeight();
         return;
       }
@@ -259,7 +266,6 @@
       currentMaxSeats = Math.min(currentInvite.max_seats, 4);
       selectedStatus=''; selectedNumber=1; selectedAttendees=[]; selectedTransport=''; selectedPhoneStored=''; selectedNotes='';
       attendanceSelect.value=''; attendanceDynamic.innerHTML=''; setError(attendeeError,'');
-      try { window.parent.postMessage({ type: 'RSVP:UNLOCKED' }, '*'); } catch (_) {}
       showStep('attendance');
     }
 
@@ -269,10 +275,8 @@
       const v = (attendanceSelect.value||'').trim();
       if(v === 'Attending'){
         if(currentMaxSeats <= 1){
-          // single seat: do not show any extra note; user proceeds on Next to transport
           postHeight(); return;
         }
-        // Render number selector only (no immediate guest inputs)
         const row=document.createElement('div'); row.className='form-row';
         const lbl=document.createElement('label'); lbl.textContent='How many people are attending (including you)?';
         const sel=document.createElement('select'); sel.id='numSelect';
@@ -284,7 +288,6 @@
           renderGuestInputs(n);
         });
         row.appendChild(lbl); row.appendChild(sel); attendanceDynamic.appendChild(row);
-        // guest inputs container (empty until number chosen)
         const gdiv=document.createElement('div'); gdiv.id='guestInputs'; gdiv.style.marginTop='8px'; attendanceDynamic.appendChild(gdiv);
         postHeight();
       } else {
@@ -306,7 +309,6 @@
       selectedStatus = val;
       if(selectedStatus === 'Declined'){ selectedAttendees = []; buildReview(); showStep('review'); return; }
       if(currentMaxSeats <= 1){ selectedAttendees = [ titleCaseName(currentInvite.display_name) ]; showStep('transport'); return; }
-      // multi-seat: require number selected
       const sel = document.getElementById('numSelect');
       if(!sel || !sel.value){ setError(attendeeError,'Please choose how many people are attending.'); postHeight(); return; }
       const gdiv=document.getElementById('guestInputs'); if(!gdiv){ setError(attendeeError,'Please choose how many people are attending.'); postHeight(); return; }
@@ -327,7 +329,8 @@
     notesBack.addEventListener('click', ()=> showStep('phone'));
     notesNext.addEventListener('click', ()=> { selectedNotes = (notesInput.value||'').trim(); buildReview(); showStep('review'); });
 
-    reviewBack.addEventListener('click', ()=> showStep('notes'));
+    // review back should go to attendance
+    reviewBack.addEventListener('click', ()=> showStep('attendance'));
     function buildReview(){
       let html = "<div><strong>"+escapeHtml(currentInvite.display_name)+"</strong></div>";
       statusLine.textContent = selectedStatus === 'Attending' ? 'ATTENDING' : 'DECLINED';
@@ -343,38 +346,37 @@
       const r = await jsonFetch(payload);
       submitBtn.disabled = false;
       if(!r || !r.ok){ reviewError.textContent = (r && r.error) ? r.error : 'Server error'; reviewError.style.display = ''; postHeight(); return; }
-      if(r.locked){ reviewError.textContent = "This invitation has already been responded to. If you need to change it please contact us: +1 778 XXX 4975 (WhatsApp/Viber)"; reviewError.style.display = ''; postHeight(); return; }
+      if(r.locked){ reviewError.textContent = "This invitation has already been responded to. If you need to change it please contact us: +1 778 977 4975 (WhatsApp/Viber)"; reviewError.style.display = ''; postHeight(); return; }
       if(selectedStatus === 'Attending') thanksMessage.innerHTML = "<strong>See you there — we're excited to celebrate with you!</strong><div class='small' style='margin-top:.5rem'>If you need to make changes, contact us: +1 778 977 4975 (WhatsApp/Viber)</div>";
       else thanksMessage.innerHTML = "<strong>We're sorry you can't join us.</strong><div class='small' style='margin-top:.5rem'>If you need to make changes, contact us: +1 778 977 4975 (WhatsApp/Viber)</div>";
       showStep('thanks');
     });
 
-    thanksClose.addEventListener('click', function(){ try{ window.parent.postMessage({ type:'RSVP:CLOSE' }, '*'); }catch(_){} try{ if(window.opener && !window.opener.closed) window.opener.postMessage({ type:'RSVP:CLOSE' }, '*'); }catch(_){} try{ window.close(); }catch(_){} });
+    if (thanksClose) thanksClose.addEventListener('click', function(){ try{ window.parent.postMessage({ type:'RSVP:CLOSE' }, '*'); }catch(_){} try{ window.close(); }catch(_){} });
+    if (notInListClose) notInListClose.addEventListener('click', function(){ try{ window.parent.postMessage({ type:'RSVP:CLOSE' }, '*'); }catch(_){} try{ window.close(); }catch(_){} });
 
-    // Enter triggers find
     nameInput.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); doFind(); } });
     findBtn.addEventListener('click', doFind);
 
     function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
 
-    // respond to parent requests
     window.addEventListener('message', function (e) {
       try { if (e && e.data && e.data.type === 'RSVP:REQUEST_HEIGHT') postHeight(); } catch (_) {}
     });
 
-    // Post height on load and when DOM changes
     window.addEventListener('load', function(){ setTimeout(postHeight, 60); });
-    try {
-      var mo = new MutationObserver(function(){ postHeight(); });
-      mo.observe(document.body, { childList:true, subtree:true, attributes:true, characterData:true });
-    } catch (e) {}
-    try {
-      var ro = new ResizeObserver(function(){ postHeight(); });
-      ro.observe(document.documentElement);
-    } catch (e) {}
+    try { var mo = new MutationObserver(function(){ postHeight(); }); mo.observe(document.body, { childList:true, subtree:true, attributes:true, characterData:true }); } catch (e) {}
+    try { var ro = new ResizeObserver(function(){ postHeight(); }); ro.observe(document.documentElement); } catch (e) {}
     setInterval(postHeight, 1200);
 
     showStep('search'); nameInput.focus();
+
+    function postHeight() {
+      try {
+        var h = document.documentElement.scrollHeight || document.body.scrollHeight;
+        window.parent.postMessage({ type: 'RSVP:HEIGHT', height: h }, '*');
+      } catch (e) {}
+    }
   })();
   </script>
 </body>
