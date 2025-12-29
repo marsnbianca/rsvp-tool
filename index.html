@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>RSVP — Mars & Bianca</title>
+  <title>Mars + Bianca — RSVP</title>
 
   <!-- Mark embedded frames early -->
   <script>
@@ -16,8 +16,9 @@
     .page-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:4vw 2vw;}
     .app-box{width:100%;max-width:var(--content-max);background:#fff;border-radius:var(--card-radius);box-shadow:0 10px 30px rgba(0,0,0,0.12);padding:1.25rem;box-sizing:border-box;position:relative;}
     :root[data-embedded="true"] .app-box{background:transparent;box-shadow:none;border-radius:0;padding:1rem;max-width:100%;}
-    .content-column{max-width:640px;margin:0 auto;text-align:center}
-    h2{margin:0 0 .5rem;font-size:clamp(1.05rem,2.6vw,1.4rem);text-align:center}
+    .content-column{max-width:640px;margin:0 auto;text-align:center;padding:8px 12px;}
+    h1{margin:0;font-size:1.3rem}
+    .subhead{color:var(--muted);margin-top:6px;margin-bottom:14px;line-height:1.1}
     .search-row{display:flex;gap:.5rem;margin-bottom:.15rem;justify-content:center}
     .search-row input{flex:1;max-width:420px;padding:.6rem;border:1px solid #e5e5e5;border-radius:8px;font-size:1rem}
     .search-row button{padding:.55rem .9rem;border-radius:8px;border:0;background:var(--accent);color:#fff;cursor:pointer}
@@ -36,11 +37,10 @@
     .btn{padding:.56rem .9rem;border-radius:8px;border:0;cursor:pointer}
     .btn.primary{background:var(--accent);color:#fff}
     .btn.ghost{background:#f3f3f3;color:#111}
-    .btn.text{background:transparent;color:var(--accent)}
     .loading-overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(255,255,255,0.7);border-radius:inherit;z-index:999}
     .spinner{width:36px;height:36px;border-radius:50%;border:4px solid #eee;border-top-color:var(--accent);animation:spin 1s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
-    @media (max-width:540px){ .app-box{padding:.9rem} .match-btn{max-width:100%} label,select,input,textarea{max-width:100%} }
+    @media (max-width:540px){ .content-column{padding:6px 8px} .match-btn{max-width:100%} label,select,input,textarea{max-width:100%} }
     input[type=tel]{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,"Roboto Mono",monospace}
   </style>
 </head>
@@ -50,7 +50,8 @@
       <div id="loading" class="loading-overlay"><div class="spinner" aria-hidden="true"></div></div>
 
       <div class="content-column">
-        <h2>RSVP — Mars & Bianca</h2>
+        <h1>Mars + Bianca</h1>
+        <div class="subhead">Nuuk Taal<br>October 15, 2027</div>
 
         <!-- Search -->
         <div id="step-search" class="step active">
@@ -223,7 +224,7 @@
       const r = await jsonFetch({ action:'find', name: q, client_id: 'guest-'+Date.now() });
       findBtn.disabled = false;
       if(!r || !r.ok){ setError(searchErr, r && r.error ? r.error : 'Server error'); postHeight(); return; }
-      if(!r.matches || r.matches.length === 0){ setError(searchErr, 'No matches found. Please try again or contact us.'); postHeight(); return; }
+      if(!r.matches || r.matches.length === 0){ setError(searchErr, 'No matches found. Please try again.'); postHeight(); return; }
       matchesEl.innerHTML = '';
       r.matches.forEach(m=>{
         const btn = document.createElement('button'); btn.type='button'; btn.className='match-btn';
@@ -244,7 +245,12 @@
       if(!r || !r.ok){ setError(searchErr, r && r.error ? r.error : 'Server error'); postHeight(); return; }
       if(r.locked){
         matchesEl.innerHTML = "<div class='message'>This invitation has already been answered. If you need to make changes, please contact us: +1 778 977 4975 (WhatsApp/Viber)</div>";
+        // hide bottom controls on matches
         const actions = document.querySelector('#step-matches .actions'); if(actions) actions.style.display = 'none';
+        // show CLOSE button below message
+        const closeBtn = document.createElement('div'); closeBtn.style.marginTop = '12px'; closeBtn.innerHTML = '<button class=\"btn primary\" id=\"lockedClose\">Close</button>';
+        matchesEl.appendChild(closeBtn);
+        const lc = document.getElementById('lockedClose'); if(lc) lc.addEventListener('click', function(){ try{ window.parent.postMessage({ type:'RSVP:CLOSE' }, '*'); }catch(_){} try{ window.close(); }catch(_){} });
         try { window.parent.postMessage({ type: 'RSVP:LOCKED' }, '*'); } catch (_) {}
         postHeight();
         return;
@@ -263,19 +269,23 @@
       const v = (attendanceSelect.value||'').trim();
       if(v === 'Attending'){
         if(currentMaxSeats <= 1){
-          const info = document.createElement('div'); info.className='small'; info.textContent = 'This invitation is for 1 person; we will record your name automatically.'; attendanceDynamic.appendChild(info); postHeight(); return;
+          // single seat: do not show any extra note; user proceeds on Next to transport
+          postHeight(); return;
         }
-        // Render number selector only. Guest inputs will appear after selection change (below).
+        // Render number selector only (no immediate guest inputs)
         const row=document.createElement('div'); row.className='form-row';
         const lbl=document.createElement('label'); lbl.textContent='How many people are attending (including you)?';
         const sel=document.createElement('select'); sel.id='numSelect';
+        const placeholder = document.createElement('option'); placeholder.value=''; placeholder.textContent='-- choose --'; sel.appendChild(placeholder);
         for(let i=1;i<=currentMaxSeats;i++){ const opt=document.createElement('option'); opt.value=String(i); opt.textContent=String(i); sel.appendChild(opt); }
-        sel.value='1';
-        sel.addEventListener('change', function(){ renderGuestInputs(parseInt(sel.value,10)); });
+        sel.value='';
+        sel.addEventListener('change', function(){
+          const n = parseInt(sel.value,10) || 0;
+          renderGuestInputs(n);
+        });
         row.appendChild(lbl); row.appendChild(sel); attendanceDynamic.appendChild(row);
-        // guest inputs container
+        // guest inputs container (empty until number chosen)
         const gdiv=document.createElement('div'); gdiv.id='guestInputs'; gdiv.style.marginTop='8px'; attendanceDynamic.appendChild(gdiv);
-        renderGuestInputs(1);
         postHeight();
       } else {
         attendanceDynamic.innerHTML=''; postHeight();
@@ -284,6 +294,7 @@
 
     function renderGuestInputs(n){
       const gdiv=document.getElementById('guestInputs'); if(!gdiv) return; gdiv.innerHTML='';
+      if(!n || n < 1) { postHeight(); return; }
       for(let i=0;i<n;i++){ const input=document.createElement('input'); input.type='text'; input.placeholder='Guest full name'; input.className='guest-name-input'; input.style.marginBottom='8px'; gdiv.appendChild(input); }
       selectedNumber = n; postHeight();
     }
@@ -295,11 +306,14 @@
       selectedStatus = val;
       if(selectedStatus === 'Declined'){ selectedAttendees = []; buildReview(); showStep('review'); return; }
       if(currentMaxSeats <= 1){ selectedAttendees = [ titleCaseName(currentInvite.display_name) ]; showStep('transport'); return; }
-      const gdiv=document.getElementById('guestInputs'); if(!gdiv){ setError(attendeeError,'Please select number of attendees.'); postHeight(); return; }
+      // multi-seat: require number selected
+      const sel = document.getElementById('numSelect');
+      if(!sel || !sel.value){ setError(attendeeError,'Please choose how many people are attending.'); postHeight(); return; }
+      const gdiv=document.getElementById('guestInputs'); if(!gdiv){ setError(attendeeError,'Please choose how many people are attending.'); postHeight(); return; }
       const inputs = Array.from(gdiv.querySelectorAll('.guest-name-input'));
       const names = inputs.map(i=>i.value.trim()).filter(Boolean);
-      if(names.length < selectedNumber){ setError(attendeeError,'Please fill all guest name boxes for the number you selected.'); postHeight(); return; }
-      selectedAttendees = names.slice(0,selectedNumber).map(titleCaseName);
+      if(names.length < parseInt(sel.value,10)){ setError(attendeeError,'Please fill all guest name boxes for the number you selected.'); postHeight(); return; }
+      selectedAttendees = names.slice(0,parseInt(sel.value,10)).map(titleCaseName);
       showStep('transport');
     });
 
@@ -329,7 +343,7 @@
       const r = await jsonFetch(payload);
       submitBtn.disabled = false;
       if(!r || !r.ok){ reviewError.textContent = (r && r.error) ? r.error : 'Server error'; reviewError.style.display = ''; postHeight(); return; }
-      if(r.locked){ reviewError.textContent = "This invitation has already been responded to. If you need to change it please contact us: +1 778 977 4975 (WhatsApp/Viber)"; reviewError.style.display = ''; postHeight(); return; }
+      if(r.locked){ reviewError.textContent = "This invitation has already been responded to. If you need to change it please contact us: +1 778 XXX 4975 (WhatsApp/Viber)"; reviewError.style.display = ''; postHeight(); return; }
       if(selectedStatus === 'Attending') thanksMessage.innerHTML = "<strong>See you there — we're excited to celebrate with you!</strong><div class='small' style='margin-top:.5rem'>If you need to make changes, contact us: +1 778 977 4975 (WhatsApp/Viber)</div>";
       else thanksMessage.innerHTML = "<strong>We're sorry you can't join us.</strong><div class='small' style='margin-top:.5rem'>If you need to make changes, contact us: +1 778 977 4975 (WhatsApp/Viber)</div>";
       showStep('thanks');
@@ -354,12 +368,10 @@
       var mo = new MutationObserver(function(){ postHeight(); });
       mo.observe(document.body, { childList:true, subtree:true, attributes:true, characterData:true });
     } catch (e) {}
-    // Resize observer for layout changes
     try {
       var ro = new ResizeObserver(function(){ postHeight(); });
       ro.observe(document.documentElement);
     } catch (e) {}
-    // periodic fallback
     setInterval(postHeight, 1200);
 
     showStep('search'); nameInput.focus();
