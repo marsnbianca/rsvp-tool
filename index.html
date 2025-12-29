@@ -8,42 +8,46 @@
   <script>try{ if(window.self !== window.top) document.documentElement.setAttribute('data-embedded','true'); }catch(e){} </script>
 
   <style>
-    :root{
-      --bg:#fff; --muted:#666; --accent:#222; --danger:#c0392b;
-      --card-radius:10px; --content-max:680px;
+    :root {
+      --bg: #fff;
+      --muted: #666;
+      --accent: #222;
+      --danger: #c0392b;
+      --card-radius: 0.6rem;
+      --content-max: 42rem; /* ~672px when root font-size 16px */
     }
 
-    /* compact layout so content height stays small */
-    html,body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;color:#111;background:var(--bg);height:auto;}
-    .page-wrap{display:flex;align-items:center;justify-content:center;padding:3vw 2vw;}
-    .app-box{width:100%;max-width:var(--content-max);background:#fff;border-radius:var(--card-radius);box-shadow:0 8px 24px rgba(0,0,0,0.12);padding:.9rem;box-sizing:border-box;margin:0 auto}
-    :root[data-embedded="true"] .app-box{background:transparent;box-shadow:none;border-radius:0;padding:.7rem;max-width:100%;}
-    .content-column{max-width:620px;margin:0 auto;text-align:center;padding:6px 10px}
-    h1{margin:0;font-size:1.15rem}
-    .subhead{color:var(--muted);margin-top:6px;margin-bottom:10px;line-height:1.05;font-size:.95rem}
-    .prompt{color:var(--muted);margin-bottom:8px;text-align:center;display:block;font-size:.95rem}
-    .search-row{display:flex;gap:.4rem;margin-bottom:.15rem;justify-content:center}
-    .search-row input{flex:1;max-width:380px;padding:.5rem;border:1px solid #e5e5e5;border-radius:8px;font-size:.95rem}
-    .actions{display:flex;gap:.5rem;margin-top:14px;justify-content:center;align-items:center;padding-bottom:10px}
-    .actions-right{display:flex;gap:.5rem}
-    .btn{padding:.48rem .8rem;border-radius:8px;border:0;cursor:pointer;font-size:.95rem}
-    .btn.primary{background:var(--accent);color:#fff}
-    .btn.ghost{background:#f3f3f3;color:#111}
-    .error{color:var(--danger);font-size:.92rem;margin-top:6px;display:none;text-align:center}
-    .matches{margin:0 auto 8px;display:flex;flex-direction:column;gap:.4rem;align-items:center}
-    .match-btn{display:block;width:100%;max-width:460px;padding:.6rem;border:1px solid #f0f0f0;border-radius:8px;background:#fff;cursor:pointer;text-align:center;transition:all .12s;font-size:.95rem}
-    .match-btn:hover{background:#fafafa;transform:translateY(-2px)}
-    .form-row{display:flex;flex-direction:column;gap:.28rem;margin-bottom:.5rem;align-items:center}
-    label{font-size:.94rem;color:#333;text-align:left;width:100%;max-width:460px;display:block}
-    select,input,textarea{padding:.5rem;font-size:.95rem;border:1px solid #e6e6e6;border-radius:8px;width:100%;max-width:460px;box-sizing:border-box}
-    textarea{min-height:72px;resize:vertical}
-    .message{padding:.5rem;background:#e7f7e7;border:1px solid #bfe6bf;border-radius:8px;margin:.4rem 0;text-align:center}
-    .small{font-size:.88rem;color:var(--muted);margin-top:6px}
-    .loading-overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(255,255,255,0.7);border-radius:inherit;z-index:999}
-    .spinner{width:30px;height:30px;border-radius:50%;border:4px solid #eee;border-top-color:var(--accent);animation:spin 1s linear infinite}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    @media (max-width:540px){ .content-column{padding:6px 8px} .match-btn{max-width:100%} label,select,input,textarea{max-width:100%} }
-    input[type=tel]{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,"Roboto Mono",monospace}
+    /* Compact, block layout to keep height small and ensure labels/answers on separate lines */
+    html,body { margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; color:#111; background:var(--bg); height:auto; }
+    .page-wrap { display:flex; align-items:center; justify-content:center; padding:3.5vw 2vw; }
+    .app-box { width:100%; max-width:var(--content-max); background:#fff; border-radius:var(--card-radius); box-shadow:0 0.5rem 1.5rem rgba(0,0,0,0.12); padding:0.9rem; box-sizing:border-box; margin:0 auto; }
+    :root[data-embedded="true"] .app-box { background:transparent; box-shadow:none; border-radius:0; padding:0.7rem; max-width:100%; }
+    .content-column { max-width:40rem; margin:0 auto; text-align:center; padding:0.4rem 0.6rem; }
+    h1 { margin:0; font-size:1.05rem; }
+    .subhead { color:var(--muted); margin-top:0.4rem; margin-bottom:0.6rem; line-height:1.05; font-size:0.95rem; }
+    .prompt { color:var(--muted); margin-bottom:0.6rem; text-align:center; display:block; font-size:0.95rem; }
+    .search-row { display:flex; gap:0.5rem; margin-bottom:0.25rem; justify-content:center; }
+    .search-row input { flex:1; max-width:24rem; padding:0.45rem; border:1px solid #e5e5e5; border-radius:0.5rem; font-size:0.95rem; }
+    .actions { display:flex; gap:0.5rem; margin-top:0.9rem; justify-content:center; align-items:center; padding-bottom:0.6rem; }
+    .actions-right { display:flex; gap:0.5rem; }
+    .btn { padding:0.45rem 0.75rem; border-radius:0.5rem; border:0; cursor:pointer; font-size:0.95rem; }
+    .btn.primary { background:var(--accent); color:#fff; }
+    .btn.ghost { background:#f3f3f3; color:#111; }
+    .error { color:var(--danger); font-size:0.92rem; margin-top:0.4rem; display:none; text-align:center; }
+    .matches { margin:0 auto 0.6rem; display:flex; flex-direction:column; gap:0.4rem; align-items:center; }
+    .match-btn { display:block; width:100%; max-width:28.75rem; padding:0.6rem; border:1px solid #f0f0f0; border-radius:0.5rem; background:#fff; cursor:pointer; text-align:center; transition:all .12s; font-size:0.95rem; }
+    .match-btn:hover { background:#fafafa; transform:translateY(-2px); }
+    .form-row { display:flex; flex-direction:column; gap:0.25rem; margin-bottom:0.6rem; align-items:center; }
+    label { font-size:0.95rem; color:#333; text-align:left; width:100%; max-width:28.75rem; display:block; }
+    select,input,textarea { padding:0.5rem; font-size:0.95rem; border:1px solid #e6e6e6; border-radius:0.5rem; width:100%; max-width:28.75rem; box-sizing:border-box; }
+    textarea { min-height:5rem; resize:vertical; }
+    .message { padding:0.5rem; background:#e7f7e7; border:1px solid #bfe6bf; border-radius:0.5rem; margin:0.4rem 0; text-align:center; }
+    .small { font-size:0.88rem; color:var(--muted); margin-top:0.4rem; }
+    .loading-overlay { position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(255,255,255,0.7); border-radius:inherit; z-index:999; }
+    .spinner { width:1.9rem; height:1.9rem; border-radius:50%; border:0.25rem solid #eee; border-top-color:var(--accent); animation:spin 1s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    @media (max-width:540px) { .content-column { padding:0.4rem 0.6rem } .match-btn { max-width:100% } label,select,input,textarea { max-width:100% } }
+    input[type=tel]{ font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,"Roboto Mono",monospace; }
   </style>
 </head>
 <body>
@@ -159,7 +163,7 @@
         <div id="step-review" class="step" style="display:none">
           <span class="prompt">Please review your RSVP details before submitting.</span>
 
-          <div id="reviewSummary" class="form-row" style="text-align:center"></div>
+          <div id="reviewSummary" class="form-row" style="text-align:left"></div>
           <div id="reviewError" class="error" style="text-align:center"></div>
 
           <div class="actions">
@@ -197,7 +201,7 @@
       thanks: document.getElementById('step-thanks')
     };
 
-    // DOM refs
+    // refs
     const nameInput = document.getElementById('nameInput');
     const findBtn = document.getElementById('findBtn');
     const searchErr = document.getElementById('searchErr');
@@ -238,51 +242,49 @@
 
     const loadingOverlay = document.getElementById('loading');
 
-    // State
-    let currentInvite = null;
-    let currentMaxSeats = 1;
-    let selectedStatus = "";
-    let selectedNumber = 1;
-    let selectedAttendees = [];
-    let selectedTransport = "";
-    let selectedPhoneStored = "";
-    let selectedNotes = "";
+    let currentInvite = null, currentMaxSeats = 1, selectedStatus = "", selectedNumber = 1, selectedAttendees = [], selectedTransport = "", selectedPhoneStored = "", selectedNotes = "";
 
     function showStep(name){
       Object.values(steps).forEach(s=>s.style.display='none');
       if(steps[name]) steps[name].style.display = '';
-      const stepsWithBottomClose = new Set(['notInList','thanks','matches']); // 'matches' may include bottom Close when locked
+      // notify parent whether there is a bottom Close button on this step
+      const stepsWithBottomClose = new Set(['notInList','thanks']);
       notifyParentHasBottomClose(name, stepsWithBottomClose.has(name));
-      setTimeout(postHeight, 60);
+      // focus first interactive element for accessibility
+      setTimeout(() => focusFirstControl(name), 80);
+      setTimeout(postHeight, 80);
+    }
+
+    function focusFirstControl(stepName){
+      try {
+        const step = steps[stepName];
+        if(!step) return;
+        const first = step.querySelector('input,select,button,textarea');
+        if(first) first.focus();
+      } catch(_) {}
     }
 
     function setError(el, msg){
       if(!el) return;
-      if(msg){ el.textContent = msg; el.style.display = 'block'; }
-      else { el.textContent = ''; el.style.display = 'none'; }
+      if(msg){ el.textContent = msg; el.style.display = 'block'; } else { el.textContent = ''; el.style.display = 'none'; }
     }
     function loading(on){ loadingOverlay.style.display = on ? 'flex' : 'none'; }
 
     async function jsonFetch(payload){
       loading(true);
       try {
-        const res = await fetch(API_URL, {
-          method: "POST",
-          headers: {"Content-Type":"application/json"},
-          body: JSON.stringify(payload)
-        });
+        const res = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
         const txt = await res.text();
-        try { return JSON.parse(txt); } catch(e) { return { ok:false, error:"Invalid server response" }; }
-      } catch (err) { console.error(err); return { ok:false, error:"Network error" }; } finally { loading(false); }
+        try { return JSON.parse(txt); } catch(e){ return { ok:false, error:'Invalid server response' }; }
+      } catch(err){ console.error(err); return { ok:false, error:'Network error' }; } finally { loading(false); }
     }
 
     function titleCaseName(s){ s=String(s||'').replace(/\s+/g,' ').trim().toLowerCase(); if(!s) return ''; return s.split(/([\s\-'])/).map(p=> /[\s\-']/.test(p)?p: p.charAt(0).toUpperCase()+p.slice(1)).join(''); }
-
     function formatPhoneInput(v){ var d=String(v||'').replace(/\D+/g,''); if(d.indexOf('63')===0 && d.length>=12) d='0'+d.slice(2); if(d.indexOf('9')===0 && d.length===10) d='0'+d; d=d.slice(0,11); if(d.length<=2) return d; if(d.length<=4) return d.slice(0,4); if(d.length<=7) return d.slice(0,4)+' '+d.slice(4); return d.slice(0,4)+' '+d.slice(4,7)+' '+d.slice(7,11); }
     function normalizePhoneToStored(input){ var d=String(input||'').replace(/\D+/g,''); if(!d) return ''; if(d.indexOf('63')===0 && d.length>=12) d='0'+d.slice(2); if(d.indexOf('9')===0 && d.length===10) d='0'+d; d=d.slice(0,11); if(!/^09\d{9}$/.test(d)) return ''; return d.slice(0,4)+' '+d.slice(4,7)+' '+d.slice(7,11); }
 
     function notifyParentHasBottomClose(stepName, hasBottom) {
-      try { window.parent.postMessage({ type: 'RSVP:HAS_BOTTOM_CLOSE', hasBottomClose: !!hasBottom }, '*'); } catch(_) {}
+      try { window.parent.postMessage({ type:'RSVP:HAS_BOTTOM_CLOSE', hasBottomClose: !!hasBottom }, '*'); } catch(_) {}
     }
 
     var postTimer = null;
@@ -298,50 +300,46 @@
       } catch(e){}
     }
 
-    // Search
+    // ----- Search -----
     async function doFind(){
-      setError(searchErr,'');
-      matchesEl.innerHTML = '';
+      setError(searchErr,''); matchesEl.innerHTML = '';
       const q = (nameInput.value||'').trim();
       if(!q || q.length < 3){ setError(searchErr, 'Please type at least 3 characters.'); postHeight(); return; }
       findBtn.disabled = true;
-      const r = await jsonFetch({ action: 'find', name: q, client_id: 'guest-'+Date.now() });
+      const r = await jsonFetch({ action:'find', name: q, client_id: 'guest-'+Date.now() });
       findBtn.disabled = false;
       if(!r || !r.ok){ setError(searchErr, r && r.error ? r.error : 'Server error'); postHeight(); return; }
       if(!r.matches || r.matches.length === 0){ setError(searchErr, 'No matches found. Please try again.'); postHeight(); return; }
-
       matchesEl.innerHTML = '';
       r.matches.forEach(m=>{
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'match-btn';
-        btn.innerHTML = "<div><strong>" + escapeHtml(m.display_name) + "</strong></div>";
-        btn.addEventListener('click', function(){ selectInvite(m); });
+        const btn = document.createElement('button'); btn.type='button'; btn.className='match-btn';
+        btn.innerHTML = "<div><strong>"+escapeHtml(m.display_name)+"</strong></div>";
+        btn.addEventListener('click', ()=> selectInvite(m));
         matchesEl.appendChild(btn);
       });
       showStep('matches');
     }
 
-    if (dontSeeBtn) dontSeeBtn.addEventListener('click', function(){ showStep('notInList'); });
-    if (backToSearch) backToSearch.addEventListener('click', function(){ showStep('search'); });
+    // wire matches buttons
+    if (dontSeeBtn) dontSeeBtn.addEventListener('click', ()=> showStep('notInList'));
+    if (backToSearch) backToSearch.addEventListener('click', ()=> showStep('search'));
 
-    async function selectInvite(m) {
+    // ----- select invite -----
+    async function selectInvite(m){
       setError(searchErr,'');
-      const r = await jsonFetch({ action: 'get', invite_id: m.invite_id });
+      const r = await jsonFetch({ action:'get', invite_id: m.invite_id });
       if(!r || !r.ok){ setError(searchErr, r && r.error ? r.error : 'Server error'); postHeight(); return; }
 
       if(r.locked){
+        // show locked message and ONLY bottom Close
         matchesEl.innerHTML = "<div class='message'>This invitation has already been answered.</div>";
-        const wrapper = document.createElement('div');
-        wrapper.style.marginTop = '10px';
-        wrapper.style.display = 'flex';
-        wrapper.style.justifyContent = 'center';
-        const closeBtn = document.createElement('button');
-        closeBtn.className = 'btn primary';
-        closeBtn.textContent = 'Close';
+        const wrapper = document.createElement('div'); wrapper.style.marginTop='0.6rem'; wrapper.style.display='flex'; wrapper.style.justifyContent='center';
+        const closeBtn = document.createElement('button'); closeBtn.className='btn primary'; closeBtn.textContent='Close';
         closeBtn.addEventListener('click', function(){ try{ window.parent.postMessage({ type:'RSVP:CLOSE' }, '*'); }catch(_){} try{ window.close(); }catch(_){} });
         wrapper.appendChild(closeBtn);
         matchesEl.appendChild(wrapper);
+
+        // hide top buttons on parent (signal bottom close present)
         notifyParentHasBottomClose('matches', true);
         postHeight();
         return;
@@ -351,68 +349,52 @@
       currentInvite.invite_id = m.invite_id;
       currentMaxSeats = Math.min(currentInvite.max_seats ? parseInt(currentInvite.max_seats,10) : (m.max_seats || 1), 4);
       selectedStatus=''; selectedNumber=1; selectedAttendees=[]; selectedTransport=''; selectedPhoneStored=''; selectedNotes='';
-      attendanceSelect.value = '';
-      attendanceDynamic.innerHTML = '';
-      setError(attendeeError,'');
+      attendanceSelect.value=''; attendanceDynamic.innerHTML=''; setError(attendeeError,'');
       notifyParentHasBottomClose('attendance', false);
       showStep('attendance');
     }
 
-    // Attendance flow
-    attendanceBack.addEventListener('click', function(){ showStep('matches'); });
+    // Attendance
+    attendanceBack.addEventListener('click', ()=> showStep('matches'));
 
     attendanceSelect.addEventListener('change', function(){
-      setError(attendeeError,'');
-      attendanceDynamic.innerHTML = '';
-      const v = (attendanceSelect.value||'').trim();
+      setError(attendeeError,''); attendanceDynamic.innerHTML='';
+      const v=(attendanceSelect.value||'').trim();
       if(v === 'Attending'){
         if(currentMaxSeats <= 1){ postHeight(); return; }
-        const row = document.createElement('div'); row.className = 'form-row';
-        const lbl = document.createElement('label'); lbl.textContent = 'How many people are attending (including you)?';
-        const sel = document.createElement('select'); sel.id = 'numSelect';
-        const placeholder = document.createElement('option'); placeholder.value=''; placeholder.textContent='-- choose --'; sel.appendChild(placeholder);
-        for(let i=1;i<=currentMaxSeats;i++){ const opt = document.createElement('option'); opt.value=String(i); opt.textContent=String(i); sel.appendChild(opt); }
-        sel.value = '';
-        sel.addEventListener('change', function(){ renderGuestInputs(parseInt(sel.value,10) || 0); });
-        row.appendChild(lbl); row.appendChild(sel);
-        attendanceDynamic.appendChild(row);
-        const gdiv = document.createElement('div'); gdiv.id='guestInputs'; gdiv.style.marginTop='6px';
-        attendanceDynamic.appendChild(gdiv);
+        const row=document.createElement('div'); row.className='form-row';
+        const lbl=document.createElement('label'); lbl.textContent='How many people are attending (including you)?';
+        const sel=document.createElement('select'); sel.id='numSelect';
+        const placeholder=document.createElement('option'); placeholder.value=''; placeholder.textContent='-- choose --'; sel.appendChild(placeholder);
+        for(let i=1;i<=currentMaxSeats;i++){ const opt=document.createElement('option'); opt.value=String(i); opt.textContent=String(i); sel.appendChild(opt); }
+        sel.value='';
+        sel.addEventListener('change', ()=> renderGuestInputs(parseInt(sel.value,10) || 0));
+        row.appendChild(lbl); row.appendChild(sel); attendanceDynamic.appendChild(row);
+
+        const gdiv=document.createElement('div'); gdiv.id='guestInputs'; gdiv.style.marginTop='0.5rem'; attendanceDynamic.appendChild(gdiv);
         postHeight();
       } else {
-        attendanceDynamic.innerHTML = '';
-        postHeight();
+        attendanceDynamic.innerHTML=''; postHeight();
       }
     });
 
     function renderGuestInputs(n){
-      const gdiv = document.getElementById('guestInputs');
-      if(!gdiv) return;
-      gdiv.innerHTML = '';
-      if(!n || n < 1){ postHeight(); return; }
-      for(let i=0;i<n;i++){
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.placeholder = 'Guest full name';
-        input.className = 'guest-name-input';
-        input.style.marginBottom = '8px';
-        gdiv.appendChild(input);
-      }
-      selectedNumber = n;
-      postHeight();
+      const gdiv=document.getElementById('guestInputs'); if(!gdiv) return; gdiv.innerHTML='';
+      if(!n || n<1){ postHeight(); return; }
+      for(let i=0;i<n;i++){ const input=document.createElement('input'); input.type='text'; input.placeholder='Guest full name'; input.className='guest-name-input'; input.style.marginBottom='0.5rem'; gdiv.appendChild(input); }
+      selectedNumber = n; postHeight();
     }
 
     attendanceNext.addEventListener('click', function(){
       setError(attendeeError,'');
-      const val = (attendanceSelect.value||'').trim();
+      const val=(attendanceSelect.value||'').trim();
       if(!val){ setError(attendeeError,'Please choose whether you will attend or decline.'); postHeight(); return; }
       selectedStatus = val;
       if(selectedStatus === 'Declined'){ selectedAttendees = []; buildReview(); showStep('review'); return; }
       if(currentMaxSeats <= 1){ selectedAttendees = []; showStep('transport'); return; }
       const sel = document.getElementById('numSelect');
       if(!sel || !sel.value){ setError(attendeeError,'Please choose how many people are attending.'); postHeight(); return; }
-      const gdiv = document.getElementById('guestInputs');
-      if(!gdiv){ setError(attendeeError,'Please choose how many people are attending.'); postHeight(); return; }
+      const gdiv=document.getElementById('guestInputs'); if(!gdiv){ setError(attendeeError,'Please choose how many people are attending.'); postHeight(); return; }
       const inputs = Array.from(gdiv.querySelectorAll('.guest-name-input'));
       const names = inputs.map(i=>i.value.trim()).filter(Boolean);
       if(names.length < parseInt(sel.value,10)){ setError(attendeeError,'Please fill all guest name boxes.'); postHeight(); return; }
@@ -421,50 +403,35 @@
     });
 
     // Transport
-    transportBack.addEventListener('click', function(){ showStep('attendance'); });
-    transportNext.addEventListener('click', function(){
-      const v = (transportSelect.value||'').trim();
-      if(!v){ setError(attendeeError,'Please choose Yes or No for airport transfer.'); postHeight(); return; }
-      selectedTransport = v === 'Yes' ? 'Yes' : 'No';
-      setError(attendeeError,'');
-      showStep('phone');
-    });
+    transportBack.addEventListener('click', ()=> showStep('attendance'));
+    transportNext.addEventListener('click', function(){ const v=(transportSelect.value||'').trim(); if(!v){ setError(attendeeError,'Please choose Yes or No for airport transfer.'); postHeight(); return; } selectedTransport = v==='Yes'?'Yes':'No'; setError(attendeeError,''); showStep('phone'); });
 
     // Phone
-    phoneInput.addEventListener('input', function(){ phoneInput.value = formatPhoneInput(phoneInput.value); postHeight(); });
-    phoneBack.addEventListener('click', function(){ showStep('transport'); });
-    phoneNext.addEventListener('click', function(){
-      setError(phoneErr,'');
-      if(selectedStatus === 'Attending'){
-        const s = normalizePhoneToStored(phoneInput.value);
-        if(!s){ setError(phoneErr,'Phone must be 11 digits starting with 09 (e.g. 0917 123 4567)'); postHeight(); return; }
-        selectedPhoneStored = s;
-      } else selectedPhoneStored = '';
-      showStep('notes');
-    });
+    phoneInput.addEventListener('input', ()=> { phoneInput.value = formatPhoneInput(phoneInput.value); postHeight(); });
+    phoneBack.addEventListener('click', ()=> showStep('transport'));
+    phoneNext.addEventListener('click', function(){ setError(phoneErr,''); if(selectedStatus==='Attending'){ const s = normalizePhoneToStored(phoneInput.value); if(!s){ setError(phoneErr,'Phone must be 11 digits starting with 09 (e.g. 0917 123 4567)'); postHeight(); return; } selectedPhoneStored = s; } else selectedPhoneStored=''; showStep('notes'); });
 
     // Notes
-    notesBack.addEventListener('click', function(){ showStep('phone'); });
-    notesNext.addEventListener('click', function(){ selectedNotes = (notesInput.value||'').trim(); buildReview(); showStep('review'); });
+    notesBack.addEventListener('click', ()=> showStep('phone'));
+    notesNext.addEventListener('click', ()=> { selectedNotes = (notesInput.value||'').trim(); buildReview(); showStep('review'); });
 
     // Review
-    reviewBack.addEventListener('click', function(){ showStep('attendance'); });
-
+    reviewBack.addEventListener('click', ()=> showStep('attendance'));
     function buildReview(){
       const statusText = selectedStatus === 'Attending' ? 'ATTENDING' : 'DECLINED';
-      let html = "<div style='font-weight:700'>" + escapeHtml(currentInvite.display_name) + "</div>";
-      html += "<div style='margin-top:6px;font-weight:600'>" + statusText + "</div>";
+      let html = "<div style='font-weight:700'>"+escapeHtml(currentInvite.display_name)+"</div>";
+      html += "<div style='margin-top:0.4rem;font-weight:600'>"+statusText+"</div>";
 
       if(selectedStatus === 'Attending'){
         if(currentMaxSeats > 1){
-          html += "<div style='margin-top:.6rem'><strong>Guest names:</strong><ul style='list-style:none;padding:0;margin:8px 0'>";
-          selectedAttendees.forEach(n => html += "<li>"+escapeHtml(n)+"</li>");
+          html += "<div style='margin-top:.5rem'><strong>Guest names:</strong><ul style='list-style:none;padding:0;margin:8px 0'>";
+          selectedAttendees.forEach(n=> html += "<li>"+escapeHtml(n)+"</li>");
           html += "</ul></div>";
         }
-        html += "<div style='margin-top:.25rem'><strong>Airport transfer:</strong> "+escapeHtml(selectedTransport)+"</div>";
-        html += "<div style='margin-top:.25rem'><strong>Phone:</strong> "+escapeHtml(selectedPhoneStored)+"</div>";
+        html += "<div style='margin-top:0.25rem'><strong>Airport transfer:</strong> "+escapeHtml(selectedTransport)+"</div>";
+        html += "<div style='margin-top:0.25rem'><strong>Phone:</strong> "+escapeHtml(selectedPhoneStored)+"</div>";
       }
-      if(selectedNotes) html += "<div style='margin-top:.4rem'><strong>Notes:</strong> "+escapeHtml(selectedNotes)+"</div>";
+      if(selectedNotes) html += "<div style='margin-top:0.4rem'><strong>Notes:</strong> "+escapeHtml(selectedNotes)+"</div>";
       reviewSummary.innerHTML = html;
       reviewError.style.display = 'none';
       postHeight();
@@ -473,23 +440,14 @@
     // Submit
     submitBtn.addEventListener('click', async function(){
       reviewError.style.display = 'none';
-      const payload = {
-        action: 'submit',
-        invite_id: currentInvite.invite_id,
-        status: selectedStatus,
-        attending_count: (selectedStatus === 'Attending' ? (currentMaxSeats <= 1 ? 1 : Math.min(selectedAttendees.length, currentMaxSeats)) : 0),
-        attendees: (selectedStatus === 'Attending' ? (currentMaxSeats <= 1 ? [ titleCaseName(currentInvite.display_name) ] : selectedAttendees.slice(0, currentMaxSeats)) : []),
-        phone: (selectedStatus === 'Attending' ? selectedPhoneStored : ""),
-        transportation: (selectedStatus === 'Attending' ? selectedTransport : ""),
-        notes: selectedNotes || ""
-      };
+      const payload = { action:'submit', invite_id: currentInvite.invite_id, status:selectedStatus, attending_count:(selectedStatus==='Attending'?(currentMaxSeats<=1?1:Math.min(selectedAttendees.length,currentMaxSeats)):0), attendees:(selectedStatus==='Attending'?(currentMaxSeats<=1?[ titleCaseName(currentInvite.display_name) ]:selectedAttendees.slice(0,currentMaxSeats)):[]), phone:(selectedStatus==='Attending'?selectedPhoneStored:''), transportation:(selectedStatus==='Attending'?selectedTransport:''), notes:selectedNotes||'' };
       submitBtn.disabled = true;
       const r = await jsonFetch(payload);
       submitBtn.disabled = false;
       if(!r || !r.ok){ reviewError.textContent = (r && r.error) ? r.error : 'Server error'; reviewError.style.display = ''; postHeight(); return; }
       if(r.locked){ reviewError.textContent = "This invitation has already been responded to."; reviewError.style.display = ''; postHeight(); return; }
-      if(selectedStatus === 'Attending') thanksMessage.innerHTML = "<strong>See you there — we're excited to celebrate with you!</strong><div class='small' style='margin-top:.5rem'>If you need to make changes, contact us: +1 778 977 4975 (WhatsApp/Viber)</div>";
-      else thanksMessage.innerHTML = "<strong>We're sorry you can't join us.</strong><div class='small' style='margin-top:.5rem'>If you need to make changes, contact us: +1 778 977 4975 (WhatsApp/Viber)</div>";
+      if(selectedStatus === 'Attending') thanksMessage.innerHTML = "<strong>See you there — we're excited to celebrate with you!</strong><div class='small' style='margin-top:.4rem'>If you need to make changes, contact us: +1 778 977 4975 (WhatsApp/Viber)</div>";
+      else thanksMessage.innerHTML = "<strong>We're sorry you can't join us.</strong><div class='small' style='margin-top:.4rem'>If you need to make changes, contact us: +1 778 977 4975 (WhatsApp/Viber)</div>";
       notifyParentHasBottomClose('thanks', true);
       showStep('thanks');
     });
@@ -505,13 +463,11 @@
     try { var ro = new ResizeObserver(function(){ postHeight(); }); ro.observe(document.documentElement); } catch(e){}
     setInterval(postHeight, 1200);
 
-    window.addEventListener('message', function(e){ try { if(e && e.data && e.data.type === 'RSVP:REQUEST_HEIGHT') postHeight(); } catch(_) {} });
+    window.addEventListener('message', function (e) { try { if (e && e.data && e.data.type === 'RSVP:REQUEST_HEIGHT') postHeight(); } catch (_) {} });
 
     function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
 
-    function notifyParentHasBottomClose(stepName, hasBottom) {
-      try { window.parent.postMessage({ type: 'RSVP:HAS_BOTTOM_CLOSE', hasBottomClose: !!hasBottom }, '*'); } catch(_) {}
-    }
+    function notifyParentHasBottomClose(stepName, hasBottom) { try { window.parent.postMessage({ type:'RSVP:HAS_BOTTOM_CLOSE', hasBottomClose: !!hasBottom }, '*'); } catch(_) {} }
 
     showStep('search');
     try { nameInput.focus(); } catch(_) {}
