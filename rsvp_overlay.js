@@ -1,7 +1,8 @@
 <script>
 (function () {
   var RSVP_ORIGIN = "https://marsnbianca.github.io"; // parent site origin (for origin checks)
-  var RSVP_URL = "https://script.google.com/macros/s/AKfycbzdV48pD-cQn5O_lNhnqh1ijjaTbyMG0IIAu2HAWLe2BXxBAWfpTl2Evc1w2S6uX3VP/exec"; // <-- your deployed Apps Script URL
+  var RSVP_URL = "https://marsnbianca.github.io/rsvp-tool/"
+  // var RSVP_URL = "https://script.google.com/macros/s/AKfycbzdV48pD-cQn5O_lNhnqh1ijjaTbyMG0IIAu2HAWLe2BXxBAWfpTl2Evc1w2S6uX3VP/exec"; // <-- your deployed Apps Script URL
 
   var host = document.createElement("div");
   host.id = "rsvpHostOverlay";
