@@ -5,154 +5,159 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Mars + Bianca — RSVP</title>
 
-  <script>try{ if(window.self !== window.top) document.documentElement.setAttribute('data-embedded','true'); }catch(e){} </script>
+  <script>
+    // Mark embedded and provide --dvh (dynamic viewport) support for mobile address-bar reflows
+    try {
+      if (window.self !== window.top) document.documentElement.setAttribute('data-embedded', 'true');
+    } catch (e) {}
+  </script>
 
-<style>
-  :root {
-    --bg: #fff;
-    --muted: #666;
-    --accent: #222;
-    --danger: #c0392b;
-    --card-radius: 0.6rem;
-    --content-max: 42rem;
-    /* --dvh will be set by JS to 1% of the dynamic viewport height */
-  }
+  <style>
+    :root {
+      --bg: #fff;
+      --muted: #666;
+      --accent: #222;
+      --danger: #c0392b;
+      --card-radius: 0.6rem;
+      --content-max: 42rem;
+      /* --dvh will be set by JS to 1% of the dynamic viewport height */
+    }
 
-  /* Basic page reset and font */
-  html, body {
-    height: 100%;
-    margin: 0;
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial;
-    color: #111;
-    background: var(--bg);
-  }
+    /* Basic page reset and font */
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+      color: #111;
+      background: var(--bg);
+    }
 
-  /* sticky modal header */
-.modal-header {
-  position: sticky;
-  top: 0.6rem;                  /* keeps top padding (adjust as needed) */
-  z-index: 5;                   /* sit above content when stuck */
-  display: block;
-  background: rgba(255,255,255,0.95); /* keeps header readable when translucent */
-  -webkit-backdrop-filter: blur(4px);
-  backdrop-filter: blur(4px);
-  padding-top: 0.4rem;
-  padding-bottom: 0.45rem;
-  margin-bottom: 0.4rem;        /* spacing between header and step content */
-  border-radius: 0.35rem;       /* small rounding so header blends with card */
-}
+    /* Page wrap uses dynamic viewport so centering works with mobile address bars */
+    .page-wrap {
+      min-height: calc(var(--dvh, 1vh) * 100);
+      display: flex;
+      align-items: center;    /* vertical centering */
+      justify-content: center;/* horizontal centering */
+      padding: 3.5vw 2vw;
+      box-sizing: border-box;
+    }
 
-/* keep header text layout consistent */
-.modal-header h1 { margin: 0; font-size: 1.05rem; }
-.modal-header .subhead { margin-top: 0.25rem; color: var(--muted); font-size: 0.95rem; line-height:1.05; }
+    /* Card: center its content and allow shrinking on small content */
+    .app-box {
+      width: 100%;
+      max-width: var(--content-max);
+      background: #fff;
+      border-radius: var(--card-radius);
+      box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.12);
+      padding: 0.9rem;
+      box-sizing: border-box;
+      margin: 0 auto;
 
-/* On very small viewports, reduce the top offset so header doesn't hide too much */
-@media (max-width: 420px) {
-  .modal-header { top: 0.45rem; padding-top: 0.35rem; padding-bottom: 0.4rem; margin-bottom: 0.35rem; }
-}
-  
-  /* Page wrap uses dynamic viewport so centering works with mobile address bars */
-  .page-wrap {
-    min-height: calc(var(--dvh, 1vh) * 100);
-    display: flex;
-    align-items: center;    /* vertical centering */
-    justify-content: center;/* horizontal centering */
-    padding: 3.5vw 2vw;
-    box-sizing: border-box;
-  }
+      display: flex;
+      align-items: center;     /* vertically center content-column */
+      justify-content: center; /* horizontally center content-column */
+      min-height: 0;           /* allow shrinking when content is small */
+      position: relative;      /* ensure stacking context for sticky header */
+      isolation: isolate;      /* create a stacking context so header z-index lives above content */
+    }
 
-  /* Card: center its content and allow shrinking on small content */
-  .app-box {
-    width: 100%;
-    max-width: var(--content-max);
-    background: #fff;
-    border-radius: var(--card-radius);
-    box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.12);
-    padding: 0.9rem;
-    box-sizing: border-box;
-    margin: 0 auto;
+    /* Embedded (when in iframe) remove outer card chrome */
+    :root[data-embedded="true"] .app-box {
+      background: transparent;
+      box-shadow: none;
+      border-radius: 0;
+      padding: 0.7rem;
+      max-width: 100%;
+    }
 
-    display: flex;
-    align-items: center;     /* vertically center content-column */
-    justify-content: center; /* horizontally center content-column */
-    min-height: 0;           /* allow shrinking when content is small */
-  }
+    /* sticky modal header - improved to prevent content overlapping */
+    .modal-header {
+      position: sticky;
+      top: 0.6rem;                           /* space from modal top, adjust if needed */
+      z-index: 10000;                        /* very high so content can't overlap */
+      display: block;
+      background: #fff;                      /* opaque white prevents underlying content from showing through */
+      -webkit-backdrop-filter: blur(4px);
+      backdrop-filter: blur(4px);
+      padding-top: 0.4rem;
+      padding-bottom: 0.45rem;
+      margin-bottom: 0.4rem;                 /* spacing between header and step content */
+      border-radius: 0.35rem;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06); /* subtle separation so content doesn't appear on top */
+    }
+    .modal-header h1 { margin: 0; font-size: 1.05rem; }
+    .modal-header .subhead { margin-top: 0.25rem; color: var(--muted); font-size: 0.95rem; line-height:1.05; }
 
-  /* Embedded (when in iframe) remove outer card chrome */
-  :root[data-embedded="true"] .app-box {
-    background: transparent;
-    box-shadow: none;
-    border-radius: 0;
-    padding: 0.7rem;
-    max-width: 100%;
-  }
+    @media (max-width: 420px) {
+      .modal-header { top: 0.45rem; padding-top: 0.35rem; padding-bottom: 0.4rem; margin-bottom: 0.35rem; }
+    }
 
-  /* Content column centers the active step vertically */
-  .content-column {
-    width: 100%;
-    max-width: 40rem;
-    margin: 0 auto;
-    padding: 0.4rem 0.6rem;
-    text-align: center;
+    /* Content column centers the active step vertically */
+    .content-column {
+      width: 100%;
+      max-width: 40rem;
+      margin: 0 auto;
+      padding: 0.4rem 0.6rem;
+      text-align: center;
 
-    display: flex;
-    flex-direction: column;
-    justify-content: center; /* vertical centering of active step content */
-    align-items: stretch;    /* inputs stretch to full width */
-    box-sizing: border-box;
-  }
+      display: flex;
+      flex-direction: column;
+      justify-content: center; /* vertical centering of active step content */
+      align-items: stretch;    /* inputs stretch to full width */
+      box-sizing: border-box;
+    }
 
-  /* Steps: hide by default, display active step as a centered flex column */
-  .step { display: none; }
-  .step.active {
-    display: flex;
-    flex-direction: column;
-    justify-content: center; /* centers content vertically inside step */
-    align-items: stretch;
-    box-sizing: border-box;
-    /* small relative minimum so very tiny layouts don't collapse */
-    min-height: calc(var(--dvh, 1vh) * 20);
-  }
+    /* Steps: hide by default, display active step as a centered flex column */
+    .step { display: none; }
+    .step.active {
+      display: flex;
+      flex-direction: column;
+      justify-content: center; /* centers content vertically inside step */
+      align-items: stretch;
+      box-sizing: border-box;
+      /* small relative minimum so very tiny layouts don't collapse */
+      min-height: calc(var(--dvh, 1vh) * 20);
+    }
 
-  /* Desktop/tablet tweaks for step minimum */
-  @media (min-width:641px) {
-    .step.active { min-height: 18rem; } /* slightly larger minimum on larger screens */
-  }
+    /* Desktop/tablet tweaks for step minimum */
+    @media (min-width:641px) {
+      .step.active { min-height: 18rem; } /* slightly larger minimum on larger screens */
+    }
 
-  /* Preserve your visual styles (inputs, buttons, messages, etc.) */
-  h1 { margin:0; font-size:1.05rem; }
-  .subhead { color:var(--muted); margin-top:0.4rem; margin-bottom:0.6rem; line-height:1.05; font-size:0.95rem; }
-  .prompt { color:var(--muted); margin-bottom:0.6rem; text-align:center; display:block; font-size:0.95rem; }
-  .search-row { display:flex; gap:0.5rem; margin-bottom:0.25rem; justify-content:center; }
-  .search-row input { flex:1; max-width:24rem; padding:0.45rem; border:1px solid #e5e5e5; border-radius:0.5rem; font-size:0.95rem; }
-  .actions { display:flex; gap:0.5rem; margin-top:0.9rem; justify-content:center; align-items:center; padding-bottom:0.6rem; }
-  .actions-right { display:flex; gap:0.5rem; }
-  .btn { padding:0.45rem 0.75rem; border-radius:0.5rem; border:0; cursor:pointer; font-size:0.95rem; }
-  .btn.primary { background:var(--accent); color:#fff; }
-  .btn.ghost { background:#f3f3f3; color:#111; }
-  .error { color:var(--danger); font-size:0.92rem; margin-top:0.4rem; display:none; text-align:center; }
-  .matches { margin:0 auto 0.6rem; display:flex; flex-direction:column; gap:0.4rem; align-items:center; }
-  .match-btn { display:block; width:100%; max-width:28.75rem; padding:0.6rem; border:1px solid #f0f0f0; border-radius:0.5rem; background:#fff; cursor:pointer; text-align:center; transition:all .12s; font-size:0.95rem; }
-  .match-btn:hover { background:#fafafa; transform:translateY(-2px); }
-  .form-row { display:flex; flex-direction:column; gap:0.25rem; margin-bottom:0.6rem; align-items:center; }
-  label { font-size:0.95rem; color:#333; text-align:left; width:100%; max-width:28.75rem; display:block; }
-  select,input,textarea { padding:0.5rem; font-size:0.95rem; border:1px solid #e6e6e6; border-radius:0.5rem; width:100%; max-width:28.75rem; box-sizing:border-box; }
-  textarea { min-height:5rem; resize:vertical; }
-  .message { padding:0.5rem; background:#e7f7e7; border:1px solid #bfe6bf; border-radius:0.5rem; margin:0.4rem 0; text-align:center; }
-  .small { font-size:0.88rem; color:var(--muted); margin-top:0.4rem; }
-  .loading-overlay { position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(255,255,255,0.7); border-radius:inherit; z-index:999; }
-  .spinner { width:1.9rem; height:1.9rem; border-radius:50%; border:0.25rem solid #eee; border-top-color:var(--accent); animation:spin 1s linear infinite; }
-  @keyframes spin { to { transform:rotate(360deg); } }
+    /* Preserve your visual styles (inputs, buttons, messages, etc.) */
+    h1 { margin:0; font-size:1.05rem; }
+    .subhead { color:var(--muted); margin-top:0.4rem; margin-bottom:0.6rem; line-height:1.05; font-size:0.95rem; }
+    .prompt { color:var(--muted); margin-bottom:0.6rem; text-align:center; display:block; font-size:0.95rem; }
+    .search-row { display:flex; gap:0.5rem; margin-bottom:0.25rem; justify-content:center; }
+    .search-row input { flex:1; max-width:24rem; padding:0.45rem; border:1px solid #e5e5e5; border-radius:0.5rem; font-size:0.95rem; }
+    .actions { display:flex; gap:0.5rem; margin-top:0.9rem; justify-content:center; align-items:center; padding-bottom:0.6rem; }
+    .actions-right { display:flex; gap:0.5rem; }
+    .btn { padding:0.45rem 0.75rem; border-radius:0.5rem; border:0; cursor:pointer; font-size:0.95rem; }
+    .btn.primary { background:var(--accent); color:#fff; }
+    .btn.ghost { background:#f3f3f3; color:#111; }
+    .error { color:var(--danger); font-size:0.92rem; margin-top:0.4rem; display:none; text-align:center; }
+    .matches { margin:0 auto 0.6rem; display:flex; flex-direction:column; gap:0.4rem; align-items:center; }
+    .match-btn { display:block; width:100%; max-width:28.75rem; padding:0.6rem; border:1px solid #f0f0f0; border-radius:0.5rem; background:#fff; cursor:pointer; text-align:center; transition:all .12s; font-size:0.95rem; }
+    .match-btn:hover { background:#fafafa; transform:translateY(-2px); }
+    .form-row { display:flex; flex-direction:column; gap:0.25rem; margin-bottom:0.6rem; align-items:center; }
+    label { font-size:0.95rem; color:#333; text-align:left; width:100%; max-width:28.75rem; display:block; }
+    select,input,textarea { padding:0.5rem; font-size:0.95rem; border:1px solid #e6e6e6; border-radius:0.5rem; width:100%; max-width:28.75rem; box-sizing:border-box; }
+    textarea { min-height:5rem; resize:vertical; }
+    .message { padding:0.5rem; background:#e7f7e7; border:1px solid #bfe6bf; border-radius:0.5rem; margin:0.4rem 0; text-align:center; }
+    .small { font-size:0.88rem; color:var(--muted); margin-top:0.4rem; }
+    .loading-overlay { position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(255,255,255,0.7); border-radius:inherit; z-index:999; }
+    .spinner { width:1.9rem; height:1.9rem; border-radius:50%; border:0.25rem solid #eee; border-top-color:var(--accent); animation:spin 1s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
 
-  /* When content grows taller than viewport, allow natural scrolling inside the iframe/page */
-  @media (max-width:540px) {
-    .content-column { padding:0.4rem 0.6rem; }
-    .match-btn { max-width:100%; }
-    label, select, input, textarea { max-width:100%; }
-  }
+    /* When content grows taller than viewport, allow natural scrolling inside the iframe/page */
+    @media (max-width:540px) {
+      .content-column { padding:0.4rem 0.6rem; }
+      .match-btn { max-width:100%; }
+      label, select, input, textarea { max-width:100%; }
+    }
 
-  input[type=tel]{ font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,"Roboto Mono",monospace; }
-</style>
+    input[type=tel]{ font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,"Roboto Mono",monospace; }
+  </style>
 </head>
 <body>
   <div class="page-wrap">
@@ -160,126 +165,105 @@
       <div id="loading" class="loading-overlay"><div class="spinner" aria-hidden="true"></div></div>
 
       <div class="content-column">
-        <header class="modal-header" role="banner" aria-label="Event header">
-  <h1>Mars + Bianca</h1>
-  <div class="subhead">Nuuk Taal<br>October 15, 2027</div>
-</header>
 
-        <!-- Search -->
+        <!-- Sticky header -->
+        <header class="modal-header" role="banner" aria-label="Event header">
+          <h1>Mars + Bianca</h1>
+          <div class="subhead">Nuuk Taal<br>October 15, 2027</div>
+        </header>
+
+        <!-- Steps -->
         <div id="step-search" class="step active">
           <span class="prompt">Please enter the name shown on your invitation to find your RSVP record.</span>
-
           <div class="search-row">
             <input id="nameInput" placeholder="Type your name" autocomplete="name" />
           </div>
           <div id="searchErr" class="error" aria-live="polite"></div>
-
           <div class="actions">
             <div class="actions-right"><button id="findBtn" class="btn primary">Find</button></div>
           </div>
         </div>
 
-        <!-- Matches -->
-        <div id="step-matches" class="step" style="display:none">
+        <div id="step-matches" class="step">
           <span class="prompt">We found matching names — please select your name below to continue.</span>
           <div id="matches" class="matches" aria-live="polite"></div>
-
           <div class="actions">
             <button id="dontSeeBtn" class="btn ghost">I don't see my name</button>
             <div class="actions-right"><button id="backToSearch" class="btn ghost">Back</button></div>
           </div>
         </div>
 
-        <!-- Not in list -->
-        <div id="step-not-in-list" class="step" style="display:none">
+        <div id="step-not-in-list" class="step">
           <span class="prompt">If your name isn't listed here, please contact us and we'll confirm your invitation status.</span>
           <div class="message"><strong>Can't find your name?</strong><div class="small" style="margin-top:.4rem">Contact: +1 778 977 4975 (WhatsApp / Viber)</div></div>
-
           <div class="actions">
             <button id="notInListBack" class="btn ghost">Back</button>
             <div class="actions-right"><button id="notInListClose" class="btn primary">Close</button></div>
           </div>
         </div>
 
-        <!-- Attendance -->
-        <div id="step-attendance" class="step" style="display:none">
+        <div id="step-attendance" class="step">
           <span class="prompt">Please tell us whether you will join us for the celebration.</span>
-
           <div class="form-row">
             <label for="attendanceSelect">Will you be joining us?</label>
             <select id="attendanceSelect"><option value="">-- choose --</option><option value="Attending">Yes — I/we will attend</option><option value="Declined">Regretfully decline</option></select>
           </div>
-
           <div id="attendanceDynamic" style="margin-top:.4rem"></div>
           <div id="attendeeError" class="error"></div>
-
           <div class="actions">
             <button id="attendanceBack" class="btn ghost">Back</button>
             <div class="actions-right"><button id="attendanceNext" class="btn primary">Next</button></div>
           </div>
         </div>
 
-        <!-- Transport -->
-        <div id="step-transport" class="step" style="display:none">
+        <div id="step-transport" class="step">
           <span class="prompt">We offer airport transfer from NAIA to Club Balai Isabel. Please let us know if you need it.</span>
-
           <div class="form-row">
             <label for="transportSelect">Do you need airport transfer from NAIA to Club Balai Isabel (Batangas)?</label>
             <select id="transportSelect"><option value="">-- choose --</option><option value="Yes">Yes — I/We need airport transfer</option><option value="No">No — we don't need airport transfer</option></select>
           </div>
-
           <div class="actions">
             <button id="transportBack" class="btn ghost">Back</button>
             <div class="actions-right"><button id="transportNext" class="btn primary">Next</button></div>
           </div>
         </div>
 
-        <!-- Phone -->
-        <div id="step-phone" class="step" style="display:none">
+        <div id="step-phone" class="step">
           <span class="prompt">Please give the best Philippine mobile number where we can reach you if needed.</span>
-
           <div class="form-row">
             <label for="phoneInput">Phone (PH format)</label>
             <input id="phoneInput" type="tel" placeholder="09" />
             <div id="phoneErr" class="error"></div>
           </div>
-
           <div class="actions">
             <button id="phoneBack" class="btn ghost">Back</button>
             <div class="actions-right"><button id="phoneNext" class="btn primary">Next</button></div>
           </div>
         </div>
 
-        <!-- Notes -->
-        <div id="step-notes" class="step" style="display:none">
+        <div id="step-notes" class="step">
           <span class="prompt">Optional — share dietary restrictions, song requests, or a short message.</span>
-
           <div class="form-row">
             <label for="notesInput">Notes (optional — dietary, song requests)</label>
             <textarea id="notesInput" placeholder="E.g. vegetarian, song request..."></textarea>
           </div>
-
           <div class="actions">
             <button id="notesBack" class="btn ghost">Back</button>
             <div class="actions-right"><button id="notesNext" class="btn primary">Review</button></div>
           </div>
         </div>
 
-        <!-- Review -->
-        <div id="step-review" class="step" style="display:none">
+        <div id="step-review" class="step">
           <span class="prompt">Please review your RSVP details before submitting.</span>
-
           <div id="reviewSummary" class="form-row" style="text-align:left"></div>
           <div id="reviewError" class="error" style="text-align:center"></div>
-
           <div class="actions">
             <button id="reviewBack" class="btn ghost">Back</button>
             <div class="actions-right"><button id="submitBtn" class="btn primary">Submit RSVP</button></div>
           </div>
         </div>
 
-        <!-- Thanks -->
-        <div id="step-thanks" class="step" style="display:none">
+        <div id="step-thanks" class="step">
           <span class="prompt">Thank you — your response is recorded.</span>
           <div id="thanksMessage" class="message" style="text-align:center"></div>
           <div class="actions">
@@ -294,6 +278,23 @@
   <script>
   (function () {
     const API_URL = "https://rsvp-proxy.marsnbianca.workers.dev/"; // <-- replace with your Worker URL
+
+    // set --dvh on the child side too (helps parent and content sizing on mobile)
+    function updateDvh() {
+      try {
+        const dv = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--dvh', dv + 'px');
+      } catch (_) {}
+    }
+    updateDvh();
+    window.addEventListener('resize', updateDvh);
+    window.addEventListener('orientationchange', updateDvh);
+    if (window.visualViewport) {
+      try {
+        window.visualViewport.addEventListener('resize', updateDvh);
+        window.visualViewport.addEventListener('scroll', updateDvh);
+      } catch (_) {}
+    }
 
     const steps = {
       search: document.getElementById('step-search'),
@@ -350,30 +351,21 @@
 
     let currentInvite = null, currentMaxSeats = 1, selectedStatus = "", selectedNumber = 1, selectedAttendees = [], selectedTransport = "", selectedPhoneStored = "", selectedNotes = "";
 
+    // showStep now toggles 'active' class so CSS can center steps reliably
     function showStep(name) {
-  // Remove 'active' from all steps and clear inline display (in case some steps had style="display:none")
-  Object.values(steps).forEach(function(s) {
-    if (!s) return;
-    s.classList.remove('active');
-    s.style.display = ''; // clear inline display so CSS controls visibility
-  });
-
-  // Add 'active' to the requested step (if it exists)
-  if (steps[name]) {
-    steps[name].classList.add('active');
-    steps[name].style.display = ''; // ensure no inline blocking display
-  }
-
-  // Notify parent whether this step includes a bottom Close button
-  const stepsWithBottomClose = new Set(['notInList','thanks']);
-  notifyParentHasBottomClose(name, stepsWithBottomClose.has(name));
-
-  // Focus first control and post height after layout settles
-  setTimeout(function() {
-    focusFirstControl(name);
-    postHeight();
-  }, 80);
-}
+      Object.values(steps).forEach(function(s) {
+        if (!s) return;
+        s.classList.remove('active');
+        s.style.display = ''; // clear inline display to let CSS control visibility
+      });
+      if (steps[name]) {
+        steps[name].classList.add('active');
+        steps[name].style.display = ''; // ensure no inline blocking display
+      }
+      const stepsWithBottomClose = new Set(['notInList','thanks']);
+      notifyParentHasBottomClose(name, stepsWithBottomClose.has(name));
+      setTimeout(function() { focusFirstControl(name); postHeight(); }, 80);
+    }
 
     function focusFirstControl(stepName){
       try {
@@ -442,8 +434,6 @@
     // FIX: ensure notInList Back button works
     if (notInListBack) {
       notInListBack.addEventListener('click', function(){
-        // Going back from "I don't see my name" should return to the matches screen
-        // and notify parent that bottom-close is not present on matches.
         showStep('matches');
       });
     }
@@ -454,7 +444,6 @@
       if(!r || !r.ok){ setError(searchErr, r && r.error ? r.error : 'Server error'); postHeight(); return; }
 
       if(r.locked){
-        // show locked message and ONLY bottom Close
         matchesEl.innerHTML = "<div class='message'>This invitation has already been answered.</div>";
         const wrapper = document.createElement('div'); wrapper.style.marginTop='0.6rem'; wrapper.style.display='flex'; wrapper.style.justifyContent='center';
         const closeBtn = document.createElement('button'); closeBtn.className='btn primary'; closeBtn.textContent='Close';
