@@ -57,8 +57,7 @@
       align-items: center;     /* vertically center content-column */
       justify-content: center; /* horizontally center content-column */
       min-height: 0;           /* allow shrinking when content is small */
-      position: relative;      /* ensure stacking context for sticky header */
-      isolation: isolate;      /* create a stacking context so header z-index lives above content */
+      position: relative;
     }
 
     /* Embedded (when in iframe) remove outer card chrome */
@@ -68,28 +67,6 @@
       border-radius: 0;
       padding: 0.7rem;
       max-width: 100%;
-    }
-
-    /* sticky modal header - improved to prevent content overlapping */
-    .modal-header {
-      position: sticky;
-      top: 0.6rem;                           /* space from modal top, adjust if needed */
-      z-index: 10000;                        /* very high so content can't overlap */
-      display: block;
-      background: #fff;                      /* opaque white prevents underlying content from showing through */
-      -webkit-backdrop-filter: blur(4px);
-      backdrop-filter: blur(4px);
-      padding-top: 0.4rem;
-      padding-bottom: 0.45rem;
-      margin-bottom: 0.4rem;                 /* spacing between header and step content */
-      border-radius: 0.35rem;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.06); /* subtle separation so content doesn't appear on top */
-    }
-    .modal-header h1 { margin: 0; font-size: 1.05rem; }
-    .modal-header .subhead { margin-top: 0.25rem; color: var(--muted); font-size: 0.95rem; line-height:1.05; }
-
-    @media (max-width: 420px) {
-      .modal-header { top: 0.45rem; padding-top: 0.35rem; padding-bottom: 0.4rem; margin-bottom: 0.35rem; }
     }
 
     /* Content column centers the active step vertically */
@@ -166,11 +143,9 @@
 
       <div class="content-column">
 
-        <!-- Sticky header -->
-        <header class="modal-header" role="banner" aria-label="Event header">
-          <h1>Mars + Bianca</h1>
-          <div class="subhead">Nuuk Taal<br>October 15, 2027</div>
-        </header>
+        <!-- Non-sticky header (reverted) -->
+        <h1>Mars + Bianca</h1>
+        <div class="subhead">Nuuk Taal<br>October 15, 2027</div>
 
         <!-- Steps -->
         <div id="step-search" class="step active">
