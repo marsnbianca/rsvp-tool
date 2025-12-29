@@ -5,37 +5,38 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Mars + Bianca — RSVP</title>
 
-  <script>
-    try { if (window.self !== window.top) document.documentElement.setAttribute('data-embedded', 'true'); } catch (e) {}
-  </script>
+  <!-- mark embedded frames early -->
+  <script>try{ if(window.self !== window.top) document.documentElement.setAttribute('data-embedded','true'); }catch(e){} </script>
 
   <style>
-    :root{ --bg:#fff; --muted:#666; --accent:#222; --danger:#c0392b; --card-radius:12px; --content-max:720px; }
-    html,body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;color:#111;background:var(--bg);height:auto;min-height:initial;}
+    :root{
+      --bg:#fff; --muted:#666; --accent:#222; --danger:#c0392b;
+      --card-radius:12px; --content-max:720px;
+    }
+    html,body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;color:#111;background:var(--bg);height:auto;}
     .page-wrap{display:flex;align-items:center;justify-content:center;padding:4vw 2vw;}
-    .app-box{width:100%;max-width:var(--content-max);background:#fff;border-radius:var(--card-radius);box-shadow:0 10px 30px rgba(0,0,0,0.12);padding:1.25rem;box-sizing:border-box;position:relative;margin:0 auto;}
+    .app-box{width:100%;max-width:var(--content-max);background:#fff;border-radius:var(--card-radius);box-shadow:0 10px 30px rgba(0,0,0,0.12);padding:1rem;box-sizing:border-box;position:relative;margin:0 auto}
     :root[data-embedded="true"] .app-box{background:transparent;box-shadow:none;border-radius:0;padding:1rem;max-width:100%;}
-    .content-column{max-width:640px;margin:0 auto;text-align:center;padding:8px 12px;}
-    h1{margin:0;font-size:1.3rem}
-    .subhead{color:var(--muted);margin-top:6px;margin-bottom:14px;line-height:1.1}
-    .prompt{color:var(--muted);margin-bottom:10px; max-width:480px; text-align:center; margin-left:auto; margin-right:auto;}
+    .content-column{max-width:640px;margin:0 auto;text-align:center;padding:6px 12px}
+    h1{margin:0;font-size:1.25rem}
+    .subhead{color:var(--muted);margin-top:6px;margin-bottom:12px;line-height:1.1}
+    .prompt{color:var(--muted);margin-bottom:10px;text-align:center}
     .search-row{display:flex;gap:.5rem;margin-bottom:.15rem;justify-content:center}
     .search-row input{flex:1;max-width:420px;padding:.6rem;border:1px solid #e5e5e5;border-radius:8px;font-size:1rem}
-    .error{color:var(--danger);font-size:.95rem;margin-top:8px;display:none;text-align:center}
-    .matches{margin:0 auto 1rem;display:flex;flex-direction:column;gap:.5rem;align-items:center}
-    .match-btn{display:block;width:100%;max-width:480px;padding:.75rem;border:1px solid #f0f0f0;border-radius:8px;background:#fff;cursor:pointer;text-align:center;transition:all .12s}
-    .match-btn:hover{background:#fafafa;transform:translateY(-2px)}
-    .message{padding:.6rem;background:#e7f7e7;border:1px solid #bfe6bf;border-radius:8px;margin:.5rem 0;text-align:center}
-    .form-row{display:flex;flex-direction:column;gap:.35rem;margin-bottom:.6rem;align-items:center}
-    label{font-size:.95rem;color:#333;text-align:left;width:100%;max-width:480px}
-    select,input,textarea{padding:.6rem;font-size:1rem;border:1px solid #e6e6e6;border-radius:8px;width:100%;max-width:480px;box-sizing:border-box}
-    textarea{min-height:80px;resize:vertical}
-    .small{font-size:.92rem;color:var(--muted);margin-top:6px}
     .actions{display:flex;gap:.6rem;margin-top:18px;justify-content:center;align-items:center;padding-bottom:12px}
     .actions-right{display:flex;gap:.6rem}
     .btn{padding:.56rem .9rem;border-radius:8px;border:0;cursor:pointer}
     .btn.primary{background:var(--accent);color:#fff}
     .btn.ghost{background:#f3f3f3;color:#111}
+    .error{color:var(--danger);font-size:.95rem;margin-top:8px;display:none;text-align:center}
+    .matches{margin:0 auto 1rem;display:flex;flex-direction:column;gap:.5rem;align-items:center}
+    .match-btn{display:block;width:100%;max-width:480px;padding:.75rem;border:1px solid #f0f0f0;border-radius:8px;background:#fff;cursor:pointer;text-align:center;transition:all .12s}
+    .match-btn:hover{background:#fafafa;transform:translateY(-2px)}
+    label{font-size:.95rem;color:#333;text-align:left;width:100%;max-width:480px}
+    select,input,textarea{padding:.6rem;font-size:1rem;border:1px solid #e6e6e6;border-radius:8px;width:100%;max-width:480px;box-sizing:border-box}
+    textarea{min-height:80px;resize:vertical}
+    .message{padding:.6rem;background:#e7f7e7;border:1px solid #bfe6bf;border-radius:8px;margin:.5rem 0;text-align:center}
+    .small{font-size:.92rem;color:var(--muted);margin-top:6px}
     .loading-overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(255,255,255,0.7);border-radius:inherit;z-index:999}
     .spinner{width:36px;height:36px;border-radius:50%;border:4px solid #eee;border-top-color:var(--accent);animation:spin 1s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
@@ -68,7 +69,7 @@
         <div id="step-matches" class="step" style="display:none">
           <div class="prompt">We found matching names — please select your name below to continue.</div>
           <div id="matches" class="matches" aria-live="polite"></div>
-          <div class="actions" style="margin-top:12px">
+          <div class="actions">
             <button id="dontSeeBtn" class="btn ghost">I don't see my name</button>
             <div class="actions-right"><button id="backToSearch" class="btn ghost">Back</button></div>
           </div>
@@ -78,24 +79,22 @@
         <div id="step-not-in-list" class="step" style="display:none">
           <div class="prompt">If your name isn't listed here, please contact us and we'll confirm your invitation status.</div>
           <div class="message"><strong>Can't find your name?</strong><div class="small" style="margin-top:.5rem">Contact: +1 778 977 4975 (WhatsApp / Viber)</div></div>
-          <div class="actions" style="margin-top:12px">
+          <div class="actions">
             <button id="notInListBack" class="btn ghost">Back</button>
             <div class="actions-right"><button id="notInListClose" class="btn primary">Close</button></div>
           </div>
         </div>
 
-        <!-- Attendance combined -->
+        <!-- Attendance -->
         <div id="step-attendance" class="step" style="display:none">
           <div class="prompt">Please tell us whether you will join us for the celebration.</div>
           <div class="form-row">
             <label>Will you be joining us?</label>
             <select id="attendanceSelect"><option value="">-- choose --</option><option value="Attending">Yes — I/we will attend</option><option value="Declined">Regretfully decline</option></select>
           </div>
-
           <div id="attendanceDynamic" style="margin-top:.6rem"></div>
           <div id="attendeeError" class="error"></div>
-
-          <div class="actions" style="margin-top:8px">
+          <div class="actions">
             <button id="attendanceBack" class="btn ghost">Back</button>
             <div class="actions-right"><button id="attendanceNext" class="btn primary">Next</button></div>
           </div>
@@ -108,7 +107,7 @@
             <label>Do you need airport transfer from NAIA to Club Balai Isabel (Batangas)?</label>
             <select id="transportSelect"><option value="">-- choose --</option><option value="Yes">Yes — I/We need airport transfer</option><option value="No">No — we don't need airport transfer</option></select>
           </div>
-          <div class="actions" style="margin-top:8px">
+          <div class="actions">
             <button id="transportBack" class="btn ghost">Back</button>
             <div class="actions-right"><button id="transportNext" class="btn primary">Next</button></div>
           </div>
@@ -122,7 +121,7 @@
             <input id="phoneInput" type="tel" placeholder="09" />
             <div id="phoneErr" class="error"></div>
           </div>
-          <div class="actions" style="margin-top:8px">
+          <div class="actions">
             <button id="phoneBack" class="btn ghost">Back</button>
             <div class="actions-right"><button id="phoneNext" class="btn primary">Next</button></div>
           </div>
@@ -135,7 +134,7 @@
             <label>Notes (optional — dietary, song requests)</label>
             <textarea id="notesInput" placeholder="E.g. vegetarian, song request..."></textarea>
           </div>
-          <div class="actions" style="margin-top:8px">
+          <div class="actions">
             <button id="notesBack" class="btn ghost">Back</button>
             <div class="actions-right"><button id="notesNext" class="btn primary">Review</button></div>
           </div>
@@ -147,7 +146,7 @@
           <div id="reviewSummary" class="form-row" style="text-align:center"></div>
           <div id="statusLine" style="font-weight:700;margin-bottom:.5rem;text-align:center"></div>
           <div id="reviewError" class="error" style="text-align:center"></div>
-          <div class="actions" style="margin-top:8px">
+          <div class="actions">
             <button id="reviewBack" class="btn ghost">Back</button>
             <div class="actions-right"><button id="submitBtn" class="btn primary">Submit RSVP</button></div>
           </div>
@@ -157,7 +156,9 @@
         <div id="step-thanks" class="step" style="display:none">
           <div class="prompt">Thank you — your response is recorded.</div>
           <div id="thanksMessage" class="message" style="text-align:center"></div>
-          <div style="margin-top:.7rem;display:flex;justify-content:center"><button id="thanksClose" class="btn primary">Close</button></div>
+          <div class="actions">
+            <div class="actions-right"><button id="thanksClose" class="btn primary">Close</button></div>
+          </div>
         </div>
 
       </div>
@@ -168,47 +169,134 @@
   (function () {
     const API_URL = "https://rsvp-proxy.marsnbianca.workers.dev/"; // <-- replace with your Worker URL
 
-    const steps = { search: document.getElementById('step-search'), matches: document.getElementById('step-matches'),
-      notInList: document.getElementById('step-not-in-list'), attendance: document.getElementById('step-attendance'),
-      transport: document.getElementById('step-transport'), phone: document.getElementById('step-phone'),
-      notes: document.getElementById('step-notes'), review: document.getElementById('step-review'),
-      thanks: document.getElementById('step-thanks') };
+    // Steps
+    const steps = {
+      search: document.getElementById('step-search'),
+      matches: document.getElementById('step-matches'),
+      notInList: document.getElementById('step-not-in-list'),
+      attendance: document.getElementById('step-attendance'),
+      transport: document.getElementById('step-transport'),
+      phone: document.getElementById('step-phone'),
+      notes: document.getElementById('step-notes'),
+      review: document.getElementById('step-review'),
+      thanks: document.getElementById('step-thanks')
+    };
 
-    const nameInput = document.getElementById('nameInput'), findBtn = document.getElementById('findBtn'), searchErr = document.getElementById('searchErr'), matchesEl = document.getElementById('matches');
-    const dontSeeBtn = document.getElementById('dontSeeBtn'), backToSearch = document.getElementById('backToSearch');
-    const attendanceSelect = document.getElementById('attendanceSelect'), attendanceDynamic = document.getElementById('attendanceDynamic'), attendeeError = document.getElementById('attendeeError'), attendanceBack = document.getElementById('attendanceBack'), attendanceNext = document.getElementById('attendanceNext');
-    const transportSelect = document.getElementById('transportSelect'), transportBack = document.getElementById('transportBack'), transportNext = document.getElementById('transportNext');
-    const phoneInput = document.getElementById('phoneInput'), phoneErr = document.getElementById('phoneErr'), phoneBack = document.getElementById('phoneBack'), phoneNext = document.getElementById('phoneNext');
-    const notesInput = document.getElementById('notesInput'), notesBack = document.getElementById('notesBack'), notesNext = document.getElementById('notesNext');
-    const reviewSummary = document.getElementById('reviewSummary'), reviewError = document.getElementById('reviewError'), statusLine = document.getElementById('statusLine'), reviewBack = document.getElementById('reviewBack'), submitBtn = document.getElementById('submitBtn');
-    const thanksMessage = document.getElementById('thanksMessage'), thanksClose = document.getElementById('thanksClose');
-    const notInListBack = document.getElementById('notInListBack'), notInListClose = document.getElementById('notInListClose'), loadingOverlay = document.getElementById('loading');
+    // DOM refs
+    const nameInput = document.getElementById('nameInput');
+    const findBtn = document.getElementById('findBtn');
+    const searchErr = document.getElementById('searchErr');
+    const matchesEl = document.getElementById('matches');
 
-    let currentInvite = null, currentMaxSeats = 1, selectedStatus = "", selectedNumber = 1, selectedAttendees = [], selectedTransport = "", selectedPhoneStored = "", selectedNotes = "";
+    const attendanceSelect = document.getElementById('attendanceSelect');
+    const attendanceDynamic = document.getElementById('attendanceDynamic');
+    const attendeeError = document.getElementById('attendeeError');
+    const attendanceBack = document.getElementById('attendanceBack');
+    const attendanceNext = document.getElementById('attendanceNext');
+
+    const transportSelect = document.getElementById('transportSelect');
+    const transportBack = document.getElementById('transportBack');
+    const transportNext = document.getElementById('transportNext');
+
+    const phoneInput = document.getElementById('phoneInput');
+    const phoneErr = document.getElementById('phoneErr');
+    const phoneBack = document.getElementById('phoneBack');
+    const phoneNext = document.getElementById('phoneNext');
+
+    const notesInput = document.getElementById('notesInput');
+    const notesBack = document.getElementById('notesBack');
+    const notesNext = document.getElementById('notesNext');
+
+    const reviewSummary = document.getElementById('reviewSummary');
+    const reviewError = document.getElementById('reviewError');
+    const statusLine = document.getElementById('statusLine');
+    const reviewBack = document.getElementById('reviewBack');
+    const submitBtn = document.getElementById('submitBtn');
+
+    const thanksMessage = document.getElementById('thanksMessage');
+    const thanksClose = document.getElementById('thanksClose');
+
+    const notInListBack = document.getElementById('notInListBack');
+    const notInListClose = document.getElementById('notInListClose');
+
+    const loadingOverlay = document.getElementById('loading');
+
+    // State
+    let currentInvite = null;
+    let currentMaxSeats = 1;
+    let selectedStatus = "";
+    let selectedNumber = 1;
+    let selectedAttendees = [];
+    let selectedTransport = "";
+    let selectedPhoneStored = "";
+    let selectedNotes = "";
 
     function showStep(name){
       Object.values(steps).forEach(s=>s.style.display='none');
       if(steps[name]) steps[name].style.display = '';
-      try { document.getElementById('appBox').scrollTop = 0; } catch(_) {}
+      // notify parent whether this step has a bottom close button
+      const stepsWithBottomClose = new Set(['notInList','thanks']);
+      notifyParentHasBottomClose(name, stepsWithBottomClose.has(name));
       setTimeout(postHeight, 60);
     }
 
-    function setError(el, msg){ if(!el) return; if(msg){ el.textContent = msg; el.style.display = 'block'; } else { el.textContent = ''; el.style.display = 'none'; } }
+    function setError(el, msg){
+      if(!el) return;
+      if(msg){ el.textContent = msg; el.style.display = 'block'; }
+      else { el.textContent = ''; el.style.display = 'none'; }
+    }
+
     function loading(on){ loadingOverlay.style.display = on ? 'flex' : 'none'; }
 
     async function jsonFetch(payload){
       loading(true);
       try {
-        const res = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify(payload)
+        });
         const txt = await res.text();
-        try { return JSON.parse(txt); } catch(e) { return { ok:false, error:'Invalid server response' }; }
-      } catch (err) { console.error(err); return { ok:false, error:'Network error' }; } finally { loading(false); }
+        try { return JSON.parse(txt); } catch(e) { return { ok:false, error:"Invalid server response" }; }
+      } catch (err) {
+        console.error(err);
+        return { ok:false, error:"Network error" };
+      } finally { loading(false); }
     }
 
-    function titleCaseName(s){ s=String(s||'').replace(/\s+/g,' ').trim().toLowerCase(); if(!s) return ''; return s.split(/([\s\-'])/).map(p=> /[\s\-']/.test(p)?p: p.charAt(0).toUpperCase()+p.slice(1)).join(''); }
-    function formatPhoneInput(v){ var d=String(v||'').replace(/\D+/g,''); if(d.indexOf('63')===0 && d.length>=12) d='0'+d.slice(2); if(d.indexOf('9')===0 && d.length===10) d='0'+d; d=d.slice(0,11); if(d.length<=2) return d; if(d.length<=4) return d.slice(0,4); if(d.length<=7) return d.slice(0,4)+' '+d.slice(4); return d.slice(0,4)+' '+d.slice(4,7)+' '+d.slice(7,11); }
-    function normalizePhoneToStored(input){ var d=String(input||'').replace(/\D+/g,''); if(!d) return ''; if(d.indexOf('63')===0 && d.length>=12) d='0'+d.slice(2); if(d.indexOf('9')===0 && d.length===10) d='0'+d; d=d.slice(0,11); if(!/^09\d{9}$/.test(d)) return ''; return d.slice(0,4)+' '+d.slice(4,7)+' '+d.slice(7,11); }
+    function titleCaseName(s){
+      s = String(s||'').replace(/\s+/g,' ').trim().toLowerCase();
+      if(!s) return '';
+      return s.split(/([\s\-'])/).map(p=> /[\s\-']/.test(p)?p: p.charAt(0).toUpperCase()+p.slice(1)).join('');
+    }
 
+    function formatPhoneInput(v){
+      var d = String(v||'').replace(/\D+/g,'');
+      if(d.indexOf('63')===0 && d.length>=12) d = '0' + d.slice(2);
+      if(d.indexOf('9')===0 && d.length===10) d = '0' + d;
+      d = d.slice(0,11);
+      if(d.length<=2) return d;
+      if(d.length<=4) return d.slice(0,4);
+      if(d.length<=7) return d.slice(0,4) + ' ' + d.slice(4);
+      return d.slice(0,4) + ' ' + d.slice(4,7) + ' ' + d.slice(7,11);
+    }
+
+    function normalizePhoneToStored(input){
+      var d = String(input||'').replace(/\D+/g,'');
+      if(!d) return '';
+      if(d.indexOf('63')===0 && d.length>=12) d='0'+d.slice(2);
+      if(d.indexOf('9')===0 && d.length===10) d='0'+d;
+      d = d.slice(0,11);
+      if(!/^09\d{9}$/.test(d)) return '';
+      return d.slice(0,4)+' '+d.slice(4,7)+' '+d.slice(7,11);
+    }
+
+    // notify parent whether this step has a bottom Close button
+    function notifyParentHasBottomClose(stepName, hasBottom) {
+      try { window.parent.postMessage({ type: 'RSVP:HAS_BOTTOM_CLOSE', hasBottomClose: !!hasBottom }, '*'); } catch(_) {}
+    }
+
+    // post height to parent (debounced)
     var postTimer = null;
     function postHeight() {
       try {
@@ -216,175 +304,241 @@
         postTimer = setTimeout(function(){
           try {
             var h = document.documentElement.scrollHeight || document.body.scrollHeight;
-            window.parent.postMessage({ type: 'RSVP:HEIGHT', height: h }, '*');
+            window.parent.postMessage({ type:'RSVP:HEIGHT', height: h }, '*');
           } catch(e) {}
         }, 80);
       } catch(e){}
     }
 
-    // Search
+    // ----- Search / Find -----
     async function doFind(){
-      setError(searchErr,''); matchesEl.innerHTML='';
-      const q=(nameInput.value||'').trim();
-      if(q.length < 3){ setError(searchErr,'Please type at least 3 characters.'); postHeight(); return; }
+      setError(searchErr,'');
+      matchesEl.innerHTML = '';
+      const q = (nameInput.value||'').trim();
+      if(!q || q.length < 3){ setError(searchErr, 'Please type at least 3 characters.'); postHeight(); return; }
       findBtn.disabled = true;
-      const r = await jsonFetch({ action:'find', name: q, client_id: 'guest-'+Date.now() });
+      const r = await jsonFetch({ action: 'find', name: q, client_id: 'guest-'+Date.now() });
       findBtn.disabled = false;
       if(!r || !r.ok){ setError(searchErr, r && r.error ? r.error : 'Server error'); postHeight(); return; }
       if(!r.matches || r.matches.length === 0){ setError(searchErr, 'No matches found. Please try again.'); postHeight(); return; }
+
       matchesEl.innerHTML = '';
       r.matches.forEach(m=>{
-        const btn = document.createElement('button'); btn.type='button'; btn.className='match-btn';
-        btn.innerHTML = "<div><strong>"+escapeHtml(m.display_name)+"</strong></div>";
-        btn.addEventListener('click', ()=> onSelectMatch(m.invite_id, m.display_name, m.max_seats));
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'match-btn';
+        btn.innerHTML = "<div><strong>" + escapeHtml(m.display_name) + "</strong></div>";
+        btn.addEventListener('click', function(){ selectInvite(m); });
         matchesEl.appendChild(btn);
       });
       showStep('matches');
     }
 
-    dontSeeBtn.addEventListener('click', ()=> showStep('notInList'));
-    backToSearch.addEventListener('click', ()=> showStep('search'));
-    notInListBack.addEventListener('click', ()=> showStep('matches'));
-    if (notInListClose) notInListClose.addEventListener('click', function(){ try{ window.parent.postMessage({ type:'RSVP:CLOSE' }, '*'); }catch(_){} try{ window.close(); }catch(_){} });
-
-    async function onSelectMatch(invite_id, display_name, max_seats){
+    // ----- select invite -----
+    async function selectInvite(m) {
       setError(searchErr,'');
-      const r = await jsonFetch({ action:'get', invite_id: invite_id });
+      const r = await jsonFetch({ action: 'get', invite_id: m.invite_id });
       if(!r || !r.ok){ setError(searchErr, r && r.error ? r.error : 'Server error'); postHeight(); return; }
+
       if(r.locked){
+        // show locked message and bottom Close
         matchesEl.innerHTML = "<div class='message'>This invitation has already been answered.</div>";
-        const actions = document.querySelector('#step-matches .actions'); if(actions) actions.style.display = 'none';
-        const wrapper = document.createElement('div'); wrapper.style.marginTop = '12px'; wrapper.style.display = 'flex'; wrapper.style.justifyContent = 'center';
-        const closeBtn = document.createElement('button'); closeBtn.className = 'btn primary'; closeBtn.textContent = 'Close';
+        const wrapper = document.createElement('div');
+        wrapper.style.marginTop = '12px';
+        wrapper.style.display = 'flex';
+        wrapper.style.justifyContent = 'center';
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'btn primary';
+        closeBtn.textContent = 'Close';
         closeBtn.addEventListener('click', function(){ try{ window.parent.postMessage({ type:'RSVP:CLOSE' }, '*'); }catch(_){} try{ window.close(); }catch(_){} });
         wrapper.appendChild(closeBtn);
         matchesEl.appendChild(wrapper);
+
+        // notify parent: bottom close present
+        notifyParentHasBottomClose('matches', true);
         postHeight();
         return;
       }
-      currentInvite = { invite_id: invite_id, display_name: display_name, max_seats: Math.max(1, r.invite && r.invite.max_seats ? parseInt(r.invite.max_seats,10) : (max_seats || 1)) };
-      currentMaxSeats = Math.min(currentInvite.max_seats, 4);
+
+      currentInvite = r.invite || m;
+      currentInvite.invite_id = m.invite_id;
+      currentMaxSeats = Math.min(currentInvite.max_seats ? parseInt(currentInvite.max_seats,10) : (m.max_seats || 1), 4);
       selectedStatus=''; selectedNumber=1; selectedAttendees=[]; selectedTransport=''; selectedPhoneStored=''; selectedNotes='';
-      attendanceSelect.value=''; attendanceDynamic.innerHTML=''; setError(attendeeError,'');
+      attendanceSelect.value = '';
+      attendanceDynamic.innerHTML = '';
+      setError(attendeeError,'');
+      notifyParentHasBottomClose('attendance', false);
       showStep('attendance');
     }
 
-    attendanceBack.addEventListener('click', ()=> showStep('matches'));
+    // ----- attendance flow -----
+    attendanceBack.addEventListener('click', function(){ showStep('matches'); });
+
     attendanceSelect.addEventListener('change', function(){
-      setError(attendeeError,''); attendanceDynamic.innerHTML='';
+      setError(attendeeError,'');
+      attendanceDynamic.innerHTML = '';
       const v = (attendanceSelect.value||'').trim();
       if(v === 'Attending'){
         if(currentMaxSeats <= 1){
-          postHeight(); return;
+          postHeight();
+          return;
         }
-        const row=document.createElement('div'); row.className='form-row';
-        const lbl=document.createElement('label'); lbl.textContent='How many people are attending (including you)?';
-        const sel=document.createElement('select'); sel.id='numSelect';
+        const row = document.createElement('div'); row.className = 'form-row';
+        const lbl = document.createElement('label'); lbl.textContent = 'How many people are attending (including you)?';
+        const sel = document.createElement('select'); sel.id = 'numSelect';
         const placeholder = document.createElement('option'); placeholder.value=''; placeholder.textContent='-- choose --'; sel.appendChild(placeholder);
-        for(let i=1;i<=currentMaxSeats;i++){ const opt=document.createElement('option'); opt.value=String(i); opt.textContent=String(i); sel.appendChild(opt); }
-        sel.value='';
-        sel.addEventListener('change', function(){
-          const n = parseInt(sel.value,10) || 0;
-          renderGuestInputs(n);
-        });
-        row.appendChild(lbl); row.appendChild(sel); attendanceDynamic.appendChild(row);
-        const gdiv=document.createElement('div'); gdiv.id='guestInputs'; gdiv.style.marginTop='8px'; attendanceDynamic.appendChild(gdiv);
+        for(let i=1;i<=currentMaxSeats;i++){ const opt = document.createElement('option'); opt.value=String(i); opt.textContent=String(i); sel.appendChild(opt); }
+        sel.value = '';
+        sel.addEventListener('change', function(){ renderGuestInputs(parseInt(sel.value,10) || 0); });
+        row.appendChild(lbl); row.appendChild(sel);
+        attendanceDynamic.appendChild(row);
+
+        const gdiv = document.createElement('div'); gdiv.id='guestInputs'; gdiv.style.marginTop='8px';
+        attendanceDynamic.appendChild(gdiv);
         postHeight();
       } else {
-        attendanceDynamic.innerHTML=''; postHeight();
+        attendanceDynamic.innerHTML = '';
+        postHeight();
       }
     });
 
     function renderGuestInputs(n){
-      const gdiv=document.getElementById('guestInputs'); if(!gdiv) return; gdiv.innerHTML='';
-      if(!n || n < 1) { postHeight(); return; }
-      for(let i=0;i<n;i++){ const input=document.createElement('input'); input.type='text'; input.placeholder='Guest full name'; input.className='guest-name-input'; input.style.marginBottom='8px'; gdiv.appendChild(input); }
-      selectedNumber = n; postHeight();
+      const gdiv = document.getElementById('guestInputs');
+      if(!gdiv) return;
+      gdiv.innerHTML = '';
+      if(!n || n < 1){ postHeight(); return; }
+      for(let i=0;i<n;i++){
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = 'Guest full name';
+        input.className = 'guest-name-input';
+        input.style.marginBottom = '8px';
+        gdiv.appendChild(input);
+      }
+      selectedNumber = n;
+      postHeight();
     }
 
     attendanceNext.addEventListener('click', function(){
       setError(attendeeError,'');
-      const val=(attendanceSelect.value||'').trim();
+      const val = (attendanceSelect.value||'').trim();
       if(!val){ setError(attendeeError,'Please choose whether you will attend or decline.'); postHeight(); return; }
       selectedStatus = val;
-      if(selectedStatus === 'Declined'){ selectedAttendees = []; buildReview(); showStep('review'); return; }
-      if(currentMaxSeats <= 1){ selectedAttendees = []; showStep('transport'); return; } // do NOT add guest name in review for single-seat
+      if(selectedStatus === 'Declined'){
+        selectedAttendees = [];
+        buildReview();
+        showStep('review');
+        return;
+      }
+      if(currentMaxSeats <= 1){
+        selectedAttendees = [];
+        showStep('transport');
+        return;
+      }
       const sel = document.getElementById('numSelect');
       if(!sel || !sel.value){ setError(attendeeError,'Please choose how many people are attending.'); postHeight(); return; }
-      const gdiv=document.getElementById('guestInputs'); if(!gdiv){ setError(attendeeError,'Please choose how many people are attending.'); postHeight(); return; }
+      const gdiv = document.getElementById('guestInputs');
+      if(!gdiv){ setError(attendeeError,'Please choose how many people are attending.'); postHeight(); return; }
       const inputs = Array.from(gdiv.querySelectorAll('.guest-name-input'));
       const names = inputs.map(i=>i.value.trim()).filter(Boolean);
-      if(names.length < parseInt(sel.value,10)){ setError(attendeeError,'Please fill all guest name boxes for the number you selected.'); postHeight(); return; }
+      if(names.length < parseInt(sel.value,10)){ setError(attendeeError,'Please fill all guest name boxes.'); postHeight(); return; }
       selectedAttendees = names.slice(0,parseInt(sel.value,10)).map(titleCaseName);
       showStep('transport');
     });
 
-    transportBack.addEventListener('click', ()=> showStep('attendance'));
-    transportNext.addEventListener('click', function(){ const v=(transportSelect.value||'').trim(); if(!v){ setError(attendeeError,'Please choose Yes or No for airport transfer.'); postHeight(); return; } selectedTransport = v==='Yes'?'Yes':'No'; setError(attendeeError,''); showStep('phone'); });
+    // ----- transport -----
+    transportBack.addEventListener('click', function(){ showStep('attendance'); });
+    transportNext.addEventListener('click', function(){
+      const v = (transportSelect.value||'').trim();
+      if(!v){ setError(attendeeError,'Please choose Yes or No for airport transfer.'); postHeight(); return; }
+      selectedTransport = v === 'Yes' ? 'Yes' : 'No';
+      setError(attendeeError,'');
+      showStep('phone');
+    });
 
-    phoneInput.addEventListener('input', ()=> { phoneInput.value = formatPhoneInput(phoneInput.value); postHeight(); });
-    phoneBack.addEventListener('click', ()=> showStep('transport'));
-    phoneNext.addEventListener('click', function(){ setError(phoneErr,''); if(selectedStatus==='Attending'){ const s = normalizePhoneToStored(phoneInput.value); if(!s){ setError(phoneErr,'Phone must be 11 digits starting with 09 (e.g. 0917 123 4567)'); postHeight(); return; } selectedPhoneStored = s; } else selectedPhoneStored=''; showStep('notes'); });
+    // ----- phone -----
+    phoneInput.addEventListener('input', function(){ phoneInput.value = formatPhoneInput(phoneInput.value); postHeight(); });
+    phoneBack.addEventListener('click', function(){ showStep('transport'); });
+    phoneNext.addEventListener('click', function(){
+      setError(phoneErr,'');
+      if(selectedStatus === 'Attending'){
+        const s = normalizePhoneToStored(phoneInput.value);
+        if(!s){ setError(phoneErr,'Phone must be 11 digits starting with 09 (e.g. 0917 123 4567)'); postHeight(); return; }
+        selectedPhoneStored = s;
+      } else selectedPhoneStored = '';
+      showStep('notes');
+    });
 
-    notesBack.addEventListener('click', ()=> showStep('phone'));
-    notesNext.addEventListener('click', ()=> { selectedNotes = (notesInput.value||'').trim(); buildReview(); showStep('review'); });
+    // ----- notes -----
+    notesBack.addEventListener('click', function(){ showStep('phone'); });
+    notesNext.addEventListener('click', function(){ selectedNotes = (notesInput.value||'').trim(); buildReview(); showStep('review'); });
 
-    // review back goes to attendance
-    reviewBack.addEventListener('click', ()=> showStep('attendance'));
+    // ----- review -----
+    reviewBack.addEventListener('click', function(){ showStep('attendance'); });
+
     function buildReview(){
-      let html = "<div><strong>"+escapeHtml(currentInvite.display_name)+"</strong></div>";
-      statusLine.textContent = selectedStatus === 'Attending' ? 'ATTENDING' : 'DECLINED';
+      const statusText = selectedStatus === 'Attending' ? 'ATTENDING' : 'DECLINED';
+      let html = "<div><strong>" + escapeHtml(currentInvite.display_name) + " — " + statusText + "</strong></div>";
+
       if(selectedStatus === 'Attending'){
         if(currentMaxSeats > 1){
           html += "<div style='margin-top:.6rem'><strong>Guest names:</strong><ul style='list-style:none;padding:0;margin:8px 0'>";
-          selectedAttendees.forEach(n=> html += "<li>"+escapeHtml(n)+"</li>");
+          selectedAttendees.forEach(n => html += "<li>"+escapeHtml(n)+"</li>");
           html += "</ul></div>";
         }
         html += "<div><strong>Airport transfer:</strong> "+escapeHtml(selectedTransport)+"</div>";
         html += "<div><strong>Phone:</strong> "+escapeHtml(selectedPhoneStored)+"</div>";
       }
       if(selectedNotes) html += "<div style='margin-top:.4rem'><strong>Notes:</strong> "+escapeHtml(selectedNotes)+"</div>";
-      reviewSummary.innerHTML = html; reviewError.style.display = 'none'; postHeight();
+      reviewSummary.innerHTML = html;
+      reviewError.style.display = 'none';
+      postHeight();
     }
 
+    // ----- submit -----
     submitBtn.addEventListener('click', async function(){
       reviewError.style.display = 'none';
-      const payload = { action:'submit', invite_id: currentInvite.invite_id, status:selectedStatus, attending_count:(selectedStatus==='Attending'?(currentMaxSeats<=1?1:Math.min(selectedAttendees.length,currentMaxSeats)):0), attendees:(selectedStatus==='Attending'?(currentMaxSeats<=1?[ titleCaseName(currentInvite.display_name) ]:selectedAttendees.slice(0,currentMaxSeats)):[]), phone:(selectedStatus==='Attending'?selectedPhoneStored:''), transportation:(selectedStatus==='Attending'?selectedTransport:''), notes:selectedNotes||'' };
+      const payload = {
+        action: 'submit',
+        invite_id: currentInvite.invite_id,
+        status: selectedStatus,
+        attending_count: (selectedStatus === 'Attending' ? (currentMaxSeats <= 1 ? 1 : Math.min(selectedAttendees.length, currentMaxSeats)) : 0),
+        attendees: (selectedStatus === 'Attending' ? (currentMaxSeats <= 1 ? [ titleCaseName(currentInvite.display_name) ] : selectedAttendees.slice(0, currentMaxSeats)) : []),
+        phone: (selectedStatus === 'Attending' ? selectedPhoneStored : ""),
+        transportation: (selectedStatus === 'Attending' ? selectedTransport : ""),
+        notes: selectedNotes || ""
+      };
       submitBtn.disabled = true;
       const r = await jsonFetch(payload);
       submitBtn.disabled = false;
       if(!r || !r.ok){ reviewError.textContent = (r && r.error) ? r.error : 'Server error'; reviewError.style.display = ''; postHeight(); return; }
-      if(r.locked){ reviewError.textContent = "This invitation has already been responded to. If you need to change it please contact us: +1 778 977 4975 (WhatsApp/Viber)"; reviewError.style.display = ''; postHeight(); return; }
+      if(r.locked){ reviewError.textContent = "This invitation has already been responded to."; reviewError.style.display = ''; postHeight(); return; }
       if(selectedStatus === 'Attending') thanksMessage.innerHTML = "<strong>See you there — we're excited to celebrate with you!</strong><div class='small' style='margin-top:.5rem'>If you need to make changes, contact us: +1 778 977 4975 (WhatsApp/Viber)</div>";
       else thanksMessage.innerHTML = "<strong>We're sorry you can't join us.</strong><div class='small' style='margin-top:.5rem'>If you need to make changes, contact us: +1 778 977 4975 (WhatsApp/Viber)</div>";
+      notifyParentHasBottomClose('thanks', true);
       showStep('thanks');
     });
 
     if (thanksClose) thanksClose.addEventListener('click', function(){ try{ window.parent.postMessage({ type:'RSVP:CLOSE' }, '*'); }catch(_){} try{ window.close(); }catch(_){} });
     if (notInListClose) notInListClose.addEventListener('click', function(){ try{ window.parent.postMessage({ type:'RSVP:CLOSE' }, '*'); }catch(_){} try{ window.close(); }catch(_){} });
 
-    nameInput.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); doFind(); } });
+    // wiring
     findBtn.addEventListener('click', doFind);
+    nameInput.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); doFind(); } });
+
+    // postHeight wiring
+    window.addEventListener('load', function(){ setTimeout(postHeight, 60); });
+    try { var mo = new MutationObserver(function(){ postHeight(); }); mo.observe(document.body, { childList:true, subtree:true, attributes:true, characterData:true }); } catch(e){}
+    try { var ro = new ResizeObserver(function(){ postHeight(); }); ro.observe(document.documentElement); } catch(e){}
+    setInterval(postHeight, 1200);
+
+    window.addEventListener('message', function(e){ try { if(e && e.data && e.data.type === 'RSVP:REQUEST_HEIGHT') postHeight(); } catch(_) {} });
 
     function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
 
-    window.addEventListener('message', function (e) {
-      try { if (e && e.data && e.data.type === 'RSVP:REQUEST_HEIGHT') postHeight(); } catch (_) {}
-    });
+    showStep('search');
+    try { nameInput.focus(); } catch(_) {}
 
-    window.addEventListener('load', function(){ setTimeout(postHeight, 60); });
-    try { var mo = new MutationObserver(function(){ postHeight(); }); mo.observe(document.body, { childList:true, subtree:true, attributes:true, characterData:true }); } catch (e) {}
-    try { var ro = new ResizeObserver(function(){ postHeight(); }); ro.observe(document.documentElement); } catch (e) {}
-    setInterval(postHeight, 1200);
-
-    showStep('search'); nameInput.focus();
-
-    function postHeight() {
-      try {
-        var h = document.documentElement.scrollHeight || document.body.scrollHeight;
-        window.parent.postMessage({ type: 'RSVP:HEIGHT', height: h }, '*');
-      } catch (e) {}
-    }
   })();
   </script>
 </body>
