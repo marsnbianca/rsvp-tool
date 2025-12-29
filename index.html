@@ -4,6 +4,19 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>RSVP — Mars & Bianca</title>
+
+  <!-- Early embed detection so CSS can adapt before paint -->
+  <script>
+    try {
+      if (window.self !== window.top) {
+        // Mark document as embedded so CSS can remove the inner card look
+        document.documentElement.setAttribute('data-embedded', 'true');
+      }
+    } catch (e) {
+      // cross-origin frame access may throw; ignore
+    }
+  </script>
+
   <style>
     :root{
       --bg:#ffffff;
@@ -24,6 +37,24 @@
       padding:1.25rem;
       box-sizing:border-box;
       position:relative;
+    }
+
+    /* When embedded, remove the inner card's outer appearance so only parent card shows */
+    :root[data-embedded="true"] {
+      background: transparent;
+    }
+    :root[data-embedded="true"] .page-wrap {
+      min-height: 100%;
+      padding: 0;
+      align-items: stretch;
+      justify-content: stretch;
+    }
+    :root[data-embedded="true"] .app-box {
+      background: transparent;      /* let parent's card background show */
+      box-shadow: none;             /* remove inner shadow */
+      border-radius: 0;             /* parent's card has radius */
+      max-width: 100%;
+      padding: 1rem 1rem;           /* keep some inner padding */
     }
 
     h2{margin:0 0 .5rem;font-size:clamp(1.05rem,2.6vw,1.4rem)}
@@ -259,7 +290,6 @@
 
     const loadingOverlay = document.getElementById('loading');
 
-    // State
     let currentInvite = null;
     let currentMaxSeats = 1;
     let selectedStatus = "";
@@ -298,7 +328,6 @@
       } finally { loading(false); }
     }
 
-    // Title-case helper
     function titleCaseName(s){
       s = String(s||'').replace(/\s+/g,' ').trim().toLowerCase();
       if(!s) return "";
@@ -308,7 +337,6 @@
       }).join('');
     }
 
-    // Phone helpers
     function formatPhoneInput(v){
       var digits = String(v||'').replace(/\D+/g,'');
       if(digits.indexOf('63')===0 && digits.length>=12) digits = '0' + digits.slice(2);
@@ -340,11 +368,7 @@
       const r = await jsonFetch({ action:'find', name: q, client_id: 'guest-'+Date.now() });
       findBtn.disabled = false;
       if(!r || !r.ok){ setError(searchErr, r && r.error ? r.error : 'Server error'); return; }
-      if(!r.matches || r.matches.length === 0){
-        setError(searchErr, 'No matches found. Please try again or contact us.');
-        return;
-      }
-      // render matches
+      if(!r.matches || r.matches.length === 0){ setError(searchErr, 'No matches found. Please try again or contact us.'); return; }
       matchesEl.innerHTML = '';
       r.matches.forEach(m=>{
         const btn = document.createElement('button');
@@ -358,18 +382,14 @@
       showStep('matches');
     }
 
-    // Matches controls
     dontSeeBtn.addEventListener('click', function(){ showStep('notInList'); });
     backToSearch.addEventListener('click', function(){ showStep('search'); });
-
     notInListBack.addEventListener('click', function(){ showStep('matches'); });
 
-    // Select match
     async function onSelectMatch(invite_id, display_name, max_seats){
       const r = await jsonFetch({ action:'get', invite_id: invite_id });
       if(!r || !r.ok){ setError(searchErr, r && r.error ? r.error : 'Server error'); return; }
       if(r.locked){
-        // show locked message in matches area and provide close control
         matchesEl.innerHTML = "<div class='message'>This invitation has already been answered. If you need to make changes, please contact us: +1 778 977 4975 (WhatsApp/Viber)</div>";
         const closeBtn = document.createElement('button');
         closeBtn.className = 'btn primary';
@@ -385,52 +405,34 @@
 
       currentInvite = { invite_id: invite_id, display_name: display_name, max_seats: Math.max(1, r.invite && r.invite.max_seats ? parseInt(r.invite.max_seats,10) : (max_seats || 1)) };
       currentMaxSeats = Math.min(currentInvite.max_seats, 4);
-      // reset
       selectedStatus=''; selectedNumber=1; selectedAttendees=[]; selectedTransport=''; selectedPhoneStored=''; selectedNotes='';
       attendanceSelect.value = '';
       attendanceDynamic.innerHTML = '';
       setError(attendeeError,'');
-      // prepare attendee inputs if max>1 (but only render after selecting attending and number)
       showStep('attendance');
     }
 
-    // Attendance flow
     attendanceBack.addEventListener('click', function(){ showStep('matches'); });
     attendanceNext.addEventListener('click', function(){
       setError(attendeeError,'');
       const val = (attendanceSelect.value||'').trim();
       if(!val){ setError(attendeeError,'Please choose whether you will attend or decline.'); return; }
       selectedStatus = val;
-      if(selectedStatus === 'Declined'){
-        // go straight to review
-        selectedAttendees = [];
-        buildReview();
-        showStep('review');
-        return;
-      }
-      // Attending -> show number selector and name inputs on same screen
+      if(selectedStatus === 'Declined'){ selectedAttendees = []; buildReview(); showStep('review'); return; }
+
+      // Attending: show number selector + guest inputs on same screen
       attendanceDynamic.innerHTML = '';
-      const row = document.createElement('div');
-      row.className = 'form-row';
-      const lbl = document.createElement('label');
-      lbl.textContent = 'How many people are attending (including you)?';
-      const sel = document.createElement('select');
-      sel.id = 'numSelect';
-      for(let i=1;i<=currentMaxSeats;i++){
-        const opt = document.createElement('option'); opt.value = String(i); opt.textContent = String(i);
-        sel.appendChild(opt);
-      }
+      const row = document.createElement('div'); row.className = 'form-row';
+      const lbl = document.createElement('label'); lbl.textContent = 'How many people are attending (including you)?';
+      const sel = document.createElement('select'); sel.id = 'numSelect';
+      for(let i=1;i<=currentMaxSeats;i++){ const opt = document.createElement('option'); opt.value = String(i); opt.textContent = String(i); sel.appendChild(opt); }
       sel.value = '1';
-      sel.addEventListener('change', function(){
-        renderGuestInputs(parseInt(sel.value,10));
-      });
+      sel.addEventListener('change', function(){ renderGuestInputs(parseInt(sel.value,10)); });
       row.appendChild(lbl); row.appendChild(sel);
       attendanceDynamic.appendChild(row);
-      // guest inputs container
       const gdiv = document.createElement('div'); gdiv.id = 'guestInputs'; gdiv.style.marginTop = '8px';
       attendanceDynamic.appendChild(gdiv);
       renderGuestInputs(1);
-      // keep on same screen (user will click Next again to proceed)
     });
 
     function renderGuestInputs(n){
@@ -447,11 +449,8 @@
       selectedNumber = n;
     }
 
-    // On second click of Next, we need to collect guest names: detect whether guestInputs exist
-    // We'll intercept attendanceNext click — but we already used attendanceNext to render. So add double-behavior:
-    // Instead: user must pick number and fill names then click Next again — we can detect guestInputs presence and then advance.
+    // Second click behavior: if guest inputs present, gather and advance
     attendanceNext.addEventListener('click', function(){
-      // if guestInputs exists and has inputs, validate and proceed
       const gdiv = document.getElementById('guestInputs');
       if(gdiv && gdiv.querySelectorAll('.guest-name-input').length > 0){
         const inputs = Array.from(gdiv.querySelectorAll('.guest-name-input'));
@@ -459,24 +458,15 @@
         if(names.length < 1){ setError(attendeeError,'Please enter at least one guest full name.'); return; }
         if(names.length < selectedNumber){ setError(attendeeError,'Please fill all guest name boxes for the number you selected.'); return; }
         selectedAttendees = names.slice(0,selectedNumber).map(titleCaseName);
-        showStep('transport');
-        return;
-      } else {
-        // no guest inputs -> probably single seat and we already handled above -> go to transport
-        if(selectedStatus === 'Attending') {
-          if(currentMaxSeats <=1){
-            selectedAttendees = [ titleCaseName(currentInvite.display_name) ];
-            showStep('transport'); return;
-          } else {
-            // if for some reason no guestInputs (shouldn't happen), force render
-            renderGuestInputs(1);
-            return;
-          }
-        }
+        showStep('transport'); return;
+      }
+      // fallback
+      if(selectedStatus === 'Attending'){
+        if(currentMaxSeats <=1){ selectedAttendees = [ titleCaseName(currentInvite.display_name) ]; showStep('transport'); return; }
+        renderGuestInputs(1); return;
       }
     });
 
-    // Transport
     transportBack.addEventListener('click', function(){ showStep('attendance'); });
     transportNext.addEventListener('click', function(){
       const v = (transportSelect.value||'').trim();
@@ -486,7 +476,6 @@
       showStep('phone');
     });
 
-    // Phone
     phoneInput.addEventListener('input', function(){
       phoneInput.value = formatPhoneInput(phoneInput.value);
     });
@@ -497,21 +486,13 @@
         const stored = normalizePhoneToStored(phoneInput.value);
         if(!stored){ setError(phoneErr, 'Phone must be 11 digits starting with 09 (e.g. 0917 123 4567)'); return; }
         selectedPhoneStored = stored;
-      } else {
-        selectedPhoneStored = '';
-      }
+      } else { selectedPhoneStored = ''; }
       showStep('notes');
     });
 
-    // Notes
     notesBack.addEventListener('click', function(){ showStep('phone'); });
-    notesNext.addEventListener('click', function(){
-      selectedNotes = (notesInput.value||'').trim();
-      buildReview();
-      showStep('review');
-    });
+    notesNext.addEventListener('click', function(){ selectedNotes = (notesInput.value||'').trim(); buildReview(); showStep('review'); });
 
-    // Review & Submit
     reviewBack.addEventListener('click', function(){ showStep('notes'); });
 
     function buildReview(){
@@ -520,16 +501,10 @@
       if(selectedStatus === 'Attending') statusLine.style.color = '#1b9b4a'; else statusLine.style.color = 'var(--danger)';
       if(selectedStatus === 'Attending'){
         html += "<div style='margin-top:.4rem;'><strong>Attendees:</strong><ul>";
-        if(currentMaxSeats <= 1){
-          html += "<li>"+escapeHtml(titleCaseName(currentInvite.display_name))+"</li>";
-        } else {
-          selectedAttendees.forEach(n=> html += "<li>"+escapeHtml(n)+"</li>");
-        }
+        if(currentMaxSeats <= 1) html += "<li>"+escapeHtml(titleCaseName(currentInvite.display_name))+"</li>"; else selectedAttendees.forEach(n=> html += "<li>"+escapeHtml(n)+"</li>");
         html += "</ul></div>";
         html += "<div><strong>Airport transfer:</strong> "+escapeHtml(selectedTransport)+"</div>";
         html += "<div><strong>Phone:</strong> "+escapeHtml(selectedPhoneStored)+"</div>";
-      } else {
-        // declined: only show name and declined status
       }
       if(selectedNotes) html += "<div style='margin-top:.4rem'><strong>Notes:</strong> "+escapeHtml(selectedNotes)+"</div>";
       reviewSummary.innerHTML = html;
@@ -551,17 +526,8 @@
       submitBtn.disabled = true;
       const r = await jsonFetch(payload);
       submitBtn.disabled = false;
-      if(!r || !r.ok){
-        reviewError.textContent = (r && r.error) ? r.error : 'Server error';
-        reviewError.style.display = '';
-        return;
-      }
-      if(r.locked){
-        reviewError.textContent = "This invitation has already been responded to. If you need to change it please contact us: +1 778 977 4975 (WhatsApp/Viber)";
-        reviewError.style.display = '';
-        return;
-      }
-      // success messages
+      if(!r || !r.ok){ reviewError.textContent = (r && r.error) ? r.error : 'Server error'; reviewError.style.display = ''; return; }
+      if(r.locked){ reviewError.textContent = "This invitation has already been responded to. If you need to change it please contact us: +1 778 977 4975 (WhatsApp/Viber)"; reviewError.style.display = ''; return; }
       if(selectedStatus === 'Attending'){
         thanksMessage.innerHTML = "<strong>See you there — we're excited to celebrate with you!</strong><div class='small' style='margin-top:.5rem'>If you need to make changes, contact us: +1 778 977 4975 (WhatsApp/Viber)</div>";
       } else {
@@ -576,10 +542,7 @@
       try { window.close(); } catch(_) {}
     });
 
-    // Enter -> search
-    nameInput.addEventListener('keydown', function(e){
-      if(e.key === 'Enter'){ e.preventDefault(); doFind(); }
-    });
+    nameInput.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); doFind(); } });
     findBtn.addEventListener('click', doFind);
 
     function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
