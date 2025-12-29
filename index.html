@@ -5,24 +5,22 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Mars + Bianca — RSVP</title>
 
-  <!-- Mark embedded frames early -->
   <script>
     try { if (window.self !== window.top) document.documentElement.setAttribute('data-embedded', 'true'); } catch (e) {}
   </script>
 
   <style>
     :root{ --bg:#fff; --muted:#666; --accent:#222; --danger:#c0392b; --card-radius:12px; --content-max:720px; }
-    html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;color:#111;background:var(--bg);}
-    .page-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:4vw 2vw;}
-    .app-box{width:100%;max-width:var(--content-max);background:#fff;border-radius:var(--card-radius);box-shadow:0 10px 30px rgba(0,0,0,0.12);padding:1.25rem;box-sizing:border-box;position:relative;}
+    html,body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;color:#111;background:var(--bg);height:auto;min-height:initial;}
+    .page-wrap{display:flex;align-items:center;justify-content:center;padding:4vw 2vw;}
+    .app-box{width:100%;max-width:var(--content-max);background:#fff;border-radius:var(--card-radius);box-shadow:0 10px 30px rgba(0,0,0,0.12);padding:1.25rem;box-sizing:border-box;position:relative;margin:0 auto;}
     :root[data-embedded="true"] .app-box{background:transparent;box-shadow:none;border-radius:0;padding:1rem;max-width:100%;}
     .content-column{max-width:640px;margin:0 auto;text-align:center;padding:8px 12px;}
     h1{margin:0;font-size:1.3rem}
     .subhead{color:var(--muted);margin-top:6px;margin-bottom:14px;line-height:1.1}
-    .prompt{color:var(--muted);margin-bottom:10px; max-width:480px; text-align:left; margin-left:auto; margin-right:auto;}
+    .prompt{color:var(--muted);margin-bottom:10px; max-width:480px; text-align:center; margin-left:auto; margin-right:auto;}
     .search-row{display:flex;gap:.5rem;margin-bottom:.15rem;justify-content:center}
     .search-row input{flex:1;max-width:420px;padding:.6rem;border:1px solid #e5e5e5;border-radius:8px;font-size:1rem}
-    .search-row button{padding:.55rem .9rem;border-radius:8px;border:0;background:var(--accent);color:#fff;cursor:pointer}
     .error{color:var(--danger);font-size:.95rem;margin-top:8px;display:none;text-align:center}
     .matches{margin:0 auto 1rem;display:flex;flex-direction:column;gap:.5rem;align-items:center}
     .match-btn{display:block;width:100%;max-width:480px;padding:.75rem;border:1px solid #f0f0f0;border-radius:8px;background:#fff;cursor:pointer;text-align:center;transition:all .12s}
@@ -59,9 +57,11 @@
           <div class="prompt">Please enter the name shown on your invitation to find your RSVP record.</div>
           <div class="search-row">
             <input id="nameInput" placeholder="Type your name" autocomplete="name" />
-            <button id="findBtn" type="button">Find</button>
           </div>
           <div id="searchErr" class="error" aria-live="polite"></div>
+          <div class="actions">
+            <div class="actions-right"><button id="findBtn" class="btn primary">Find</button></div>
+          </div>
         </div>
 
         <!-- Matches -->
@@ -308,7 +308,7 @@
       if(!val){ setError(attendeeError,'Please choose whether you will attend or decline.'); postHeight(); return; }
       selectedStatus = val;
       if(selectedStatus === 'Declined'){ selectedAttendees = []; buildReview(); showStep('review'); return; }
-      if(currentMaxSeats <= 1){ selectedAttendees = [ titleCaseName(currentInvite.display_name) ]; showStep('transport'); return; }
+      if(currentMaxSeats <= 1){ selectedAttendees = []; showStep('transport'); return; } // do NOT add guest name in review for single-seat
       const sel = document.getElementById('numSelect');
       if(!sel || !sel.value){ setError(attendeeError,'Please choose how many people are attending.'); postHeight(); return; }
       const gdiv=document.getElementById('guestInputs'); if(!gdiv){ setError(attendeeError,'Please choose how many people are attending.'); postHeight(); return; }
@@ -329,12 +329,20 @@
     notesBack.addEventListener('click', ()=> showStep('phone'));
     notesNext.addEventListener('click', ()=> { selectedNotes = (notesInput.value||'').trim(); buildReview(); showStep('review'); });
 
-    // review back should go to attendance
+    // review back goes to attendance
     reviewBack.addEventListener('click', ()=> showStep('attendance'));
     function buildReview(){
       let html = "<div><strong>"+escapeHtml(currentInvite.display_name)+"</strong></div>";
       statusLine.textContent = selectedStatus === 'Attending' ? 'ATTENDING' : 'DECLINED';
-      if(selectedStatus === 'Attending'){ html += "<div style='margin-top:.6rem'><strong>Guest names:</strong><ul style='list-style:none;padding:0;margin:8px 0'>"; if(currentMaxSeats<=1) html += "<li>"+escapeHtml(titleCaseName(currentInvite.display_name))+"</li>"; else selectedAttendees.forEach(n=> html += "<li>"+escapeHtml(n)+"</li>"); html += "</ul></div>"; html += "<div><strong>Airport transfer:</strong> "+escapeHtml(selectedTransport)+"</div>"; html += "<div><strong>Phone:</strong> "+escapeHtml(selectedPhoneStored)+"</div>"; }
+      if(selectedStatus === 'Attending'){
+        if(currentMaxSeats > 1){
+          html += "<div style='margin-top:.6rem'><strong>Guest names:</strong><ul style='list-style:none;padding:0;margin:8px 0'>";
+          selectedAttendees.forEach(n=> html += "<li>"+escapeHtml(n)+"</li>");
+          html += "</ul></div>";
+        }
+        html += "<div><strong>Airport transfer:</strong> "+escapeHtml(selectedTransport)+"</div>";
+        html += "<div><strong>Phone:</strong> "+escapeHtml(selectedPhoneStored)+"</div>";
+      }
       if(selectedNotes) html += "<div style='margin-top:.4rem'><strong>Notes:</strong> "+escapeHtml(selectedNotes)+"</div>";
       reviewSummary.innerHTML = html; reviewError.style.display = 'none'; postHeight();
     }
