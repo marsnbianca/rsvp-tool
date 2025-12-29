@@ -324,13 +324,30 @@
 
     let currentInvite = null, currentMaxSeats = 1, selectedStatus = "", selectedNumber = 1, selectedAttendees = [], selectedTransport = "", selectedPhoneStored = "", selectedNotes = "";
 
-    function showStep(name){
-      Object.values(steps).forEach(s=>s.style.display='none');
-      if(steps[name]) steps[name].style.display = '';
-      const stepsWithBottomClose = new Set(['notInList','thanks']);
-      notifyParentHasBottomClose(name, stepsWithBottomClose.has(name));
-      setTimeout(()=>{ focusFirstControl(name); postHeight(); }, 80);
-    }
+    function showStep(name) {
+  // Remove 'active' from all steps and clear inline display (in case some steps had style="display:none")
+  Object.values(steps).forEach(function(s) {
+    if (!s) return;
+    s.classList.remove('active');
+    s.style.display = ''; // clear inline display so CSS controls visibility
+  });
+
+  // Add 'active' to the requested step (if it exists)
+  if (steps[name]) {
+    steps[name].classList.add('active');
+    steps[name].style.display = ''; // ensure no inline blocking display
+  }
+
+  // Notify parent whether this step includes a bottom Close button
+  const stepsWithBottomClose = new Set(['notInList','thanks']);
+  notifyParentHasBottomClose(name, stepsWithBottomClose.has(name));
+
+  // Focus first control and post height after layout settles
+  setTimeout(function() {
+    focusFirstControl(name);
+    postHeight();
+  }, 80);
+}
 
     function focusFirstControl(stepName){
       try {
