@@ -311,8 +311,18 @@
       showStep('matches');
     }
 
+    // wire matches controls
     if (dontSeeBtn) dontSeeBtn.addEventListener('click', ()=> showStep('notInList'));
     if (backToSearch) backToSearch.addEventListener('click', ()=> showStep('search'));
+
+    // FIX: ensure notInList Back button works
+    if (notInListBack) {
+      notInListBack.addEventListener('click', function(){
+        // Going back from "I don't see my name" should return to the matches screen
+        // and notify parent that bottom-close is not present on matches.
+        showStep('matches');
+      });
+    }
 
     async function selectInvite(m){
       setError(searchErr,'');
