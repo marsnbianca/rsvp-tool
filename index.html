@@ -155,7 +155,7 @@
     // CONFIG — set to your Cloudflare Worker URL (proxy)
     const API_URL = "https://rsvp-proxy.marsnbianca.workers.dev/"; // <-- replace with your Worker URL
 
-    // Steps
+    // Steps mapping
     const steps = { search: document.getElementById('step-search'), matches: document.getElementById('step-matches'),
       notInList: document.getElementById('step-not-in-list'), attendance: document.getElementById('step-attendance'),
       transport: document.getElementById('step-transport'), phone: document.getElementById('step-phone'),
@@ -176,13 +176,14 @@
     // State
     let currentInvite = null, currentMaxSeats = 1, selectedStatus = "", selectedNumber = 1, selectedAttendees = [], selectedTransport = "", selectedPhoneStored = "", selectedNotes = "";
 
+    // Show step + request parent resize
     function showStep(name){
       Object.values(steps).forEach(s=>s.style.display='none');
       if(steps[name]) steps[name].style.display = '';
       try { document.getElementById('appBox').scrollTop = 0; } catch(_) {}
-      // report height to parent after show change
-      setTimeout(postHeight, 80);
+      setTimeout(postHeight, 60);
     }
+
     function setError(el, msg){ if(!el) return; if(msg){ el.textContent = msg; el.style.display = 'block'; } else { el.textContent = ''; el.style.display = 'none'; } }
     function loading(on){ loadingOverlay.style.display = on ? 'flex' : 'none'; }
 
@@ -199,8 +200,19 @@
     function formatPhoneInput(v){ var d=String(v||'').replace(/\D+/g,''); if(d.indexOf('63')===0 && d.length>=12) d='0'+d.slice(2); if(d.indexOf('9')===0 && d.length===10) d='0'+d; d=d.slice(0,11); if(d.length<=2) return d; if(d.length<=4) return d.slice(0,4); if(d.length<=7) return d.slice(0,4)+' '+d.slice(4); return d.slice(0,4)+' '+d.slice(4,7)+' '+d.slice(7,11); }
     function normalizePhoneToStored(input){ var d=String(input||'').replace(/\D+/g,''); if(!d) return ''; if(d.indexOf('63')===0 && d.length>=12) d='0'+d.slice(2); if(d.indexOf('9')===0 && d.length===10) d='0'+d; d=d.slice(0,11); if(!/^09\d{9}$/.test(d)) return ''; return d.slice(0,4)+' '+d.slice(4,7)+' '+d.slice(7,11); }
 
-    // Height post to parent
-    function postHeight(){ try{ var h = document.documentElement.scrollHeight; window.parent.postMessage({ type: 'RSVP:HEIGHT', height: h }, '*'); } catch(e){} }
+    // Post height to parent (debounced)
+    var postTimer = null;
+    function postHeight() {
+      try {
+        if (postTimer) clearTimeout(postTimer);
+        postTimer = setTimeout(function(){
+          try {
+            var h = document.documentElement.scrollHeight || document.body.scrollHeight;
+            window.parent.postMessage({ type: 'RSVP:HEIGHT', height: h }, '*');
+          } catch(e) {}
+        }, 80);
+      } catch(e){}
+    }
 
     // Search
     async function doFind(){
@@ -253,19 +265,28 @@
         if(currentMaxSeats <= 1){
           const info = document.createElement('div'); info.className='small'; info.textContent = 'This invitation is for 1 person; we will record your name automatically.'; attendanceDynamic.appendChild(info); postHeight(); return;
         }
+        // Render number selector only. Guest inputs will appear after selection change (below).
         const row=document.createElement('div'); row.className='form-row';
         const lbl=document.createElement('label'); lbl.textContent='How many people are attending (including you)?';
         const sel=document.createElement('select'); sel.id='numSelect';
         for(let i=1;i<=currentMaxSeats;i++){ const opt=document.createElement('option'); opt.value=String(i); opt.textContent=String(i); sel.appendChild(opt); }
-        sel.value='1'; sel.addEventListener('change', ()=> renderGuestInputs(parseInt(sel.value,10)));
+        sel.value='1';
+        sel.addEventListener('change', function(){ renderGuestInputs(parseInt(sel.value,10)); });
         row.appendChild(lbl); row.appendChild(sel); attendanceDynamic.appendChild(row);
+        // guest inputs container
         const gdiv=document.createElement('div'); gdiv.id='guestInputs'; gdiv.style.marginTop='8px'; attendanceDynamic.appendChild(gdiv);
         renderGuestInputs(1);
         postHeight();
-      } else { attendanceDynamic.innerHTML=''; postHeight(); }
+      } else {
+        attendanceDynamic.innerHTML=''; postHeight();
+      }
     });
 
-    function renderGuestInputs(n){ const gdiv=document.getElementById('guestInputs'); if(!gdiv) return; gdiv.innerHTML=''; for(let i=0;i<n;i++){ const input=document.createElement('input'); input.type='text'; input.placeholder='Guest full name'; input.className='guest-name-input'; input.style.marginBottom='8px'; gdiv.appendChild(input); } selectedNumber = n; postHeight(); }
+    function renderGuestInputs(n){
+      const gdiv=document.getElementById('guestInputs'); if(!gdiv) return; gdiv.innerHTML='';
+      for(let i=0;i<n;i++){ const input=document.createElement('input'); input.type='text'; input.placeholder='Guest full name'; input.className='guest-name-input'; input.style.marginBottom='8px'; gdiv.appendChild(input); }
+      selectedNumber = n; postHeight();
+    }
 
     attendanceNext.addEventListener('click', function(){
       setError(attendeeError,'');
@@ -322,16 +343,24 @@
 
     function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
 
-    // Height posting & mutation observer so parent can size iframe
-    function postHeight(){ try{ var h = document.documentElement.scrollHeight; window.parent.postMessage({ type: 'RSVP:HEIGHT', height: h }, '*'); } catch(e){} }
-    window.addEventListener('load', function(){ setTimeout(postHeight, 60); });
-    try { var mo = new MutationObserver(function(){ postHeight(); }); mo.observe(document.body, { childList:true, subtree:true, attributes:true, characterData:true }); } catch (e) {}
-    setInterval(postHeight, 1200);
-
     // respond to parent requests
     window.addEventListener('message', function (e) {
       try { if (e && e.data && e.data.type === 'RSVP:REQUEST_HEIGHT') postHeight(); } catch (_) {}
     });
+
+    // Post height on load and when DOM changes
+    window.addEventListener('load', function(){ setTimeout(postHeight, 60); });
+    try {
+      var mo = new MutationObserver(function(){ postHeight(); });
+      mo.observe(document.body, { childList:true, subtree:true, attributes:true, characterData:true });
+    } catch (e) {}
+    // Resize observer for layout changes
+    try {
+      var ro = new ResizeObserver(function(){ postHeight(); });
+      ro.observe(document.documentElement);
+    } catch (e) {}
+    // periodic fallback
+    setInterval(postHeight, 1200);
 
     showStep('search'); nameInput.focus();
   })();
