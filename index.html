@@ -13,17 +13,15 @@
       --max-width:900px;
     }
     html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;color:#111;background:var(--bg);}
-    .page-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2vh 4vw;}
-    /* App box (looks like a modal card when embedded in iframe) */
+    .page-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:4vw 2vw;}
     .app-box{
       width:100%;
       max-width:var(--max-width);
       background:#fff;
       border-radius:var(--card-radius);
-      box-shadow:0 18px 50px rgba(0,0,0,0.15);
+      box-shadow:0 10px 30px rgba(0,0,0,0.12);
       padding:1.25rem;
       box-sizing:border-box;
-      transform: translateZ(0);
     }
 
     h2{margin:0 0 .5rem;font-size:clamp(1.05rem,2.6vw,1.4rem)}
@@ -59,14 +57,18 @@
       border-radius: calc(var(--card-radius));
       z-index: 999;
     }
-    .spinner{
-      width:36px;height:36px;border-radius:50%;border:4px solid #eee;border-top-color:var(--accent);animation:spin 1s linear infinite;
-    }
+    .spinner{width:36px;height:36px;border-radius:50%;border:4px solid #eee;border-top-color:var(--accent);animation:spin 1s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
 
-    /* Responsive adjustments */
-    @media (max-width:480px){
-      .app-box{padding:.9rem;border-radius:10px}
+    /* Make look slightly more "modal" when inside iframe (host controls outer card) */
+    :root[data-embedded="true"] .app-box {
+      box-shadow: none;
+      border-radius: 6px;
+      padding: 1rem;
+    }
+
+    @media (max-width:520px){
+      .app-box{padding:.8rem;border-radius:10px}
       .search button{padding:.5rem .7rem}
     }
   </style>
@@ -127,14 +129,21 @@
         </form>
       </div>
 
-      <div class="meta">If you prefer a new tab, open the RSVP page directly.</div>
+      <div class="meta">If this opens as a new tab, you can close it after submitting.</div>
     </div>
   </div>
 
   <script>
   (function () {
     // CONFIG — set to your Cloudflare Worker URL (proxy)
-    const API_URL = "https://rsvp-proxy.marsnbianca.workers.dev/"; // <-- replace with your Worker URL
+    const API_URL = "https://rsvp-proxy.marsnbianca.workers.dev/"; // <-- REPLACE with your Worker URL
+
+    // If running in an iframe, mark root so CSS can adjust if needed
+    try {
+      if (window.self !== window.top) {
+        document.documentElement.setAttribute('data-embedded', 'true');
+      }
+    } catch (_) {}
 
     // DOM refs
     const nameInput = document.getElementById('name');
@@ -164,7 +173,6 @@
     function setError(el, msg){ if(!el) return; if(msg){ el.textContent = msg; show(el); } else { hide(el); el.textContent = ""; } }
 
     async function jsonFetch(payload) {
-      // show loading
       loading(true);
       try {
         const res = await fetch(API_URL, {
@@ -225,14 +233,12 @@
       currentInvite = r.invite || m;
       inviteName.textContent = currentInvite.display_name || m.display_name;
       show(inviteArea);
-      // reset form
       statusEl.value = "";
       attendeesEl.value = "";
       phoneEl.value = "";
       notesEl.value = "";
       setError(submitError, "");
       setError(submitSuccess, "");
-      // focus first field
       statusEl.focus();
     }
 
@@ -258,15 +264,14 @@
       if(!r || !r.ok){ setError(submitError, r && r.error ? r.error : "Server error"); return; }
       if(r.locked){ setError(submitError,"This invite already responded"); return; }
       setError(submitSuccess, "Thanks — RSVP recorded.");
+
       // notify parent overlay to close
       try { window.parent.postMessage("RSVP:CLOSE", "*"); } catch (_) {}
-      // also attempt to close popup if opened as separate window
       try { if(window.opener && !window.opener.closed) window.opener.postMessage("RSVP:CLOSE","*"); } catch(_) {}
-      // close self if a popup
       setTimeout(()=>{ try { window.close(); } catch(_) {} }, 200);
     }
 
-    // keyboard: Enter triggers search when focus is in name input
+    // Enter triggers search in name field
     nameInput.addEventListener('keydown', function(e){
       if(e.key === 'Enter'){
         e.preventDefault();
@@ -282,7 +287,6 @@
 
     function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-    // autofocus the name input
     try { nameInput.focus(); } catch (_) {}
   })();
   </script>
