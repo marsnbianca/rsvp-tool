@@ -27,6 +27,30 @@
     background: var(--bg);
   }
 
+  /* sticky modal header */
+.modal-header {
+  position: sticky;
+  top: 0.6rem;                  /* keeps top padding (adjust as needed) */
+  z-index: 5;                   /* sit above content when stuck */
+  display: block;
+  background: rgba(255,255,255,0.95); /* keeps header readable when translucent */
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  padding-top: 0.4rem;
+  padding-bottom: 0.45rem;
+  margin-bottom: 0.4rem;        /* spacing between header and step content */
+  border-radius: 0.35rem;       /* small rounding so header blends with card */
+}
+
+/* keep header text layout consistent */
+.modal-header h1 { margin: 0; font-size: 1.05rem; }
+.modal-header .subhead { margin-top: 0.25rem; color: var(--muted); font-size: 0.95rem; line-height:1.05; }
+
+/* On very small viewports, reduce the top offset so header doesn't hide too much */
+@media (max-width: 420px) {
+  .modal-header { top: 0.45rem; padding-top: 0.35rem; padding-bottom: 0.4rem; margin-bottom: 0.35rem; }
+}
+  
   /* Page wrap uses dynamic viewport so centering works with mobile address bars */
   .page-wrap {
     min-height: calc(var(--dvh, 1vh) * 100);
@@ -136,8 +160,10 @@
       <div id="loading" class="loading-overlay"><div class="spinner" aria-hidden="true"></div></div>
 
       <div class="content-column">
-        <h1>Mars + Bianca</h1>
-        <div class="subhead">Nuuk Taal<br>October 15, 2027</div>
+        <header class="modal-header" role="banner" aria-label="Event header">
+  <h1>Mars + Bianca</h1>
+  <div class="subhead">Nuuk Taal<br>October 15, 2027</div>
+</header>
 
         <!-- Search -->
         <div id="step-search" class="step active">
