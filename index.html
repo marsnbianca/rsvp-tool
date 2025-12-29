@@ -14,10 +14,9 @@
       --accent: #222;
       --danger: #c0392b;
       --card-radius: 0.6rem;
-      --content-max: 42rem; /* ~672px when root font-size 16px */
+      --content-max: 42rem;
     }
 
-    /* Compact, block layout to keep height small and ensure labels/answers on separate lines */
     html,body { margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; color:#111; background:var(--bg); height:auto; }
     .page-wrap { display:flex; align-items:center; justify-content:center; padding:3.5vw 2vw; }
     .app-box { width:100%; max-width:var(--content-max); background:#fff; border-radius:var(--card-radius); box-shadow:0 0.5rem 1.5rem rgba(0,0,0,0.12); padding:0.9rem; box-sizing:border-box; margin:0 auto; }
@@ -247,12 +246,9 @@
     function showStep(name){
       Object.values(steps).forEach(s=>s.style.display='none');
       if(steps[name]) steps[name].style.display = '';
-      // notify parent whether there is a bottom Close button on this step
       const stepsWithBottomClose = new Set(['notInList','thanks']);
       notifyParentHasBottomClose(name, stepsWithBottomClose.has(name));
-      // focus first interactive element for accessibility
-      setTimeout(() => focusFirstControl(name), 80);
-      setTimeout(postHeight, 80);
+      setTimeout(()=>{ focusFirstControl(name); postHeight(); }, 80);
     }
 
     function focusFirstControl(stepName){
@@ -264,10 +260,7 @@
       } catch(_) {}
     }
 
-    function setError(el, msg){
-      if(!el) return;
-      if(msg){ el.textContent = msg; el.style.display = 'block'; } else { el.textContent = ''; el.style.display = 'none'; }
-    }
+    function setError(el, msg){ if(!el) return; if(msg){ el.textContent = msg; el.style.display = 'block'; } else { el.textContent = ''; el.style.display = 'none'; } }
     function loading(on){ loadingOverlay.style.display = on ? 'flex' : 'none'; }
 
     async function jsonFetch(payload){
@@ -283,9 +276,7 @@
     function formatPhoneInput(v){ var d=String(v||'').replace(/\D+/g,''); if(d.indexOf('63')===0 && d.length>=12) d='0'+d.slice(2); if(d.indexOf('9')===0 && d.length===10) d='0'+d; d=d.slice(0,11); if(d.length<=2) return d; if(d.length<=4) return d.slice(0,4); if(d.length<=7) return d.slice(0,4)+' '+d.slice(4); return d.slice(0,4)+' '+d.slice(4,7)+' '+d.slice(7,11); }
     function normalizePhoneToStored(input){ var d=String(input||'').replace(/\D+/g,''); if(!d) return ''; if(d.indexOf('63')===0 && d.length>=12) d='0'+d.slice(2); if(d.indexOf('9')===0 && d.length===10) d='0'+d; d=d.slice(0,11); if(!/^09\d{9}$/.test(d)) return ''; return d.slice(0,4)+' '+d.slice(4,7)+' '+d.slice(7,11); }
 
-    function notifyParentHasBottomClose(stepName, hasBottom) {
-      try { window.parent.postMessage({ type:'RSVP:HAS_BOTTOM_CLOSE', hasBottomClose: !!hasBottom }, '*'); } catch(_) {}
-    }
+    function notifyParentHasBottomClose(stepName, hasBottom) { try { window.parent.postMessage({ type:'RSVP:HAS_BOTTOM_CLOSE', hasBottomClose: !!hasBottom }, '*'); } catch(_) {} }
 
     var postTimer = null;
     function postHeight() {
@@ -300,7 +291,7 @@
       } catch(e){}
     }
 
-    // ----- Search -----
+    // Search
     async function doFind(){
       setError(searchErr,''); matchesEl.innerHTML = '';
       const q = (nameInput.value||'').trim();
@@ -320,11 +311,9 @@
       showStep('matches');
     }
 
-    // wire matches buttons
     if (dontSeeBtn) dontSeeBtn.addEventListener('click', ()=> showStep('notInList'));
     if (backToSearch) backToSearch.addEventListener('click', ()=> showStep('search'));
 
-    // ----- select invite -----
     async function selectInvite(m){
       setError(searchErr,'');
       const r = await jsonFetch({ action:'get', invite_id: m.invite_id });
@@ -338,8 +327,6 @@
         closeBtn.addEventListener('click', function(){ try{ window.parent.postMessage({ type:'RSVP:CLOSE' }, '*'); }catch(_){} try{ window.close(); }catch(_){} });
         wrapper.appendChild(closeBtn);
         matchesEl.appendChild(wrapper);
-
-        // hide top buttons on parent (signal bottom close present)
         notifyParentHasBottomClose('matches', true);
         postHeight();
         return;
@@ -358,29 +345,24 @@
     attendanceBack.addEventListener('click', ()=> showStep('matches'));
 
     attendanceSelect.addEventListener('change', function(){
-      setError(attendeeError,''); attendanceDynamic.innerHTML='';
+      setError(attendeeError,''); attendanceDynamic.innerHTML = '';
       const v=(attendanceSelect.value||'').trim();
       if(v === 'Attending'){
         if(currentMaxSeats <= 1){ postHeight(); return; }
-        const row=document.createElement('div'); row.className='form-row';
+        const row=document.createElement('div'); row.className = 'form-row';
         const lbl=document.createElement('label'); lbl.textContent='How many people are attending (including you)?';
         const sel=document.createElement('select'); sel.id='numSelect';
         const placeholder=document.createElement('option'); placeholder.value=''; placeholder.textContent='-- choose --'; sel.appendChild(placeholder);
         for(let i=1;i<=currentMaxSeats;i++){ const opt=document.createElement('option'); opt.value=String(i); opt.textContent=String(i); sel.appendChild(opt); }
-        sel.value='';
-        sel.addEventListener('change', ()=> renderGuestInputs(parseInt(sel.value,10) || 0));
+        sel.value=''; sel.addEventListener('change', ()=> renderGuestInputs(parseInt(sel.value,10) || 0));
         row.appendChild(lbl); row.appendChild(sel); attendanceDynamic.appendChild(row);
-
         const gdiv=document.createElement('div'); gdiv.id='guestInputs'; gdiv.style.marginTop='0.5rem'; attendanceDynamic.appendChild(gdiv);
         postHeight();
-      } else {
-        attendanceDynamic.innerHTML=''; postHeight();
-      }
+      } else { attendanceDynamic.innerHTML=''; postHeight(); }
     });
 
     function renderGuestInputs(n){
-      const gdiv=document.getElementById('guestInputs'); if(!gdiv) return; gdiv.innerHTML='';
-      if(!n || n<1){ postHeight(); return; }
+      const gdiv=document.getElementById('guestInputs'); if(!gdiv) return; gdiv.innerHTML=''; if(!n || n<1){ postHeight(); return; }
       for(let i=0;i<n;i++){ const input=document.createElement('input'); input.type='text'; input.placeholder='Guest full name'; input.className='guest-name-input'; input.style.marginBottom='0.5rem'; gdiv.appendChild(input); }
       selectedNumber = n; postHeight();
     }
@@ -421,7 +403,6 @@
       const statusText = selectedStatus === 'Attending' ? 'ATTENDING' : 'DECLINED';
       let html = "<div style='font-weight:700'>"+escapeHtml(currentInvite.display_name)+"</div>";
       html += "<div style='margin-top:0.4rem;font-weight:600'>"+statusText+"</div>";
-
       if(selectedStatus === 'Attending'){
         if(currentMaxSeats > 1){
           html += "<div style='margin-top:.5rem'><strong>Guest names:</strong><ul style='list-style:none;padding:0;margin:8px 0'>";
@@ -466,8 +447,6 @@
     window.addEventListener('message', function (e) { try { if (e && e.data && e.data.type === 'RSVP:REQUEST_HEIGHT') postHeight(); } catch (_) {} });
 
     function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
-
-    function notifyParentHasBottomClose(stepName, hasBottom) { try { window.parent.postMessage({ type:'RSVP:HAS_BOTTOM_CLOSE', hasBottomClose: !!hasBottom }, '*'); } catch(_) {} }
 
     showStep('search');
     try { nameInput.focus(); } catch(_) {}
