@@ -27,16 +27,17 @@
     }
 
     h2{margin:0 0 .5rem;font-size:clamp(1.05rem,2.6vw,1.4rem)}
-    .search-row{display:flex;gap:.5rem;margin-bottom:.75rem}
+    .intro{margin-bottom:.6rem;color:var(--muted)}
+    .search-row{display:flex;gap:.5rem;margin-bottom:.35rem}
     .search-row input{flex:1;padding:.6rem;border:1px solid #e5e5e5;border-radius:8px;font-size:1rem}
     .search-row button{padding:.6rem .9rem;border-radius:8px;border:0;background:var(--accent);color:#fff;cursor:pointer}
     .matches{margin-bottom:1rem}
     .matches-subtext{font-size:.95rem;color:var(--muted);margin-bottom:.5rem}
-    .match-btn{display:flex;align-items:center;justify-content:space-between;padding:.7rem;border:1px solid #f0f0f0;border-radius:8px;margin:.45rem 0;background:#fff;cursor:pointer;transition:all .12s}
+    .match-btn{display:flex;align-items:center;justify-content:space-between;padding:.75rem;border:1px solid #f0f0f0;border-radius:8px;margin:.45rem 0;background:#fff;cursor:pointer;transition:all .12s;width:100%}
     .match-btn:hover{background:#fafafa;transform:translateY(-2px)}
     .match-btn:active{opacity:.95}
     .message{padding:.6rem;background:#e7f7e7;border:1px solid #bfe6bf;border-radius:8px;margin:.5rem 0}
-    .error{padding:.6rem;background:#ffecec;border:1px solid #f5c2c2;border-radius:8px;margin:.5rem 0;color:var(--danger);display:none}
+    .error{padding:.5rem 0;color:var(--danger);font-size:.95rem;display:none}
 
     .step{display:none}
     .step.active{display:block}
@@ -63,7 +64,6 @@
       .app-box{padding:12px;border-radius:10px}
       .match-btn{padding:.6rem}
     }
-    /* phone input monospace so formatting looks neat */
     input[type=tel]{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace}
   </style>
 </head>
@@ -73,6 +73,7 @@
       <div id="loading" class="loading-overlay"><div class="spinner" aria-hidden="true"></div></div>
 
       <h2 id="title">RSVP — Mars & Bianca</h2>
+      <div class="intro">If you're responding for yourself and a guest (or your family), you'll be able to RSVP for your entire group.</div>
 
       <!-- Step: Search -->
       <div id="step-search" class="step active">
@@ -85,11 +86,13 @@
 
       <!-- Step: Matches -->
       <div id="step-matches" class="step">
-        <div class="matches-subtext">We found you in the guest list! Please select your name below to RSVP.</div>
+        <div class="matches-subtext" id="matchesSubtext" style="display:none">We found you in the guest list! Please select your name below to RSVP.</div>
         <div id="matches" class="matches" aria-live="polite"></div>
         <div style="margin-top:.6rem;display:flex;gap:.6rem;justify-content:space-between;align-items:center">
-          <button id="dontSeeBtn" class="btn text">I don't see my name</button>
-          <button id="backToSearch" class="btn ghost">Back</button>
+          <button id="dontSeeBtn" class="btn ghost">I don't see my name</button>
+          <div style="margin-left:auto">
+            <button id="backToSearch" class="btn ghost">Back</button>
+          </div>
         </div>
       </div>
 
@@ -116,7 +119,7 @@
           </select>
         </div>
 
-        <div id="attendeeInputsContainer" style="margin-bottom:.6rem"></div>
+        <div id="attendanceDynamic" style="margin-top:.6rem"></div>
         <div id="attendeeError" class="error"></div>
 
         <div class="actions">
@@ -172,7 +175,7 @@
       <!-- Step: Review & Submit -->
       <div id="step-review" class="step">
         <div id="reviewSummary" class="form-row"></div>
-        <div id="statusLine" style="color:var(--danger);font-weight:600;margin-bottom:.5rem"></div>
+        <div id="statusLine" style="font-weight:600;margin-bottom:.5rem"></div>
         <div id="reviewError" class="error"></div>
 
         <div class="actions">
@@ -194,9 +197,9 @@
   <script>
   (function () {
     // CONFIG — set to your Cloudflare Worker URL (proxy)
-    const API_URL = "https://rsvp-proxy.marsnbianca.workers.dev/"; // <-- replace with your Worker URL
+    const API_URL = "https://rsvp-proxy.marsnbianca.workers.dev/"; // <-- replace
 
-    // Step elements
+    // Steps
     const steps = {
       search: document.getElementById('step-search'),
       matches: document.getElementById('step-matches'),
@@ -209,17 +212,18 @@
       thanks: document.getElementById('step-thanks')
     };
 
-    // Search / matches
+    // Search
     const nameInput = document.getElementById('nameInput');
     const findBtn = document.getElementById('findBtn');
     const searchErr = document.getElementById('searchErr');
     const matchesEl = document.getElementById('matches');
+    const matchesSubtext = document.getElementById('matchesSubtext');
     const dontSeeBtn = document.getElementById('dontSeeBtn');
     const backToSearch = document.getElementById('backToSearch');
 
-    // Attendance + attendees combined
+    // Attendance combined
     const attendanceSelect = document.getElementById('attendanceSelect');
-    const attendeeInputsContainer = document.getElementById('attendeeInputsContainer');
+    const attendanceDynamic = document.getElementById('attendanceDynamic');
     const attendeeError = document.getElementById('attendeeError');
     const attendanceBack = document.getElementById('attendanceBack');
     const attendanceNext = document.getElementById('attendanceNext');
@@ -240,7 +244,7 @@
     const notesBack = document.getElementById('notesBack');
     const notesNext = document.getElementById('notesNext');
 
-    // Review / submit
+    // Review
     const reviewSummary = document.getElementById('reviewSummary');
     const reviewError = document.getElementById('reviewError');
     const statusLine = document.getElementById('statusLine');
@@ -251,34 +255,32 @@
     const thanksMessage = document.getElementById('thanksMessage');
     const thanksClose = document.getElementById('thanksClose');
 
-    // Not-in-list
     const notInListBack = document.getElementById('notInListBack');
 
-    // Loading overlay
     const loadingOverlay = document.getElementById('loading');
 
     // State
-    let currentInvite = null; // { invite_id, display_name, max_seats }
+    let currentInvite = null;
     let currentMaxSeats = 1;
     let selectedStatus = "";
+    let selectedNumber = 1;
     let selectedAttendees = [];
     let selectedTransport = "";
     let selectedPhoneStored = "";
     let selectedNotes = "";
 
-    // Helpers
     function showStep(name){
       Object.values(steps).forEach(s=>s.classList.remove('active'));
       if(steps[name]) steps[name].classList.add('active');
-      try { document.getElementById('appBox').scrollTop = 0; } catch (_) {}
+      try { document.getElementById('appBox').scrollTop = 0; } catch(_) {}
     }
+
     function setError(el, msg){
       if(!el) return;
       if(msg){ el.textContent = msg; el.style.display = ''; } else { el.textContent = ''; el.style.display = 'none'; }
     }
-    function loading(on){
-      loadingOverlay.style.display = on ? 'flex' : 'none';
-    }
+
+    function loading(on){ loadingOverlay.style.display = on ? 'flex' : 'none'; }
 
     async function jsonFetch(payload){
       loading(true);
@@ -296,28 +298,19 @@
       } finally { loading(false); }
     }
 
-    // Title case helper for names before submit
+    // Title-case helper
     function titleCaseName(s){
       s = String(s||'').replace(/\s+/g,' ').trim().toLowerCase();
       if(!s) return "";
-      var out = "";
-      var capNext = true;
-      for(var i=0;i<s.length;i++){
-        var ch = s[i];
-        if(capNext && ch >= 'a' && ch <= 'z'){
-          out += ch.toUpperCase(); capNext = false;
-        } else {
-          out += ch;
-        }
-        if(ch === ' ' || ch === '-' || ch === "'") capNext = true;
-      }
-      return out;
+      return s.split(/([\s\-'])/).map(function(part){
+        if(/[\s\-']/.test(part)) return part;
+        return part.charAt(0).toUpperCase() + part.slice(1);
+      }).join('');
     }
 
-    // Phone normalization/validation
+    // Phone helpers
     function formatPhoneInput(v){
       var digits = String(v||'').replace(/\D+/g,'');
-      // handle +63 or leading 9 conversions not needed here, require user to start with 09
       if(digits.indexOf('63')===0 && digits.length>=12) digits = '0' + digits.slice(2);
       if(digits.indexOf('9')===0 && digits.length===10) digits = '0' + digits;
       digits = digits.slice(0,11);
@@ -327,33 +320,31 @@
       return digits.slice(0,4) + ' ' + digits.slice(4,7) + ' ' + digits.slice(7,11);
     }
     function normalizePhoneToStored(input){
-      var digits = String(input || "").replace(/\D+/g, "");
+      var digits = String(input||'').replace(/\D+/g,'');
       if(!digits) return "";
-      if(digits.indexOf("63") === 0 && digits.length >= 12) digits = "0" + digits.slice(2);
-      if(digits.indexOf("9") === 0 && digits.length === 10) digits = "0" + digits;
-      digits = digits.slice(0, 11);
+      if(digits.indexOf('63')===0 && digits.length>=12) digits = '0' + digits.slice(2);
+      if(digits.indexOf('9')===0 && digits.length===10) digits = '0' + digits;
+      digits = digits.slice(0,11);
       if(!/^09\d{9}$/.test(digits)) return "";
-      return digits.slice(0,4) + " " + digits.slice(4,7) + " " + digits.slice(7,11);
+      return digits.slice(0,4) + ' ' + digits.slice(4,7) + ' ' + digits.slice(7,11);
     }
 
-    // Search flow
+    // Search
     async function doFind(){
       setError(searchErr,'');
       matchesEl.innerHTML = '';
+      matchesSubtext.style.display = 'none';
       const q = (nameInput.value||'').trim();
-      if(q.length < 3){
-        setError(searchErr, 'Please type at least 3 characters.');
-        return;
-      }
+      if(q.length < 3){ setError(searchErr,'Please type at least 3 characters.'); return; }
       findBtn.disabled = true;
       const r = await jsonFetch({ action:'find', name: q, client_id: 'guest-'+Date.now() });
       findBtn.disabled = false;
       if(!r || !r.ok){ setError(searchErr, r && r.error ? r.error : 'Server error'); return; }
       if(!r.matches || r.matches.length === 0){
-        matchesEl.innerHTML = "<div class='message'>No matches found.</div>";
-        showStep('matches');
+        setError(searchErr, 'No matches found. Please try again or contact us.');
         return;
       }
+      // render matches
       matchesEl.innerHTML = '';
       r.matches.forEach(m=>{
         const btn = document.createElement('button');
@@ -363,26 +354,23 @@
         btn.addEventListener('click', ()=> onSelectMatch(m.invite_id, m.display_name, m.max_seats));
         matchesEl.appendChild(btn);
       });
+      matchesSubtext.style.display = '';
       showStep('matches');
     }
 
-    // "I don't see my name"
+    // Matches controls
     dontSeeBtn.addEventListener('click', function(){ showStep('notInList'); });
     backToSearch.addEventListener('click', function(){ showStep('search'); });
 
-    // Not in list back
     notInListBack.addEventListener('click', function(){ showStep('matches'); });
 
-    // When match selected
+    // Select match
     async function onSelectMatch(invite_id, display_name, max_seats){
-      // call get to see locked and canonical max_seats
       const r = await jsonFetch({ action:'get', invite_id: invite_id });
-      if(!r || !r.ok){ alert(r && r.error ? r.error : 'Server error'); return; }
+      if(!r || !r.ok){ setError(searchErr, r && r.error ? r.error : 'Server error'); return; }
       if(r.locked){
-        // replace matches with locked message and provide Close button
+        // show locked message in matches area and provide close control
         matchesEl.innerHTML = "<div class='message'>This invitation has already been answered. If you need to make changes, please contact us: +1 778 977 4975 (WhatsApp/Viber)</div>";
-        // show a close control in place of back: implement by showing the notInList screen with same message and a close button - but simpler: showMatches contains Close button
-        // We'll add a Close button below
         const closeBtn = document.createElement('button');
         closeBtn.className = 'btn primary';
         closeBtn.style.marginTop = '10px';
@@ -395,89 +383,119 @@
         return;
       }
 
-      // set currentInvite
       currentInvite = { invite_id: invite_id, display_name: display_name, max_seats: Math.max(1, r.invite && r.invite.max_seats ? parseInt(r.invite.max_seats,10) : (max_seats || 1)) };
-      currentMaxSeats = Math.min(currentInvite.max_seats, 4); // cap UI to 4
-      // reset selections
-      selectedStatus=''; selectedAttendees=[]; selectedTransport=''; selectedPhoneStored=''; selectedNotes='';
-
-      // populate attendance screen
+      currentMaxSeats = Math.min(currentInvite.max_seats, 4);
+      // reset
+      selectedStatus=''; selectedNumber=1; selectedAttendees=[]; selectedTransport=''; selectedPhoneStored=''; selectedNotes='';
       attendanceSelect.value = '';
-      attendeeInputsContainer.innerHTML = '';
-      setError(attendeeError, '');
-      // If max seats > 1, render inputs equal to max seats (no extra text)
-      if(currentMaxSeats > 1){
-        for(let i=0;i<currentMaxSeats;i++){
-          const input = document.createElement('input');
-          input.type = 'text';
-          input.placeholder = 'Guest full name';
-          input.className = 'guest-name-input';
-          input.style.marginBottom = '8px';
-          input.style.width = '100%';
-          attendeeInputsContainer.appendChild(input);
-        }
-      }
+      attendanceDynamic.innerHTML = '';
+      setError(attendeeError,'');
+      // prepare attendee inputs if max>1 (but only render after selecting attending and number)
       showStep('attendance');
     }
 
-    // Attendance navigation
+    // Attendance flow
     attendanceBack.addEventListener('click', function(){ showStep('matches'); });
     attendanceNext.addEventListener('click', function(){
       setError(attendeeError,'');
       const val = (attendanceSelect.value||'').trim();
-      if(!val){ setError(attendeeError, 'Please choose whether you will attend or decline.'); return; }
+      if(!val){ setError(attendeeError,'Please choose whether you will attend or decline.'); return; }
       selectedStatus = val;
       if(selectedStatus === 'Declined'){
-        // clear attendee inputs
+        // go straight to review
         selectedAttendees = [];
-        showStep('transport');
+        buildReview();
+        showStep('review');
         return;
       }
-      // Attending
-      if(currentMaxSeats <= 1){
-        // single invite: use invite display name automatically
-        selectedAttendees = [ titleCaseName(currentInvite.display_name) ];
-        showStep('transport');
-        return;
+      // Attending -> show number selector and name inputs on same screen
+      attendanceDynamic.innerHTML = '';
+      const row = document.createElement('div');
+      row.className = 'form-row';
+      const lbl = document.createElement('label');
+      lbl.textContent = 'How many people are attending (including you)?';
+      const sel = document.createElement('select');
+      sel.id = 'numSelect';
+      for(let i=1;i<=currentMaxSeats;i++){
+        const opt = document.createElement('option'); opt.value = String(i); opt.textContent = String(i);
+        sel.appendChild(opt);
       }
-      // multiple seats: collect names from inputs if any prefilled (do not require all now, require at least one)
-      const inputs = Array.from(attendeeInputsContainer.querySelectorAll('.guest-name-input'));
-      const names = inputs.map(i=>i.value.trim()).filter(Boolean);
-      if(names.length < 1){
-        setError(attendeeError, 'Please provide at least one attendee full name.');
-        return;
-      }
-      selectedAttendees = names.map(titleCaseName).slice(0,currentMaxSeats);
-      showStep('transport');
+      sel.value = '1';
+      sel.addEventListener('change', function(){
+        renderGuestInputs(parseInt(sel.value,10));
+      });
+      row.appendChild(lbl); row.appendChild(sel);
+      attendanceDynamic.appendChild(row);
+      // guest inputs container
+      const gdiv = document.createElement('div'); gdiv.id = 'guestInputs'; gdiv.style.marginTop = '8px';
+      attendanceDynamic.appendChild(gdiv);
+      renderGuestInputs(1);
+      // keep on same screen (user will click Next again to proceed)
     });
 
-    // Transport navigation
-    transportBack.addEventListener('click', function(){
-      showStep('attendance');
+    function renderGuestInputs(n){
+      const gdiv = document.getElementById('guestInputs');
+      gdiv.innerHTML = '';
+      for(let i=0;i<n;i++){
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = 'Guest full name';
+        input.className = 'guest-name-input';
+        input.style.marginBottom = '8px';
+        gdiv.appendChild(input);
+      }
+      selectedNumber = n;
+    }
+
+    // On second click of Next, we need to collect guest names: detect whether guestInputs exist
+    // We'll intercept attendanceNext click — but we already used attendanceNext to render. So add double-behavior:
+    // Instead: user must pick number and fill names then click Next again — we can detect guestInputs presence and then advance.
+    attendanceNext.addEventListener('click', function(){
+      // if guestInputs exists and has inputs, validate and proceed
+      const gdiv = document.getElementById('guestInputs');
+      if(gdiv && gdiv.querySelectorAll('.guest-name-input').length > 0){
+        const inputs = Array.from(gdiv.querySelectorAll('.guest-name-input'));
+        const names = inputs.map(i=>i.value.trim()).filter(Boolean);
+        if(names.length < 1){ setError(attendeeError,'Please enter at least one guest full name.'); return; }
+        if(names.length < selectedNumber){ setError(attendeeError,'Please fill all guest name boxes for the number you selected.'); return; }
+        selectedAttendees = names.slice(0,selectedNumber).map(titleCaseName);
+        showStep('transport');
+        return;
+      } else {
+        // no guest inputs -> probably single seat and we already handled above -> go to transport
+        if(selectedStatus === 'Attending') {
+          if(currentMaxSeats <=1){
+            selectedAttendees = [ titleCaseName(currentInvite.display_name) ];
+            showStep('transport'); return;
+          } else {
+            // if for some reason no guestInputs (shouldn't happen), force render
+            renderGuestInputs(1);
+            return;
+          }
+        }
+      }
     });
+
+    // Transport
+    transportBack.addEventListener('click', function(){ showStep('attendance'); });
     transportNext.addEventListener('click', function(){
       const v = (transportSelect.value||'').trim();
       if(!v){ setError(attendeeError, 'Please choose Yes or No for airport transfer.'); return; }
-      setError(attendeeError,'');
       selectedTransport = v === 'Yes' ? 'Yes' : 'No';
+      setError(attendeeError,'');
       showStep('phone');
     });
 
-    // Phone input formatting & validation
-    phoneInput.addEventListener('input', function(e){
-      const formatted = formatPhoneInput(phoneInput.value);
-      phoneInput.value = formatted;
+    // Phone
+    phoneInput.addEventListener('input', function(){
+      phoneInput.value = formatPhoneInput(phoneInput.value);
     });
-
     phoneBack.addEventListener('click', function(){ showStep('transport'); });
     phoneNext.addEventListener('click', function(){
       setError(phoneErr,'');
       if(selectedStatus === 'Attending'){
         const stored = normalizePhoneToStored(phoneInput.value);
-        if(!stored){
-          setError(phoneErr, 'Phone must be 11 digits starting with 09 (e.g. 0917 123 4567).');
-          return;
-        }
+        if(!stored){ setError(phoneErr, 'Phone must be 11 digits starting with 09 (e.g. 0917 123 4567)'); return; }
         selectedPhoneStored = stored;
       } else {
         selectedPhoneStored = '';
@@ -485,48 +503,41 @@
       showStep('notes');
     });
 
-    // Notes navigation
-    notesBack.addEventListener('click', function(){
-      showStep('phone');
-    });
+    // Notes
+    notesBack.addEventListener('click', function(){ showStep('phone'); });
     notesNext.addEventListener('click', function(){
       selectedNotes = (notesInput.value||'').trim();
       buildReview();
       showStep('review');
     });
 
-    // Review
+    // Review & Submit
     reviewBack.addEventListener('click', function(){ showStep('notes'); });
 
     function buildReview(){
       let html = "<div><strong>Invite:</strong> "+escapeHtml(currentInvite.display_name)+"</div>";
-      html += "<div><strong>Response:</strong></div>";
-      // show response in red under the label
       statusLine.textContent = selectedStatus === 'Attending' ? 'Attending' : 'Declined';
       if(selectedStatus === 'Attending') statusLine.style.color = '#1b9b4a'; else statusLine.style.color = 'var(--danger)';
-      html += "<div style='margin-top:.4rem;'><strong>Attendees:</strong><ul>";
       if(selectedStatus === 'Attending'){
+        html += "<div style='margin-top:.4rem;'><strong>Attendees:</strong><ul>";
         if(currentMaxSeats <= 1){
           html += "<li>"+escapeHtml(titleCaseName(currentInvite.display_name))+"</li>";
         } else {
-          selectedAttendees.forEach(n => html += "<li>"+escapeHtml(n)+"</li>");
+          selectedAttendees.forEach(n=> html += "<li>"+escapeHtml(n)+"</li>");
         }
-      } else {
-        html += "<li>—</li>";
-      }
-      html += "</ul></div>";
-      if(selectedStatus === 'Attending'){
+        html += "</ul></div>";
         html += "<div><strong>Airport transfer:</strong> "+escapeHtml(selectedTransport)+"</div>";
         html += "<div><strong>Phone:</strong> "+escapeHtml(selectedPhoneStored)+"</div>";
+      } else {
+        // declined: only show name and declined status
       }
-      if(selectedNotes) html += "<div><strong>Notes:</strong> "+escapeHtml(selectedNotes)+"</div>";
+      if(selectedNotes) html += "<div style='margin-top:.4rem'><strong>Notes:</strong> "+escapeHtml(selectedNotes)+"</div>";
       reviewSummary.innerHTML = html;
       reviewError.style.display = 'none';
     }
 
     submitBtn.addEventListener('click', async function(){
       reviewError.style.display = 'none';
-      // prepare payload
       const payload = {
         action: 'submit',
         invite_id: currentInvite.invite_id,
@@ -550,7 +561,7 @@
         reviewError.style.display = '';
         return;
       }
-      // success -> thanks
+      // success messages
       if(selectedStatus === 'Attending'){
         thanksMessage.innerHTML = "<strong>See you there — we're excited to celebrate with you!</strong><div class='small' style='margin-top:.5rem'>If you need to make changes, contact us: +1 778 977 4975 (WhatsApp/Viber)</div>";
       } else {
@@ -559,23 +570,20 @@
       showStep('thanks');
     });
 
-    // thanks close
     thanksClose.addEventListener('click', function(){
       try { window.parent.postMessage('RSVP:CLOSE','*'); } catch(_) {}
       try { if(window.opener && !window.opener.closed) window.opener.postMessage('RSVP:CLOSE','*'); } catch(_) {}
       try { window.close(); } catch(_) {}
     });
 
-    // keyboard: Enter triggers search
+    // Enter -> search
     nameInput.addEventListener('keydown', function(e){
       if(e.key === 'Enter'){ e.preventDefault(); doFind(); }
     });
     findBtn.addEventListener('click', doFind);
 
-    // small helpers
-    function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
 
-    // init
     showStep('search');
     nameInput.focus();
   })();
