@@ -1,120 +1,290 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>RSVP — Mars & Bianca</title>
   <style>
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;margin:0;padding:1rem;background:#fff;color:#111}
-    .wrap{max-width:820px;margin:0 auto}
-    .search{display:flex;gap:.5rem}
-    input,textarea,select{width:100%;padding:.6rem;border:1px solid #ddd;border-radius:6px}
-    button{padding:.6rem .9rem;border-radius:6px;background:#222;color:#fff;border:0}
-    .match{display:flex;justify-content:space-between;align-items:center;padding:.5rem;border:1px solid #eee;border-radius:6px;margin:.5rem 0}
+    :root{
+      --bg:#ffffff;
+      --muted:#666;
+      --accent:#222;
+      --card-radius:12px;
+      --max-width:900px;
+    }
+    html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;color:#111;background:var(--bg);}
+    .page-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2vh 4vw;}
+    /* App box (looks like a modal card when embedded in iframe) */
+    .app-box{
+      width:100%;
+      max-width:var(--max-width);
+      background:#fff;
+      border-radius:var(--card-radius);
+      box-shadow:0 18px 50px rgba(0,0,0,0.15);
+      padding:1.25rem;
+      box-sizing:border-box;
+      transform: translateZ(0);
+    }
+
+    h2{margin:0 0 .5rem;font-size:clamp(1.05rem,2.6vw,1.4rem)}
+    .search{display:flex;gap:.5rem;margin-bottom:.75rem}
+    .search input{flex:1;padding:.6rem;border:1px solid #e5e5e5;border-radius:8px;font-size:1rem}
+    .search button{padding:.6rem .9rem;border-radius:8px;border:0;background:var(--accent);color:#fff;cursor:pointer}
+    .matches{margin-bottom:1rem}
+    .match{display:flex;justify-content:space-between;align-items:center;padding:.6rem;border:1px solid #f0f0f0;border-radius:8px;margin:.45rem 0}
+    .match small{color:var(--muted);display:block;font-size:.88rem}
+    .message{padding:.6rem;background:#e7f7e7;border:1px solid #bfe6bf;border-radius:8px;margin:.5rem 0}
+    .error{padding:.6rem;background:#ffecec;border:1px solid #f5c2c2;border-radius:8px;margin:.5rem 0;color:#800}
+
+    form{margin-top:.5rem;display:grid;gap:.6rem}
+    .form-row{display:flex;flex-direction:column;gap:.35rem}
+    label{font-size:.95rem;color:#333}
+    input,select,textarea{padding:.6rem;font-size:1rem;border:1px solid #e6e6e6;border-radius:8px;width:100%;box-sizing:border-box}
+    textarea{min-height:80px;resize:vertical}
+
+    .actions{display:flex;gap:.6rem;margin-top:.6rem;justify-content:flex-end}
+    .actions .primary{background:var(--accent);color:#fff;padding:.6rem .9rem;border-radius:8px;border:0;cursor:pointer}
+    .actions .muted{background:#f3f3f3;color:#111;padding:.6rem .9rem;border-radius:8px;border:0;cursor:pointer}
+
+    .meta{font-size:.9rem;color:var(--muted);margin-top:.5rem}
+
+    /* Loading overlay inside the app */
+    .loading-overlay{
+      position: absolute;
+      inset: 0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: rgba(255,255,255,0.7);
+      border-radius: calc(var(--card-radius));
+      z-index: 999;
+    }
+    .spinner{
+      width:36px;height:36px;border-radius:50%;border:4px solid #eee;border-top-color:var(--accent);animation:spin 1s linear infinite;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* Responsive adjustments */
+    @media (max-width:480px){
+      .app-box{padding:.9rem;border-radius:10px}
+      .search button{padding:.5rem .7rem}
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h2>RSVP — Mars & Bianca</h2>
-    <div class="search">
-      <input id="name" placeholder="Type your name"/>
-      <button id="find">Find</button>
-    </div>
-    <div id="matches"></div>
+  <div class="page-wrap">
+    <div class="app-box" id="appBox" role="dialog" aria-modal="true">
+      <div id="loading" class="loading-overlay" style="display:none">
+        <div class="spinner" aria-hidden="true"></div>
+      </div>
 
-    <div id="invite" style="display:none">
-      <h3 id="inviteName"></h3>
-      <label>Status<select id="status"><option value="">--</option><option>Attending</option><option>Declined</option></select></label>
-      <label>Attendees<textarea id="attendees" rows="3"></textarea></label>
-      <label>Phone<input id="phone" type="text" /></label>
-      <label>Notes<textarea id="notes" rows="2"></textarea></label>
-      <div style="margin-top:.5rem"><button id="submit">Submit RSVP</button></div>
-      <div id="msg" style="margin-top:.5rem"></div>
+      <h2>RSVP — Mars & Bianca</h2>
+
+      <div id="searchArea">
+        <div class="search">
+          <input id="name" placeholder="Type your name (or family name)" autocomplete="name" />
+          <button id="findBtn" type="button">Find</button>
+        </div>
+        <div id="findError" class="error" style="display:none"></div>
+        <div id="matches" class="matches" aria-live="polite"></div>
+      </div>
+
+      <div id="invite" style="display:none">
+        <h3 id="inviteName"></h3>
+
+        <form id="rsvpForm" onsubmit="return false;">
+          <div class="form-row">
+            <label for="status">Status</label>
+            <select id="status">
+              <option value="">-- choose --</option>
+              <option value="Attending">Attending</option>
+              <option value="Declined">Declined</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label for="attendees">Attendee names (one per line)</label>
+            <textarea id="attendees" placeholder="First Last&#10;Another Name"></textarea>
+          </div>
+
+          <div class="form-row">
+            <label for="phone">Phone (11 digits, starts with 09)</label>
+            <input id="phone" type="text" placeholder="0917XXXXXXXX" />
+          </div>
+
+          <div class="form-row">
+            <label for="notes">Notes (optional)</label>
+            <textarea id="notes"></textarea>
+          </div>
+
+          <div id="submitError" class="error" style="display:none"></div>
+          <div id="submitSuccess" class="message" style="display:none"></div>
+
+          <div class="actions">
+            <button id="cancelBtn" type="button" class="muted">Cancel</button>
+            <button id="submitBtn" class="primary" type="button">Submit RSVP</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="meta">If you prefer a new tab, open the RSVP page directly.</div>
     </div>
   </div>
 
   <script>
-    // CONFIG: set this to your Cloudflare Worker URL (not the Apps Script exec URL)
-    const API_URL = "https://rsvp-proxy.marsnbianca.workers.dev/"; // <= replace
+  (function () {
+    // CONFIG — set to your Cloudflare Worker URL (proxy)
+    const API_URL = "https://rsvp-proxy.marsnbianca.workers.dev/"; // <-- replace with your Worker URL
 
-    function jsonFetch(payload) {
-      return fetch(API_URL, {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify(payload)
-      }).then(r=>r.json());
-    }
-
+    // DOM refs
     const nameInput = document.getElementById('name');
-    const findBtn = document.getElementById('find');
+    const findBtn = document.getElementById('findBtn');
     const matchesEl = document.getElementById('matches');
-    const inviteEl = document.getElementById('invite');
-    const inviteName = document.getElementById('inviteName');
-    const status = document.getElementById('status');
-    const attendees = document.getElementById('attendees');
-    const phone = document.getElementById('phone');
-    const notes = document.getElementById('notes');
-    const submitBtn = document.getElementById('submit');
-    const msg = document.getElementById('msg');
+    const findError = document.getElementById('findError');
 
-    findBtn.addEventListener('click', async () => {
-      matchesEl.innerHTML = ''; msg.textContent='';
-      const q = nameInput.value.trim(); if(!q){ msg.textContent='Type a name'; return; }
-      findBtn.disabled=true;
-      try {
-        const r = await jsonFetch({action:'find', name:q, client_id:'guest-'+Date.now()});
-        if(!r.ok){ msg.textContent = r.error || 'Server error'; return; }
-        if(!r.matches || r.matches.length===0){ matchesEl.innerHTML = '<div>No matches</div>'; return; }
-        r.matches.forEach(m=>{
-          const d = document.createElement('div'); d.className='match';
-          d.innerHTML = '<div><strong>'+encodeHTML(m.display_name)+'</strong><div style="font-size:.85rem;color:#666">invite: '+encodeHTML(m.invite_id)+'</div></div>';
-          const b = document.createElement('button'); b.textContent = 'Select';
-          b.addEventListener('click', ()=>selectInvite(m));
-          d.appendChild(b); matchesEl.appendChild(d);
-        });
-      } catch (err) { console.error(err); msg.textContent='Network error'; }
-      finally { findBtn.disabled=false; }
-    });
+    const inviteArea = document.getElementById('invite');
+    const inviteName = document.getElementById('inviteName');
+    const rsvpForm = document.getElementById('rsvpForm');
+    const statusEl = document.getElementById('status');
+    const attendeesEl = document.getElementById('attendees');
+    const phoneEl = document.getElementById('phone');
+    const notesEl = document.getElementById('notes');
+
+    const submitBtn = document.getElementById('submitBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const submitError = document.getElementById('submitError');
+    const submitSuccess = document.getElementById('submitSuccess');
+
+    const loadingOverlay = document.getElementById('loading');
 
     let currentInvite = null;
-    async function selectInvite(m){
+
+    function show(el){ if(!el) return; el.style.display = ""; }
+    function hide(el){ if(!el) return; el.style.display = "none"; }
+    function setError(el, msg){ if(!el) return; if(msg){ el.textContent = msg; show(el); } else { hide(el); el.textContent = ""; } }
+
+    async function jsonFetch(payload) {
+      // show loading
+      loading(true);
       try {
-        const r = await jsonFetch({action:'get', invite_id:m.invite_id});
-        if(!r.ok){ msg.textContent = r.error || 'Server error'; return; }
-        currentInvite = r.invite || m;
-        inviteName.textContent = currentInvite.display_name;
-        inviteEl.style.display='block';
-        status.value='';
-        attendees.value='';
-        phone.value='';
-        notes.value='';
-      } catch(e){ console.error(e); msg.textContent='Network error'; }
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const txt = await res.text();
+        try { return JSON.parse(txt); } catch(e) { return { ok:false, error: "Invalid server response" }; }
+      } catch (err) {
+        console.error("fetch error", err);
+        return { ok:false, error: "Network error" };
+      } finally {
+        loading(false);
+      }
     }
 
-    submitBtn.addEventListener('click', async ()=>{
-      if(!currentInvite){ msg.textContent='No invite selected'; return; }
+    function loading(on){
+      if(on){
+        loadingOverlay.style.display = "flex";
+        findBtn.disabled = true;
+        submitBtn.disabled = true;
+      } else {
+        loadingOverlay.style.display = "none";
+        findBtn.disabled = false;
+        submitBtn.disabled = false;
+      }
+    }
+
+    async function doFind() {
+      setError(findError, "");
+      matchesEl.innerHTML = "";
+      const q = (nameInput.value || "").trim();
+      if(!q){ setError(findError, "Please type your name."); return; }
+      findBtn.disabled = true;
+      const r = await jsonFetch({ action:"find", name: q, client_id: "guest-"+Date.now() });
+      findBtn.disabled = false;
+      if(!r || !r.ok){ setError(findError, r && r.error ? r.error : "Server error"); return; }
+      if(!r.matches || r.matches.length === 0){ matchesEl.innerHTML = "<div class='message'>No matches found.</div>"; return; }
+
+      r.matches.forEach(m => {
+        const div = document.createElement('div');
+        div.className = "match";
+        div.innerHTML = "<div><strong>" + escapeHtml(m.display_name) + "</strong><small>invite: " + escapeHtml(m.invite_id) + "</small></div>";
+        const btn = document.createElement('button');
+        btn.type = "button";
+        btn.textContent = "Select";
+        btn.addEventListener('click', function(){ selectInvite(m); });
+        div.appendChild(btn);
+        matchesEl.appendChild(div);
+      });
+    }
+
+    async function selectInvite(m) {
+      setError(submitError, "");
+      const r = await jsonFetch({ action: "get", invite_id: m.invite_id });
+      if(!r || !r.ok){ setError(submitError, r && r.error ? r.error : "Server error"); return; }
+      currentInvite = r.invite || m;
+      inviteName.textContent = currentInvite.display_name || m.display_name;
+      show(inviteArea);
+      // reset form
+      statusEl.value = "";
+      attendeesEl.value = "";
+      phoneEl.value = "";
+      notesEl.value = "";
+      setError(submitError, "");
+      setError(submitSuccess, "");
+      // focus first field
+      statusEl.focus();
+    }
+
+    async function onSubmit() {
+      setError(submitError, "");
+      setError(submitSuccess, "");
+      if(!currentInvite){ setError(submitError, "No invite selected."); return; }
+      const status = (statusEl.value || "").trim();
+      if(status !== "Attending" && status !== "Declined"){ setError(submitError,"Please select Attending or Declined."); return; }
+      const rawNames = (attendeesEl.value || "").split("\n").map(x=>x.trim()).filter(Boolean);
       const payload = {
-        action:'submit',
+        action: "submit",
         invite_id: currentInvite.invite_id,
-        status: status.value,
-        attending_count: (attendees.value.split('\n').filter(Boolean).length) || 1,
-        attendees: attendees.value.split('\n').filter(Boolean),
-        phone: phone.value.trim(),
-        notes: notes.value.trim()
+        status: status,
+        attending_count: rawNames.length || 1,
+        attendees: rawNames,
+        phone: phoneEl.value.trim(),
+        notes: notesEl.value.trim()
       };
-      submitBtn.disabled=true;
-      try {
-        const r = await jsonFetch(payload);
-        if(!r.ok){ msg.textContent = r.error || 'Server error'; return; }
-        if(r.locked){ msg.textContent='This invite already responded'; return; }
-        msg.textContent='Thanks — RSVP recorded';
-        // optionally close overlay on parent page by postMessage if embedded
-        try { window.parent.postMessage('RSVP:CLOSE','*'); } catch(_){}
-      } catch(e){ console.error(e); msg.textContent='Network error'; }
-      finally { submitBtn.disabled=false; }
+      submitBtn.disabled = true;
+      const r = await jsonFetch(payload);
+      submitBtn.disabled = false;
+      if(!r || !r.ok){ setError(submitError, r && r.error ? r.error : "Server error"); return; }
+      if(r.locked){ setError(submitError,"This invite already responded"); return; }
+      setError(submitSuccess, "Thanks — RSVP recorded.");
+      // notify parent overlay to close
+      try { window.parent.postMessage("RSVP:CLOSE", "*"); } catch (_) {}
+      // also attempt to close popup if opened as separate window
+      try { if(window.opener && !window.opener.closed) window.opener.postMessage("RSVP:CLOSE","*"); } catch(_) {}
+      // close self if a popup
+      setTimeout(()=>{ try { window.close(); } catch(_) {} }, 200);
+    }
+
+    // keyboard: Enter triggers search when focus is in name input
+    nameInput.addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){
+        e.preventDefault();
+        doFind();
+      }
     });
 
-    function encodeHTML(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    findBtn.addEventListener('click', doFind);
+    submitBtn.addEventListener('click', onSubmit);
+    cancelBtn.addEventListener('click', function(){
+      try { window.parent.postMessage("RSVP:CLOSE", "*"); } catch(_) {}
+    });
+
+    function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    // autofocus the name input
+    try { nameInput.focus(); } catch (_) {}
+  })();
   </script>
 </body>
 </html>
