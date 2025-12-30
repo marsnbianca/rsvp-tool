@@ -92,8 +92,8 @@
       justify-content: center; /* centers content vertically inside step */
       align-items: stretch;
       box-sizing: border-box;
-      /* small relative minimum so very tiny layouts don't collapse */
-      min-height: calc(var(--dvh, 1vh) * 20);
+      /* increased small-screen minimum so the modal doesn't feel too short on mobile */
+      min-height: calc(var(--dvh, 1vh) * 30);
     }
 
     /* Desktop/tablet tweaks for step minimum */
