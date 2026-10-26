@@ -145,7 +145,7 @@
     }
     html, body { font-family:"DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif; color:var(--burgundy); }
         /* Always transparent + no header: the Webflow card supplies the background and title */
-    html, body { background:transparent !important; }
+    html, body { background:transparent !important; height:auto !important; }
     .page-wrap { min-height:0; padding:0; align-items:flex-start; }
     .app-box { background:transparent !important; box-shadow:none !important; border-radius:0; padding:0; max-width:100%; }
     .step.active { min-height:0; }
@@ -180,6 +180,42 @@
     .spinner { border-color:var(--sage); border-top-color:var(--burgundy); }
     input[type=tel] { font-family:inherit; }
 
+
+    /* Same-size buttons: left ones pinned left, right ones pinned right */
+    .actions { display:flex; justify-content:space-between; align-items:center; gap:0.75rem; margin-top:1rem; padding-bottom:0; }
+    .actions > .btn, .actions-right { flex:0 0 min(12rem, calc(50% - 0.4rem)); width:min(12rem, calc(50% - 0.4rem)); box-sizing:border-box; }
+    .actions .btn { text-align:center; padding:0.7rem 0.5rem; line-height:1.2; box-sizing:border-box; }
+    .actions-right { margin-left:auto; display:flex; }
+    .actions-right .btn { width:100%; }
+
+    /* Compact fields so the longest step fits the card */
+    select, input, textarea { padding:0.65rem 0.9rem; }
+    .form-row { margin-bottom:0.5rem; }
+
+    /* "Replying as" chip */
+    .who { align-self:center; display:inline-flex; gap:0.35rem; align-items:center; margin:0 auto 0.9rem; padding:0.35rem 0.9rem;
+           background:var(--ivory); border:2px solid var(--sage); border-radius:999px; color:var(--fern); font-size:0.9rem; }
+    .who[hidden] { display:none; }
+    .who strong { color:var(--burgundy); font-weight:700; }
+
+    /* Locked first guest name */
+    input[readonly] { background:#ece5d1; border-color:var(--sage); color:var(--burgundy); cursor:not-allowed; font-weight:500; }
+
+    /* Review step */
+    .review { text-align:center; margin-bottom:0.25rem; }
+    .rv-name { font-family:"Fraunces", Georgia, serif; font-weight:600; font-size:1.9rem; line-height:1.15; color:var(--burgundy); }
+    .rv-pill { display:inline-block; margin-top:0.6rem; padding:0.3rem 1rem; border-radius:999px; font-weight:700; font-size:0.85rem; letter-spacing:0.12em; text-transform:uppercase; }
+    .rv-pill.yes { background:var(--fern); color:var(--ivory); }
+    .rv-pill.no { background:var(--blush); color:var(--burgundy); }
+    .rv-block { margin-top:1rem; padding-top:0.9rem; border-top:2px solid var(--sage); }
+    .rv-label { font-size:0.78rem; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:var(--fern); margin-bottom:0.25rem; }
+    .rv-value { font-size:1.25rem; line-height:1.35; color:var(--burgundy); }
+    .rv-guests { list-style:none; margin:0; padding:0; }
+    .rv-guests li { font-size:1.25rem; line-height:1.5; color:var(--burgundy); }
+    .rv-row { display:flex; gap:1rem; }
+    .rv-row > div { flex:1; }
+    @media (max-width:540px) { .rv-row { flex-direction:column; gap:0.7rem; } .rv-name { font-size:1.6rem; } }
+
     /* Fill the full width of the Webflow card */
     .content-column { max-width:100%; padding:0; }
     .search-row { width:100%; }
@@ -192,6 +228,9 @@
       <div id="loading" class="loading-overlay"><div class="spinner" aria-hidden="true"></div></div>
 
       <div class="content-column">
+
+        <!-- Who is replying: appears once an invite is selected -->
+        <div id="whoChip" class="who" hidden>Replying as <strong id="whoName"></strong></div>
 
         <!-- Non-sticky header (reverted) -->
         <h1>Mars + Bianca</h1>
@@ -213,14 +252,14 @@
           <span class="prompt">We found matching names — please select your name below to continue.</span>
           <div id="matches" class="matches" aria-live="polite"></div>
           <div class="actions">
-            <button id="dontSeeBtn" class="btn ghost">I don't see my name</button>
-            <div class="actions-right"><button id="backToSearch" class="btn ghost">Back</button></div>
+            <button id="backToSearch" class="btn ghost">Back</button>
+            <div class="actions-right"><button id="dontSeeBtn" class="btn ghost">I don't see my name</button></div>
           </div>
         </div>
 
         <div id="step-not-in-list" class="step">
           <span class="prompt">If your name isn't listed here, please contact us and we'll confirm your invitation status.</span>
-          <div class="message"><strong>Can't find your name?</strong><div class="small" style="margin-top:.4rem">Contact: +1 778 977 4975 (WhatsApp / Viber)</div></div>
+          <div class="message"><strong>Can't find your name, or already sent your RSVP?</strong><div class="small" style="margin-top:.4rem">Once an invitation is answered it no longer shows up here. To make changes, message us: +1 778 977 4975 (WhatsApp / Viber)</div></div>
           <div class="actions">
             <button id="notInListBack" class="btn ghost">Back</button>
             <div class="actions-right"><button id="notInListClose" class="btn primary">Close</button></div>
@@ -280,7 +319,7 @@
 
         <div id="step-review" class="step">
           <span class="prompt">Please review your RSVP details before submitting.</span>
-          <div id="reviewSummary" class="form-row" style="text-align:left"></div>
+          <div id="reviewSummary" class="review"></div>
           <div id="reviewError" class="error" style="text-align:center"></div>
           <div class="actions">
             <button id="reviewBack" class="btn ghost">Back</button>
@@ -373,6 +412,8 @@
     const notInListClose = document.getElementById('notInListClose');
 
     const loadingOverlay = document.getElementById('loading');
+    const whoChip = document.getElementById('whoChip');
+    const whoName = document.getElementById('whoName');
 
     let currentInvite = null, currentMaxSeats = 1, selectedStatus = "", selectedNumber = 1, selectedAttendees = [], selectedTransport = "", selectedPhoneStored = "", selectedNotes = "";
 
@@ -393,6 +434,10 @@
         steps[name].classList.add('active');
         steps[name].style.display = ''; // ensure no inline blocking display
       }
+      try {
+        const chipSteps = ['attendance','transport','phone','notes','review'];
+        if (whoChip) whoChip.hidden = !(chipSteps.indexOf(name) !== -1 && currentInvite);
+      } catch (_) {}
       const stepsWithBottomClose = new Set(['notInList','thanks']);
       notifyParentHasBottomClose(name, stepsWithBottomClose.has(name));
       setTimeout(function() { focusFirstControl(name); postHeight(); }, 80);
@@ -431,7 +476,8 @@
         if (postTimer) clearTimeout(postTimer);
         postTimer = setTimeout(function(){
           try {
-            var h = document.documentElement.scrollHeight || document.body.scrollHeight;
+            var pw = document.querySelector('.page-wrap');
+            var h = pw ? Math.ceil(pw.getBoundingClientRect().height) + 4 : (document.documentElement.scrollHeight || document.body.scrollHeight);
             window.parent.postMessage({ type:'RSVP:HEIGHT', height: h }, '*');
           } catch(e) {}
         }, 80);
@@ -499,6 +545,7 @@
       currentMaxSeats = Math.min(currentInvite.max_seats ? parseInt(currentInvite.max_seats,10) : (m.max_seats || 1), 4);
       selectedStatus=''; selectedNumber=1; selectedAttendees=[]; selectedTransport=''; selectedPhoneStored=''; selectedNotes='';
       attendanceSelect.value=''; attendanceDynamic.innerHTML=''; setError(attendeeError,'');
+      if (whoName) whoName.textContent = currentInvite.display_name || m.display_name || '';
       notifyParentHasBottomClose('attendance', false);
       showStep('attendance');
     }
@@ -525,7 +572,14 @@
 
     function renderGuestInputs(n){
       const gdiv=document.getElementById('guestInputs'); if(!gdiv) return; gdiv.innerHTML=''; if(!n || n<1){ postHeight(); return; }
-      for(let i=0;i<n;i++){ const input=document.createElement('input'); input.type='text'; input.placeholder='Guest full name'; input.className='guest-name-input'; input.style.marginBottom='0.5rem'; gdiv.appendChild(input); }
+      for(let i=0;i<n;i++){
+        const input=document.createElement('input'); input.type='text'; input.className='guest-name-input'; input.style.marginBottom='0.45rem';
+        if(i===0){
+          // First guest is always the invitee: filled in and locked
+          input.value = titleCaseName(currentInvite.display_name); input.readOnly = true; input.setAttribute('aria-readonly','true'); input.title = 'This is the name on your invitation';
+        } else { input.placeholder = 'Guest ' + (i+1) + ' full name'; }
+        gdiv.appendChild(input);
+      }
       selectedNumber = n; postHeight();
     }
 
@@ -562,19 +616,19 @@
     // Review
     reviewBack.addEventListener('click', ()=> showStep('attendance'));
     function buildReview(){
-      const statusText = selectedStatus === 'Attending' ? 'ATTENDING' : 'DECLINED';
-      let html = "<div style='font-weight:700'>"+escapeHtml(currentInvite.display_name)+"</div>";
-      html += "<div style='margin-top:0.4rem;font-weight:600'>"+statusText+"</div>";
-      if(selectedStatus === 'Attending'){
+      const attending = selectedStatus === 'Attending';
+      let html = "<div class='rv-name'>"+escapeHtml(currentInvite.display_name)+"</div>";
+      html += "<div class='rv-pill "+(attending?'yes':'no')+"'>"+(attending?'Attending':'Declined')+"</div>";
+      if(attending){
         if(currentMaxSeats > 1){
-          html += "<div style='margin-top:.5rem'><strong>Guest names:</strong><ul style='list-style:none;padding:0;margin:8px 0'>";
+          html += "<div class='rv-block'><div class='rv-label'>Guests</div><ul class='rv-guests'>";
           selectedAttendees.forEach(n=> html += "<li>"+escapeHtml(n)+"</li>");
           html += "</ul></div>";
         }
-        html += "<div style='margin-top:0.25rem'><strong>Airport transfer:</strong> "+escapeHtml(selectedTransport)+"</div>";
-        html += "<div style='margin-top:0.25rem'><strong>Phone:</strong> "+escapeHtml(selectedPhoneStored)+"</div>";
+        html += "<div class='rv-block rv-row'><div><div class='rv-label'>Airport transfer</div><div class='rv-value'>"+escapeHtml(selectedTransport)+"</div></div>"
+              + "<div><div class='rv-label'>Phone</div><div class='rv-value'>"+escapeHtml(selectedPhoneStored)+"</div></div></div>";
       }
-      if(selectedNotes) html += "<div style='margin-top:0.4rem'><strong>Notes:</strong> "+escapeHtml(selectedNotes)+"</div>";
+      if(selectedNotes) html += "<div class='rv-block'><div class='rv-label'>Notes</div><div class='rv-value'>"+escapeHtml(selectedNotes)+"</div></div>";
       reviewSummary.innerHTML = html;
       reviewError.style.display = 'none';
       postHeight();
