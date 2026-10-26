@@ -179,6 +179,11 @@
     .loading-overlay { background:rgba(246,239,223,0.8); }
     .spinner { border-color:var(--sage); border-top-color:var(--burgundy); }
     input[type=tel] { font-family:inherit; }
+
+    /* Fill the full width of the Webflow card */
+    .content-column { max-width:100%; padding:0; }
+    .search-row { width:100%; }
+    .search-row input, label, select, input, textarea, .match-btn { max-width:100%; }
   </style>
 </head>
 <body>
@@ -194,9 +199,9 @@
 
         <!-- Steps -->
         <div id="step-search" class="step active">
-          <span class="prompt">Type your name as it appears on your invite.</span>
+          <span class="prompt">Find your invitation</span>
           <div class="search-row">
-            <input id="nameInput" placeholder="Type your name" autocomplete="name" />
+            <input id="nameInput" placeholder="Type your name as it appears on your invite" autocomplete="name" />
           </div>
           <div id="searchErr" class="error" aria-live="polite"></div>
           <div class="actions">
