@@ -262,7 +262,6 @@
           <div class="message"><strong>Can't find your name, or already sent your RSVP?</strong><div class="small" style="margin-top:.4rem">Once an invitation is answered it no longer shows up here. To make changes, message us: +1 778 977 4975 (WhatsApp / Viber)</div></div>
           <div class="actions">
             <button id="notInListBack" class="btn ghost">Back</button>
-            <div class="actions-right"><button id="notInListClose" class="btn primary">Close</button></div>
           </div>
         </div>
 
@@ -330,9 +329,6 @@
         <div id="step-thanks" class="step">
           <span class="prompt">Got it. Thank you!</span>
           <div id="thanksMessage" class="message" style="text-align:center"></div>
-          <div class="actions">
-            <div class="actions-right"><button id="thanksClose" class="btn primary">Close</button></div>
-          </div>
         </div>
 
       </div>
@@ -406,10 +402,8 @@
     const submitBtn = document.getElementById('submitBtn');
 
     const thanksMessage = document.getElementById('thanksMessage');
-    const thanksClose = document.getElementById('thanksClose');
 
     const notInListBack = document.getElementById('notInListBack');
-    const notInListClose = document.getElementById('notInListClose');
 
     const loadingOverlay = document.getElementById('loading');
     const whoChip = document.getElementById('whoChip');
@@ -521,18 +515,12 @@
       if(!r || !r.ok){ setError(searchErr, r && r.error ? r.error : 'Server error'); postHeight(); return; }
 
       if(r.locked){
-        // show locked message and ONLY bottom Close
+        // show locked message (Back button stays so they can search again)
         matchesEl.innerHTML = "<div class='message'>This invitation has already been answered.</div>";
-        const wrapper = document.createElement('div'); wrapper.style.marginTop='0.6rem'; wrapper.style.display='flex'; wrapper.style.justifyContent='center';
-        const closeBtn = document.createElement('button'); closeBtn.className='btn primary'; closeBtn.textContent='Close';
-        closeBtn.addEventListener('click', function(){ try{ window.parent.postMessage({ type:'RSVP:CLOSE' }, '*'); }catch(_){} try{ window.close(); }catch(_){} });
-        wrapper.appendChild(closeBtn);
-        matchesEl.appendChild(wrapper);
 
-        // Hide the "I don't see my name" and "Back" buttons for this locked view
+        // Hide only the "I don't see my name" button for this locked view (Back stays)
         try {
           if (dontSeeBtn) dontSeeBtn.style.display = 'none';
-          if (backToSearch) backToSearch.style.display = 'none';
         } catch(_) {}
 
         notifyParentHasBottomClose('matches', true);
@@ -649,8 +637,6 @@
       showStep('thanks');
     });
 
-    if (thanksClose) thanksClose.addEventListener('click', function(){ try{ window.parent.postMessage({ type:'RSVP:CLOSE' }, '*'); }catch(_){} try{ window.close(); }catch(_){} });
-    if (notInListClose) notInListClose.addEventListener('click', function(){ try{ window.parent.postMessage({ type:'RSVP:CLOSE' }, '*'); }catch(_){} try{ window.close(); }catch(_){} });
 
     findBtn.addEventListener('click', doFind);
     nameInput.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); doFind(); } });
