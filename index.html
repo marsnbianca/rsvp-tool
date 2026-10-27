@@ -216,6 +216,15 @@
     .rv-row > div { flex:1; }
     @media (max-width:540px) { .rv-row { flex-direction:column; gap:0.7rem; } .rv-name { font-size:1.6rem; } }
 
+
+    /* Single-button screens: center the button */
+    .actions > :only-child { margin-left:auto; margin-right:auto; }
+    /* Name choices: all the same width */
+    .matches { width:100%; max-width:28rem; margin:0 auto 0.6rem; align-items:stretch; }
+    .match-btn { width:100%; max-width:100%; box-sizing:border-box; }
+    /* Centered typing */
+    #nameInput, #phoneInput { text-align:center; }
+
     /* Fill the full width of the Webflow card */
     .content-column { max-width:100%; padding:0; }
     .search-row { width:100%; }
@@ -249,7 +258,7 @@
         </div>
 
         <div id="step-matches" class="step">
-          <span class="prompt">We found matching names — please select your name below to continue.</span>
+          <span class="prompt" id="matchesPrompt">We found matching names — please select your name below to continue.</span>
           <div id="matches" class="matches" aria-live="polite"></div>
           <div class="actions">
             <button id="backToSearch" class="btn ghost">Back</button>
@@ -416,7 +425,10 @@
       // restore the matches-screen action buttons by default (they may have been hidden for locked flow)
       try {
         if (dontSeeBtn) dontSeeBtn.style.display = '';
-        if (backToSearch) backToSearch.style.display = '';
+        if (dontSeeBtn && dontSeeBtn.parentElement) dontSeeBtn.parentElement.style.display = '';
+        if (backToSearch) { backToSearch.style.display = ''; backToSearch.style.margin = ''; }
+        var mp = document.getElementById('matchesPrompt');
+        if (mp) mp.textContent = 'We found matching names — please select your name below to continue.';
       } catch (_) {}
 
       Object.values(steps).forEach(function(s) {
@@ -516,11 +528,12 @@
 
       if(r.locked){
         // show locked message (Back button stays so they can search again)
-        matchesEl.innerHTML = "<div class='message'>This invitation has already been answered.</div>";
-
-        // Hide only the "I don't see my name" button for this locked view (Back stays)
+        matchesEl.innerHTML = "<div class='message'><strong>This invitation has already been answered.</strong><div class='small' style='margin-top:.4rem'>If you need to make changes, contact us: +1 778 977 4975 (WhatsApp/Viber)</div></div>";
         try {
-          if (dontSeeBtn) dontSeeBtn.style.display = 'none';
+          if (dontSeeBtn && dontSeeBtn.parentElement) dontSeeBtn.parentElement.style.display = 'none';
+          if (backToSearch) backToSearch.style.margin = '0 auto';
+          var mp2 = document.getElementById('matchesPrompt');
+          if (mp2) mp2.textContent = 'We already have your answer.';
         } catch(_) {}
 
         notifyParentHasBottomClose('matches', true);
