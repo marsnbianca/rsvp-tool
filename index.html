@@ -5,610 +5,1489 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Mars + Bianca — RSVP</title>
 
-  <script>
-    // Mark embedded and provide --dvh (dynamic viewport) support for mobile address-bar reflows
-    try {
-      if (window.self !== window.top) document.documentElement.setAttribute('data-embedded', 'true');
-    } catch (e) {}
-  </script>
-
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..400&family=Gochi+Hand&display=swap" rel="stylesheet">
+
   <style>
-    :root {
-      --bg: #fff;
-      --muted: #666;
-      --accent: #222;
-      --danger: #c0392b;
-      --card-radius: 0.6rem;
-      --content-max: 42rem;
-      /* --dvh will be set by JS to 1% of the dynamic viewport height */
+    @font-face {
+      font-family: 'Marzupial';
+      src: url('Marzupial.otf') format('opentype');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
     }
 
-    /* Basic page reset and font */
+    /* ── Tokens ── */
+    :root {
+      --ivory:        #F9F4EA;
+      --cherry:       #A8323A;
+      --cherry-dark:  #7F2229;
+      --cherry-tint:  #F2D5D4;
+      --sky:          #8DC3DE;
+      --sky-tint:     #DCEBF3;
+      --butter:       #F3CF6E;
+      --butter-tint:  #FBEFC9;
+      --garden:       #5E7F45;
+      --garden-tint:  #DCE5D0;
+      --radius:       14px;
+      --card-max:     560px;
+    }
+
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Page — transparent so Readymag bg shows around card ── */
     html, body {
-      height: 100%;
-      margin: 0;
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial;
-      color: #111;
-      background: var(--bg);
-    }
-
-    /* Page wrap uses dynamic viewport so centering works with mobile address bars */
-    .page-wrap {
-      min-height: calc(var(--dvh, 1vh) * 100);
-      display: flex;
-      align-items: center;    /* vertical centering */
-      justify-content: center;/* horizontal centering */
-      padding: 3.5vw 2vw;
-      box-sizing: border-box;
-    }
-
-    /* Card: center its content and allow shrinking on small content */
-    .app-box {
-      width: 100%;
-      max-width: var(--content-max);
-      background: #fff;
-      border-radius: var(--card-radius);
-      box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.12);
-      padding: 0.9rem;
-      box-sizing: border-box;
-      margin: 0 auto;
-
-      display: flex;
-      align-items: center;     /* vertically center content-column */
-      justify-content: center; /* horizontally center content-column */
-      min-height: 0;           /* allow shrinking when content is small */
-      position: relative;
-    }
-
-    /* Embedded (when in iframe) remove outer card chrome */
-    :root[data-embedded="true"] .app-box {
       background: transparent;
-      box-shadow: none;
-      border-radius: 0;
-      padding: 0.7rem;
-      max-width: 100%;
+      min-height: 100%;
+    }
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      color: var(--cherry-dark);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 16px;
     }
 
-    /* Content column centers the active step vertically */
-    .content-column {
+    /* ── Card ── */
+    .card {
+      background: var(--ivory);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 32px rgba(100,40,40,.10);
       width: 100%;
-      max-width: 40rem;
-      margin: 0 auto;
-      padding: 0.4rem 0.6rem;
-      text-align: center;
+      max-width: var(--card-max);
+      position: relative;
+      overflow: hidden;
+    }
+    .card-inner { padding: 24px 24px 28px; }
 
-      display: flex;
-      flex-direction: column;
-      justify-content: center; /* vertical centering of active step content */
-      align-items: stretch;    /* inputs stretch to full width */
-      box-sizing: border-box;
+    /* Scalloped top strip */
+    .card-scallop {
+      height: 10px;
+      background:
+        radial-gradient(circle at 10px 10px, var(--ivory) 10px, transparent 11px) 0 0 / 20px 20px repeat-x,
+        var(--cherry-tint);
     }
 
-    /* Steps: hide by default, display active step as a centered flex column */
+    /* ── Step dots ── */
+    .step-dots {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .step-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--cherry-tint);
+      transition: background .2s, transform .2s;
+    }
+    .step-dot.done   { background: var(--garden); }
+    .step-dot.active { background: var(--cherry); transform: scale(1.35); }
+
+    /* ── Steps ── */
     .step { display: none; }
-    .step.active {
+    .step.active { display: block; }
+
+    /* ── Typography ── */
+    .step-heading {
+      font-family: 'Marzupial', 'Gochi Hand', cursive;
+      font-size: 2rem;
+      color: var(--cherry);
+      line-height: 1.1;
+      margin-bottom: 8px;
+      font-weight: normal;
+      outline: none;
+    }
+    .step-sub {
+      font-family: 'Fraunces', Georgia, serif;
+      font-variation-settings: 'SOFT' 100;
+      color: var(--cherry-dark);
+      font-size: 1rem;
+      margin-bottom: 14px;
+      line-height: 1.4;
+    }
+    .deadline-note {
+      font-size: .82rem;
+      color: var(--garden);
+      margin-bottom: 20px;
+    }
+
+    /* ── Fields ── */
+    .field { margin-bottom: 16px; }
+    label, .field-label {
+      display: block;
+      font-size: .88rem;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: var(--cherry-dark);
+    }
+    .field-help { font-size: .78rem; color: var(--garden); margin-top: 4px; }
+    .optional   { font-weight: 400; color: var(--garden); font-size: .85em; }
+
+    input[type="text"],
+    input[type="tel"],
+    textarea {
+      width: 100%;
+      padding: 11px 14px;
+      font-size: 1rem;
+      font-family: 'DM Sans', system-ui, sans-serif;
+      color: var(--cherry-dark);
+      background: white;
+      border: 2px solid #ddd0c4;
+      border-radius: var(--radius);
+      outline: none;
+      transition: border-color .15s;
+      -webkit-appearance: none;
+    }
+    input[type="text"]:focus,
+    input[type="tel"]:focus,
+    textarea:focus {
+      border-color: var(--cherry);
+      box-shadow: 0 0 0 3px var(--butter);
+    }
+    textarea { resize: vertical; min-height: 80px; }
+
+    /* ── Errors ── */
+    .error {
+      color: var(--cherry);
+      font-size: .82rem;
+      margin-top: 8px;
+      display: none;
+    }
+    .error.visible { display: block; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'DM Sans', system-ui, sans-serif;
+      font-size: .95rem;
+      font-weight: 600;
+      letter-spacing: .02em;
+      border: none;
+      border-radius: 100px;
+      padding: 12px 26px;
+      min-height: 48px;
+      cursor: pointer;
+      transition: transform .12s, background .12s, border-color .12s;
+      text-decoration: none;
+    }
+    .btn:focus-visible {
+      outline: 3px solid var(--butter);
+      outline-offset: 3px;
+    }
+    .btn:hover:not(:disabled) { transform: translateY(-1px); }
+    .btn:active:not(:disabled) { transform: none; }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    .btn-primary { background: var(--cherry); color: var(--ivory); }
+    .btn-primary:hover:not(:disabled) { background: var(--cherry-dark); }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--cherry);
+      border: 2px solid var(--cherry);
+    }
+    .btn-secondary:hover:not(:disabled) { background: var(--cherry-tint); }
+
+    /* ── Actions row ── */
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 24px;
+      align-items: center;
+    }
+    .actions .btn-primary { margin-left: auto; }
+
+    /* ── Link buttons ── */
+    .link-btn {
+      background: none;
+      border: none;
+      color: var(--garden);
+      font-size: .82rem;
+      cursor: pointer;
+      text-decoration: underline;
+      padding: 4px 2px;
+      font-family: inherit;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+    }
+    .link-btn:focus-visible {
+      outline: 3px solid var(--butter);
+      outline-offset: 2px;
+      border-radius: 3px;
+    }
+
+    /* ── Replying-as ── */
+    .replying-as { font-size: .9rem; margin-bottom: 2px; }
+    .replying-as strong { color: var(--cherry); }
+    .not-you-row { margin-bottom: 16px; }
+
+    /* ── Attendance radio cards ── */
+    .radio-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 14px 0 4px;
+    }
+    .radio-card { display: block; cursor: pointer; }
+    .radio-card input[type="radio"] {
+      position: absolute; opacity: 0; width: 0; height: 0;
+    }
+    .radio-card-inner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 16px 10px;
+      min-height: 60px;
+      border-radius: var(--radius);
+      border: 2px solid #ddd0c4;
+      background: white;
+      font-size: .95rem;
+      font-weight: 500;
+      color: var(--cherry-dark);
+      transition: border-color .15s, background .15s;
+    }
+    .radio-card input[type="radio"]:checked + .radio-card-inner {
+      background: var(--cherry);
+      border-color: var(--cherry);
+      color: var(--ivory);
+    }
+    .radio-card input[type="radio"]:focus-visible + .radio-card-inner {
+      box-shadow: 0 0 0 3px var(--butter);
+    }
+
+    /* ── Stepper ── */
+    .stepper {
+      display: inline-flex;
+      align-items: stretch;
+      border: 2px solid #ddd0c4;
+      border-radius: 100px;
+      overflow: hidden;
+    }
+    .stepper-btn {
+      background: none;
+      border: none;
+      font-size: 1.3rem;
+      line-height: 1;
+      color: var(--cherry);
+      padding: 0 16px;
+      min-width: 48px;
+      min-height: 44px;
+      cursor: pointer;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .stepper-btn:focus-visible {
+      outline: 3px solid var(--butter);
+      outline-offset: 1px;
+    }
+    .stepper-btn:disabled { opacity: .3; cursor: not-allowed; }
+    .stepper-val {
+      min-width: 36px;
+      text-align: center;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--cherry-dark);
+      border-left: 1px solid #ddd0c4;
+      border-right: 1px solid #ddd0c4;
+      padding: 10px 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Count step ── */
+    .count-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .count-row .field-label { margin-bottom: 0; }
+    .attendee-names { margin-bottom: 16px; }
+    .attendee-name-wrap { margin-bottom: 8px; }
+    .attendee-name-wrap label { font-size: .78rem; color: var(--garden); margin-bottom: 3px; }
+
+    /* ── Stay cards ── */
+    .stay-cards {
       display: flex;
       flex-direction: column;
-      justify-content: center; /* centers content vertically inside step */
-      align-items: stretch;
-      box-sizing: border-box;
-      /* increased small-screen minimum so the modal doesn't feel too short on mobile */
-      min-height: calc(var(--dvh, 1vh) * 30);
+      gap: 10px;
+      margin: 14px 0 4px;
+    }
+    .stay-card { display: block; cursor: pointer; }
+    .stay-card input[type="radio"] {
+      position: absolute; opacity: 0; width: 0; height: 0;
+    }
+    .stay-card-inner {
+      padding: 14px 16px;
+      border-radius: var(--radius);
+      border: 2px solid #ddd0c4;
+      background: white;
+      transition: border-color .15s, background .15s;
+    }
+    .stay-card input[type="radio"]:checked + .stay-card-inner {
+      border-color: var(--cherry);
+      background: var(--cherry-tint);
+    }
+    .stay-card input[type="radio"]:focus-visible + .stay-card-inner {
+      box-shadow: 0 0 0 3px var(--butter);
+    }
+    .stay-name   { font-weight: 600; font-size: .95rem; color: var(--cherry-dark); }
+    .stay-detail { font-size: .82rem; color: var(--garden); margin-top: 2px; }
+
+    /* ── Airport transfer ── */
+    .transport-box {
+      margin-top: 14px;
+      padding: 14px 16px;
+      background: var(--sky-tint);
+      border-radius: var(--radius);
+    }
+    .transport-box fieldset { border: none; padding: 0; }
+    .transport-box legend {
+      font-size: .88rem;
+      font-weight: 600;
+      color: var(--cherry-dark);
+      margin-bottom: 4px;
+      display: block;
+    }
+    .radio-inline {
+      display: flex;
+      gap: 20px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    .radio-inline label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      font-size: .9rem;
+      min-height: 44px;
+      margin-bottom: 0;
+    }
+    .radio-inline input[type="radio"] {
+      accent-color: var(--cherry);
+      width: 16px; height: 16px;
+      cursor: pointer;
     }
 
-    /* Desktop/tablet tweaks for step minimum */
-    @media (min-width:641px) {
-      .step.active { min-height: 18rem; } /* slightly larger minimum on larger screens */
+    /* ── Event cards ── */
+    .event-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 14px 0 4px;
+    }
+    .event-card {
+      border-radius: var(--radius);
+      background: var(--event-bg, var(--butter-tint));
+      padding: 14px 16px;
+    }
+    .event-top { margin-bottom: 8px; }
+    .event-when {
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--cherry);
+      margin-bottom: 1px;
+    }
+    .event-name {
+      font-family: 'Fraunces', Georgia, serif;
+      font-variation-settings: 'SOFT' 100;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--cherry-dark);
+    }
+    .event-venue { font-size: .78rem; color: var(--garden); margin-top: 1px; }
+    .event-badge {
+      display: inline-block;
+      font-size: .72rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 100px;
+      margin-top: 6px;
+    }
+    .badge-optional { background: white; color: var(--cherry-dark); opacity: .65; }
+    .badge-locked   { background: var(--garden); color: white; }
+    .event-locked-note { font-size: .82rem; color: var(--cherry-dark); opacity: .7; margin-top: 4px; }
+    .event-count-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .event-count-row .field-label {
+      flex: 1;
+      font-size: .82rem;
+      margin-bottom: 0;
     }
 
-    /* Preserve your visual styles (inputs, buttons, messages, etc.) */
-    h1 { margin:0; font-size:1.05rem; }
-    .subhead { color:var(--muted); margin-top:0.4rem; margin-bottom:0.6rem; line-height:1.05; font-size:0.95rem; }
-    .prompt { color:var(--muted); margin-bottom:0.6rem; text-align:center; display:block; font-size:0.95rem; }
-    .search-row { display:flex; gap:0.5rem; margin-bottom:0.25rem; justify-content:center; }
-    .search-row input { flex:1; max-width:24rem; padding:0.45rem; border:1px solid #e5e5e5; border-radius:0.5rem; font-size:0.95rem; }
-    .actions { display:flex; gap:0.5rem; margin-top:0.9rem; justify-content:center; align-items:center; padding-bottom:0.6rem; }
-    .actions-right { display:flex; gap:0.5rem; }
-    .btn { padding:0.45rem 0.75rem; border-radius:0.5rem; border:0; cursor:pointer; font-size:0.95rem; }
-    .btn.primary { background:var(--accent); color:#fff; }
-    .btn.ghost { background:#f3f3f3; color:#111; }
-    .error { color:var(--danger); font-size:0.92rem; margin-top:0.4rem; display:none; text-align:center; }
-    .matches { margin:0 auto 0.6rem; display:flex; flex-direction:column; gap:0.4rem; align-items:center; }
-    .match-btn { display:block; width:100%; max-width:28.75rem; padding:0.6rem; border:1px solid #f0f0f0; border-radius:0.5rem; background:#fff; cursor:pointer; text-align:center; transition:all .12s; font-size:0.95rem; }
-    .match-btn:hover { background:#fafafa; transform:translateY(-2px); }
-    .form-row { display:flex; flex-direction:column; gap:0.25rem; margin-bottom:0.6rem; align-items:center; }
-    label { font-size:0.95rem; color:#333; text-align:left; width:100%; max-width:28.75rem; display:block; }
-    select,input,textarea { padding:0.5rem; font-size:0.95rem; border:1px solid #e6e6e6; border-radius:0.5rem; width:100%; max-width:28.75rem; box-sizing:border-box; }
-    textarea { min-height:5rem; resize:vertical; }
-    .message { padding:0.5rem; background:#e7f7e7; border:1px solid #bfe6bf; border-radius:0.5rem; margin:0.4rem 0; text-align:center; }
-    .small { font-size:0.88rem; color:var(--muted); margin-top:0.4rem; }
-    .loading-overlay { position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(255,255,255,0.7); border-radius:inherit; z-index:999; }
-    .spinner { width:1.9rem; height:1.9rem; border-radius:50%; border:0.25rem solid #eee; border-top-color:var(--accent); animation:spin 1s linear infinite; }
-    @keyframes spin { to { transform:rotate(360deg); } }
-
-    /* When content grows taller than viewport, allow natural scrolling inside the iframe/page */
-    @media (max-width:540px) {
-      .content-column { padding:0.4rem 0.6rem; }
-      .match-btn { max-width:100%; }
-      label, select, input, textarea { max-width:100%; }
+    .transport-note {
+      font-size: .8rem;
+      color: var(--garden);
+      background: var(--garden-tint);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-top: 12px;
+      line-height: 1.4;
     }
 
-    input[type=tel]{ font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,"Roboto Mono",monospace; }
-
-    /* ===== Mars & Bianca brand theme (lakeside social club) ===== */
-    :root {
-      --ivory:#F8F4EA; --cream:#F6EFDF; --burgundy:#6E1E2E; --sage:#A3B48A; --fern:#4F6B45; --blush:#E8B4A6; --gold:#E3B866;
-      --bg: var(--cream); --muted: var(--fern); --accent: var(--fern); --danger:#9c2b3b;
+    /* ── Review ── */
+    .review-list { margin-bottom: 4px; }
+    .review-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid #e8d8d0;
     }
-    html, body { font-family:"DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif; color:var(--burgundy); }
-    :root[data-embedded="true"], :root[data-embedded="true"] body { background:transparent; }
-    :root[data-embedded="true"] .page-wrap { min-height:0; padding:0; align-items:flex-start; }
-    :root[data-embedded="true"] .app-box { padding:0; }
-    :root[data-embedded="true"] .step.active { min-height:0; }
-    :root[data-embedded="true"] h1,
-    :root[data-embedded="true"] .subhead { display:none; }
-
-    h1 { font-family:"Fraunces", Georgia, serif; font-weight:600; font-size:1.5rem; color:var(--burgundy); }
-    .subhead { color:var(--fern); line-height:1.4; }
-    .prompt { font-family:"Fraunces", Georgia, serif; font-weight:600; font-size:1.2rem; line-height:1.3; color:var(--burgundy); margin-bottom:1rem; }
-    label { color:var(--burgundy); font-weight:500; }
-    .small { color:var(--fern); }
-
-    select, input, textarea {
-      background:var(--ivory); color:var(--burgundy); font-family:inherit; font-size:1rem;
-      border:2px solid var(--sage); border-radius:14px; padding:0.8rem 1rem; outline:none;
+    .review-row:last-child { border-bottom: none; }
+    .review-left {}
+    .review-label {
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--garden);
+      margin-bottom: 2px;
     }
-    select:focus, input:focus, textarea:focus { border-color:var(--burgundy); }
-    ::placeholder { color:#8a7a6a; opacity:1; }
-    .search-row input { max-width:28.75rem; }
+    .review-value { font-size: .9rem; color: var(--cherry-dark); line-height: 1.4; }
+    .review-edit-btn {
+      background: none;
+      border: none;
+      color: var(--cherry);
+      font-size: .8rem;
+      cursor: pointer;
+      text-decoration: underline;
+      font-family: inherit;
+      white-space: nowrap;
+      min-height: 44px;
+      padding: 0 2px;
+      display: flex;
+      align-items: center;
+    }
+    .review-edit-btn:focus-visible {
+      outline: 3px solid var(--butter);
+      outline-offset: 2px;
+      border-radius: 3px;
+    }
 
-    .btn { font-family:inherit; font-weight:700; letter-spacing:.04em; border-radius:14px; padding:0.8rem 1.4rem; font-size:1rem; transition:transform .12s, background .12s; }
-    .btn:hover { transform:translateY(-1px); }
-    .btn.primary { background:var(--fern); color:var(--ivory); }
-    .btn.primary:hover { background:var(--burgundy); }
-    .btn.ghost { background:transparent; color:var(--burgundy); border:2px solid var(--sage); }
-    .btn.ghost:hover { background:var(--ivory); }
+    /* ── Thanks ── */
+    .thanks-box {
+      background: white;
+      border-radius: var(--radius);
+      padding: 16px;
+      margin: 14px 0;
+    }
+    .thanks-row { display: flex; gap: 8px; margin-bottom: 6px; }
+    .thanks-row:last-child { margin-bottom: 0; }
+    .thanks-row-label { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--garden); min-width: 80px; }
+    .thanks-row-val   { font-size: .9rem; color: var(--cherry-dark); }
 
-    .match-btn { background:var(--ivory); border:2px solid var(--sage); border-radius:14px; color:var(--burgundy); font-family:inherit; font-size:1rem; padding:0.8rem 1rem; }
-    .match-btn:hover { background:#fff; border-color:var(--burgundy); }
-    .message { background:var(--ivory); border:2px solid var(--sage); border-radius:14px; color:var(--burgundy); padding:1rem; }
-    .error { color:var(--danger); }
-    .loading-overlay { background:rgba(246,239,223,0.8); }
-    .spinner { border-color:var(--sage); border-top-color:var(--burgundy); }
-    input[type=tel] { font-family:inherit; }
+    /* ── Closed / Error ── */
+    .closed-box, .error-box {
+      background: white;
+      border-radius: var(--radius);
+      padding: 16px;
+      margin: 14px 0;
+      font-size: .92rem;
+      line-height: 1.5;
+      color: var(--cherry-dark);
+    }
+    .contact-line { margin-top: 10px; color: var(--garden); font-size: .85rem; }
+
+    /* ── Loading spinner ── */
+    .loading {
+      position: absolute;
+      inset: 0;
+      background: rgba(249,244,234,.88);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      border-radius: var(--radius);
+    }
+    .loading.on { display: flex; }
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid var(--cherry-tint);
+      border-top-color: var(--cherry);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (prefers-reduced-motion: reduce) {
+      .spinner { animation: none; border-top-color: var(--cherry); }
+      .btn, .radio-card-inner, .stay-card-inner, .step-dot { transition: none; }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 400px) {
+      body { padding: 8px; }
+      .card-inner { padding: 20px 16px 24px; }
+      .radio-cards { grid-template-columns: 1fr; }
+      .step-heading { font-size: 1.75rem; }
+    }
+
+    /* ── SR only ── */
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0;
+      margin: -1px; overflow: hidden; clip: rect(0,0,0,0);
+      white-space: nowrap; border: 0;
+    }
   </style>
 </head>
 <body>
-  <div class="page-wrap">
-    <div class="app-box" id="appBox" role="dialog" aria-modal="true">
-      <div id="loading" class="loading-overlay"><div class="spinner" aria-hidden="true"></div></div>
 
-      <div class="content-column">
+<div class="card" id="card">
+  <div class="loading" id="loading" aria-hidden="true"><div class="spinner"></div></div>
+  <div class="card-scallop" aria-hidden="true"></div>
+  <div class="card-inner">
 
-        <!-- Non-sticky header (reverted) -->
-        <h1>Mars + Bianca</h1>
-        <div class="subhead">Nuuk Taal<br>October 15, 2027</div>
+    <!-- Step dots -->
+    <div class="step-dots" id="step-dots" aria-hidden="true"></div>
 
-        <!-- Steps -->
-        <div id="step-search" class="step active">
-          <span class="prompt">Type your name as it appears on your invite.</span>
-          <div class="search-row">
-            <input id="nameInput" placeholder="Type your name" autocomplete="name" />
-          </div>
-          <div id="searchErr" class="error" aria-live="polite"></div>
-          <div class="actions">
-            <div class="actions-right"><button id="findBtn" class="btn primary">Find</button></div>
-          </div>
-        </div>
-
-        <div id="step-matches" class="step">
-          <span class="prompt">We found matching names — please select your name below to continue.</span>
-          <div id="matches" class="matches" aria-live="polite"></div>
-          <div class="actions">
-            <button id="dontSeeBtn" class="btn ghost">I don't see my name</button>
-            <div class="actions-right"><button id="backToSearch" class="btn ghost">Back</button></div>
-          </div>
-        </div>
-
-        <div id="step-not-in-list" class="step">
-          <span class="prompt">If your name isn't listed here, please contact us and we'll confirm your invitation status.</span>
-          <div class="message"><strong>Can't find your name?</strong><div class="small" style="margin-top:.4rem">Contact: +1 778 977 4975 (WhatsApp / Viber)</div></div>
-          <div class="actions">
-            <button id="notInListBack" class="btn ghost">Back</button>
-            <div class="actions-right"><button id="notInListClose" class="btn primary">Close</button></div>
-          </div>
-        </div>
-
-        <div id="step-attendance" class="step">
-          <span class="prompt">Please tell us whether you will join us for the celebration.</span>
-          <div class="form-row">
-            <label for="attendanceSelect">Will you be joining us?</label>
-            <select id="attendanceSelect"><option value="">-- choose --</option><option value="Attending">Yes — I/we will attend</option><option value="Declined">Regretfully decline</option></select>
-          </div>
-          <div id="attendanceDynamic" style="margin-top:.4rem"></div>
-          <div id="attendeeError" class="error"></div>
-          <div class="actions">
-            <button id="attendanceBack" class="btn ghost">Back</button>
-            <div class="actions-right"><button id="attendanceNext" class="btn primary">Next</button></div>
-          </div>
-        </div>
-
-        <div id="step-transport" class="step">
-          <span class="prompt">We offer airport transfer from NAIA to Club Balai Isabel. Please let us know if you need it.</span>
-          <div class="form-row">
-            <label for="transportSelect">Do you need airport transfer from NAIA to Club Balai Isabel (Batangas)?</label>
-            <select id="transportSelect"><option value="">-- choose --</option><option value="Yes">Yes — I/We need airport transfer</option><option value="No">No — we don't need airport transfer</option></select>
-          </div>
-          <div class="actions">
-            <button id="transportBack" class="btn ghost">Back</button>
-            <div class="actions-right"><button id="transportNext" class="btn primary">Next</button></div>
-          </div>
-        </div>
-
-        <div id="step-phone" class="step">
-          <span class="prompt">Please give the best Philippine mobile number where we can reach you if needed.</span>
-          <div class="form-row">
-            <label for="phoneInput">Phone (PH format)</label>
-            <input id="phoneInput" type="tel" placeholder="09" />
-            <div id="phoneErr" class="error"></div>
-          </div>
-          <div class="actions">
-            <button id="phoneBack" class="btn ghost">Back</button>
-            <div class="actions-right"><button id="phoneNext" class="btn primary">Next</button></div>
-          </div>
-        </div>
-
-        <div id="step-notes" class="step">
-          <span class="prompt">Optional — share dietary restrictions, song requests, or a short message.</span>
-          <div class="form-row">
-            <label for="notesInput">Notes (optional — dietary, song requests)</label>
-            <textarea id="notesInput" placeholder="E.g. vegetarian, song request..."></textarea>
-          </div>
-          <div class="actions">
-            <button id="notesBack" class="btn ghost">Back</button>
-            <div class="actions-right"><button id="notesNext" class="btn primary">Review</button></div>
-          </div>
-        </div>
-
-        <div id="step-review" class="step">
-          <span class="prompt">Please review your RSVP details before submitting.</span>
-          <div id="reviewSummary" class="form-row" style="text-align:left"></div>
-          <div id="reviewError" class="error" style="text-align:center"></div>
-          <div class="actions">
-            <button id="reviewBack" class="btn ghost">Back</button>
-            <div class="actions-right"><button id="submitBtn" class="btn primary">Submit RSVP</button></div>
-          </div>
-        </div>
-
-        <div id="step-thanks" class="step">
-          <span class="prompt">Got it. Thank you!</span>
-          <div id="thanksMessage" class="message" style="text-align:center"></div>
-          <div class="actions">
-            <div class="actions-right"><button id="thanksClose" class="btn primary">Close</button></div>
-          </div>
-        </div>
-
+    <!-- Step: code -->
+    <section id="step-code" class="step active" aria-label="Enter invite code">
+      <h1 class="step-heading" tabindex="-1">roll call.</h1>
+      <p class="step-sub">Got your invite code? Pop it in.</p>
+      <p class="deadline-note">Please reply by March 30.</p>
+      <div class="field">
+        <label for="code-input">Your invite code</label>
+        <input id="code-input" type="text" autocomplete="off" spellcheck="false"
+               inputmode="text" maxlength="40" placeholder="e.g. ABC123">
+        <p class="field-help">It's on your invite.</p>
       </div>
-    </div>
-  </div>
+      <div class="error" id="code-error" role="alert" aria-live="polite"></div>
+      <div class="actions">
+        <button id="code-next" class="btn btn-primary">Next</button>
+      </div>
+    </section>
 
-  <script>
-  (function () {
-    const API_URL = "https://rsvp-proxy.marsnbianca.workers.dev/"; // <-- replace with your Worker URL
+    <!-- Step: attendance -->
+    <section id="step-attendance" class="step" aria-label="Will you attend?" tabindex="-1">
+      <p class="replying-as">Replying as <strong id="invite-name-display"></strong></p>
+      <div class="not-you-row">
+        <button id="not-you-btn" class="link-btn">not you?</button>
+      </div>
+      <h2 class="step-heading" tabindex="-1">hara eon ngani.</h2>
+      <fieldset>
+        <legend class="sr-only">Will you be joining us?</legend>
+        <div class="radio-cards" role="group">
+          <label class="radio-card">
+            <input type="radio" name="attendance" value="Attending" id="attend-yes">
+            <span class="radio-card-inner">Present!</span>
+          </label>
+          <label class="radio-card">
+            <input type="radio" name="attendance" value="Declined" id="attend-no">
+            <span class="radio-card-inner">Absent, sadly</span>
+          </label>
+        </div>
+      </fieldset>
+      <div class="error" id="attendance-error" role="alert" aria-live="polite"></div>
+      <div class="actions">
+        <button id="attendance-back" class="btn btn-secondary">Back</button>
+        <button id="attendance-next" class="btn btn-primary">Next</button>
+      </div>
+    </section>
 
-    // set --dvh on the child side too (helps parent and content sizing on mobile)
-    function updateDvh() {
-      try {
-        const dv = window.innerHeight * 0.01;
-        document.documentElement.style.setProperty('--dvh', dv + 'px');
-      } catch (_) {}
+    <!-- Step: absent-note -->
+    <section id="step-absent-note" class="step" aria-label="Leave a note" tabindex="-1">
+      <h2 class="step-heading" tabindex="-1">we'll miss you.</h2>
+      <p class="step-sub">Drinks soon, okay?</p>
+      <div class="field">
+        <label for="absent-note-input">Leave us a note <span class="optional">(optional)</span></label>
+        <textarea id="absent-note-input" rows="4" placeholder="Say anything..."></textarea>
+      </div>
+      <div class="actions">
+        <button id="absent-note-back" class="btn btn-secondary">Back</button>
+        <button id="absent-note-next" class="btn btn-primary">Next</button>
+      </div>
+    </section>
+
+    <!-- Step: count -->
+    <section id="step-count" class="step" aria-label="Who's coming?" tabindex="-1">
+      <h2 class="step-heading" tabindex="-1">who's coming?</h2>
+      <div class="count-row">
+        <span class="field-label" id="count-label">How many of you?</span>
+        <div class="stepper" role="group" aria-labelledby="count-label">
+          <button type="button" class="stepper-btn" id="count-dec" aria-label="Fewer">−</button>
+          <span class="stepper-val" id="count-val" aria-live="polite" aria-atomic="true">1</span>
+          <button type="button" class="stepper-btn" id="count-inc" aria-label="More">+</button>
+        </div>
+      </div>
+      <div class="attendee-names" id="attendee-name-fields"></div>
+      <div class="field">
+        <label for="phone-input">Your phone number</label>
+        <input id="phone-input" type="tel" inputmode="numeric"
+               placeholder="0917 123 4567" autocomplete="tel" maxlength="15">
+        <p class="field-help">We'll only use this if we need to reach you.</p>
+      </div>
+      <div class="error" id="count-error" role="alert" aria-live="polite"></div>
+      <div class="actions">
+        <button id="count-back" class="btn btn-secondary">Back</button>
+        <button id="count-next" class="btn btn-primary">Next</button>
+      </div>
+    </section>
+
+    <!-- Step: stay -->
+    <section id="step-stay" class="step" aria-label="Where are you sleeping?" tabindex="-1">
+      <h2 class="step-heading" tabindex="-1">where are you sleeping?</h2>
+      <fieldset>
+        <legend class="sr-only">Accommodation</legend>
+        <div class="stay-cards">
+          <label class="stay-card">
+            <input type="radio" name="stay" value="Club Balai" id="stay-club">
+            <div class="stay-card-inner">
+              <div class="stay-name">Club Balai Isabel, on us.</div>
+              <div class="stay-detail">Two nights, paid for.</div>
+            </div>
+          </label>
+          <label class="stay-card">
+            <input type="radio" name="stay" value="Other" id="stay-other">
+            <div class="stay-card-inner">
+              <div class="stay-name">Somewhere else.</div>
+              <div class="stay-detail">You'll drive yourself. Ideas are on the page above.</div>
+            </div>
+          </label>
+        </div>
+      </fieldset>
+
+      <!-- Airport transfer — only shown when Club Balai is chosen -->
+      <div id="transport-box" class="transport-box" hidden>
+        <fieldset>
+          <legend>Would a ride from the airport (NAIA) help?</legend>
+          <p class="field-help" style="margin-top:0;margin-bottom:0;">
+            We're still working out whether we can arrange one. Say yes and we'll follow up.
+            It isn't included automatically.
+          </p>
+          <div class="radio-inline">
+            <label>
+              <input type="radio" name="transport" value="Yes" id="transport-yes">
+              Yes, follow up with me
+            </label>
+            <label>
+              <input type="radio" name="transport" value="No" id="transport-no">
+              No thanks
+            </label>
+          </div>
+        </fieldset>
+        <div class="error" id="transport-error" role="alert" aria-live="polite"></div>
+      </div>
+
+      <div class="error" id="stay-error" role="alert" aria-live="polite"></div>
+      <div class="actions">
+        <button id="stay-back" class="btn btn-secondary">Back</button>
+        <button id="stay-next" class="btn btn-primary">Next</button>
+      </div>
+    </section>
+
+    <!-- Step: events -->
+    <section id="step-events" class="step" aria-label="Which days are you in?" tabindex="-1">
+      <h2 class="step-heading" tabindex="-1">which days are you in?</h2>
+      <div class="event-cards">
+
+        <!-- Oct 14 — optional -->
+        <div class="event-card" style="--event-bg: var(--cherry-tint)">
+          <div class="event-top">
+            <div class="event-when">Thu Oct 14 · 5:30 PM</div>
+            <div class="event-name">Welcome Dinner</div>
+            <div class="event-venue">Club Balai Isabel, Batangas</div>
+            <span class="event-badge badge-optional">Optional</span>
+          </div>
+          <div class="event-count-row">
+            <span class="field-label" id="oct14-label">How many of you?</span>
+            <div class="stepper" role="group" aria-labelledby="oct14-label">
+              <button type="button" class="stepper-btn" id="oct14-dec" aria-label="Fewer">−</button>
+              <span class="stepper-val" id="oct14-val" aria-live="polite" aria-atomic="true">0</span>
+              <button type="button" class="stepper-btn" id="oct14-inc" aria-label="More">+</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Oct 15 — locked -->
+        <div class="event-card" style="--event-bg: var(--butter-tint)">
+          <div class="event-top">
+            <div class="event-when">Fri Oct 15 · 4:00 PM</div>
+            <div class="event-name">The Wedding</div>
+            <div class="event-venue">Nuuk Taal, Laurel, Batangas</div>
+            <span class="event-badge badge-locked">You're in for this one ✓</span>
+          </div>
+          <p class="event-locked-note">It's the whole point.</p>
+        </div>
+
+        <!-- Oct 16 — optional -->
+        <div class="event-card" style="--event-bg: var(--garden-tint)">
+          <div class="event-top">
+            <div class="event-when">Sat Oct 16 · 12:30 PM</div>
+            <div class="event-name">Farewell Lunch</div>
+            <div class="event-venue">Farmer's Table, Tagaytay</div>
+            <span class="event-badge badge-optional">Optional</span>
+          </div>
+          <div class="event-count-row">
+            <span class="field-label" id="oct16-label">How many of you?</span>
+            <div class="stepper" role="group" aria-labelledby="oct16-label">
+              <button type="button" class="stepper-btn" id="oct16-dec" aria-label="Fewer">−</button>
+              <span class="stepper-val" id="oct16-val" aria-live="polite" aria-atomic="true">0</span>
+              <button type="button" class="stepper-btn" id="oct16-inc" aria-label="More">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Only shown for Club Balai guests -->
+      <p id="club-balai-note" class="transport-note" hidden>
+        Vans run between Club Balai Isabel, Nuuk and Farmer's Table for all Club Balai guests. You're sorted.
+      </p>
+
+      <div class="actions">
+        <button id="events-back" class="btn btn-secondary">Back</button>
+        <button id="events-next" class="btn btn-primary">Next</button>
+      </div>
+    </section>
+
+    <!-- Step: notes -->
+    <section id="step-notes" class="step" aria-label="Anything else?" tabindex="-1">
+      <h2 class="step-heading" tabindex="-1">anything else?</h2>
+      <div class="field">
+        <label for="notes-input">Notes <span class="optional">(optional)</span></label>
+        <textarea id="notes-input" rows="4"
+                  placeholder="Dietary needs, song requests, a message..."></textarea>
+      </div>
+      <div class="actions">
+        <button id="notes-back" class="btn btn-secondary">Back</button>
+        <button id="notes-next" class="btn btn-primary">Next</button>
+      </div>
+    </section>
+
+    <!-- Step: review -->
+    <section id="step-review" class="step" aria-label="Review your RSVP" tabindex="-1">
+      <h2 class="step-heading" tabindex="-1">look right?</h2>
+      <div class="review-list" id="review-list"></div>
+      <div class="error" id="review-error" role="alert" aria-live="polite"></div>
+      <div class="actions">
+        <button id="submit-btn" class="btn btn-primary">Send it</button>
+      </div>
+    </section>
+
+    <!-- Step: thanks -->
+    <section id="step-thanks" class="step" aria-label="RSVP confirmed" tabindex="-1">
+      <h2 class="step-heading" tabindex="-1" id="thanks-heading">present. noted.</h2>
+      <p class="step-sub" id="thanks-sub"></p>
+      <div class="thanks-box" id="thanks-box"></div>
+      <button id="change-answer-btn" class="link-btn" style="margin-top:4px">change my answer</button>
+    </section>
+
+    <!-- Step: closed -->
+    <section id="step-closed" class="step" aria-label="Replies closed" tabindex="-1">
+      <h2 class="step-heading" tabindex="-1">oh no.</h2>
+      <div class="closed-box">
+        Replies closed on March 30. We're so sorry to have missed you.
+        Please contact us and we'll sort it out.
+        <div class="contact-line">+1 778 977 4975 (WhatsApp / Viber)</div>
+      </div>
+    </section>
+
+    <!-- Step: error -->
+    <section id="step-error" class="step" aria-label="Something went wrong" tabindex="-1">
+      <h2 class="step-heading" tabindex="-1">hmm.</h2>
+      <div class="error-box">
+        Something went wrong on our side. Try again, or message us.
+        <div class="contact-line">+1 778 977 4975 (WhatsApp / Viber)</div>
+      </div>
+      <div class="actions">
+        <button id="error-retry-btn" class="btn btn-primary">Try again</button>
+      </div>
+    </section>
+
+  </div><!-- /.card-inner -->
+</div><!-- /.card -->
+
+<script>
+(function () {
+'use strict';
+
+// ── Config ────────────────────────────────────────────────────────────────────
+var API_URL  = 'https://rsvp-proxy.marsnbianca.workers.dev/';
+var DEV_MODE = /[?&]dev=1/.test(location.search);
+
+var DEV_INVITES = {
+  'TEST01': {
+    ok:true, invite_name:'Solo Test', max_seats:1, skip_stay:false, deadline:'March 30, 2027', closed:false,
+    existing:{ status:'', attending_count:0, attendee_names:[], phone:'', transportation:'', stay:'', oct14_count:null, oct16_count:null, notes:'' }
+  },
+  'TEST02': {
+    ok:true, invite_name:'Duo Test', max_seats:2, skip_stay:false, deadline:'March 30, 2027', closed:false,
+    existing:{ status:'', attending_count:0, attendee_names:[], phone:'', transportation:'', stay:'', oct14_count:null, oct16_count:null, notes:'' }
+  },
+  'TEST03': {
+    ok:true, invite_name:'Family Test', max_seats:4, skip_stay:true, deadline:'March 30, 2027', closed:false,
+    existing:{ status:'', attending_count:0, attendee_names:[], phone:'', transportation:'', stay:'', oct14_count:null, oct16_count:null, notes:'' }
+  },
+  'TEST04': {
+    ok:true, invite_name:'Declined Test', max_seats:1, skip_stay:false, deadline:'March 30, 2027', closed:false,
+    existing:{ status:'Declined', attending_count:0, attendee_names:[], phone:'', transportation:'', stay:'', oct14_count:0, oct16_count:0, notes:'cannot make it' }
+  }
+};
+
+// ── State ─────────────────────────────────────────────────────────────────────
+var S = {
+  code:'', inviteName:'', maxSeats:1, skipStay:false,
+  status:'', attendingCount:1, attendeeNames:[], phone:'',
+  stay:'', transportation:'', oct14Count:0, oct16Count:0,
+  notes:'', absentNote:'',
+  returnToReview: false
+};
+
+// ── DOM refs ──────────────────────────────────────────────────────────────────
+var $ = function(id){ return document.getElementById(id); };
+
+var STEPS = {
+  code:        $('step-code'),
+  attendance:  $('step-attendance'),
+  'absent-note': $('step-absent-note'),
+  count:       $('step-count'),
+  stay:        $('step-stay'),
+  events:      $('step-events'),
+  notes:       $('step-notes'),
+  review:      $('step-review'),
+  thanks:      $('step-thanks'),
+  closed:      $('step-closed'),
+  error:       $('step-error')
+};
+
+// ── Flow ──────────────────────────────────────────────────────────────────────
+function getFlow() {
+  if (S.status === 'Declined') return ['code','attendance','absent-note','review','thanks'];
+  var f = ['code','attendance','count'];
+  if (!S.skipStay) f.push('stay');
+  f.push('events','notes','review','thanks');
+  return f;
+}
+
+function showStep(name) {
+  Object.keys(STEPS).forEach(function(k){
+    var el = STEPS[k];
+    if (!el) return;
+    el.classList.remove('active');
+  });
+  var target = STEPS[name];
+  if (!target) return;
+  target.classList.add('active');
+
+  // Focus heading for screen readers
+  var heading = target.querySelector('[tabindex="-1"]');
+  if (heading) {
+    setTimeout(function(){ heading.focus({ preventScroll: false }); }, 60);
+  }
+
+  updateDots(name);
+  postHeight();
+}
+
+function goNext(from) {
+  if (S.returnToReview && from !== 'code' && from !== 'attendance') {
+    S.returnToReview = false;
+    showStep('review');
+    return;
+  }
+  var flow = getFlow();
+  var idx  = flow.indexOf(from);
+  if (idx >= 0 && idx < flow.length - 1) showStep(flow[idx + 1]);
+}
+
+function goBack(from) {
+  var flow = getFlow();
+  var idx  = flow.indexOf(from);
+  if (idx > 0) showStep(flow[idx - 1]);
+}
+
+// ── Dots ──────────────────────────────────────────────────────────────────────
+function updateDots(current) {
+  var dotsEl = $('step-dots');
+  if (!dotsEl) return;
+  var flow = getFlow().filter(function(s){ return s !== 'thanks' && s !== 'closed' && s !== 'error'; });
+  var idx  = flow.indexOf(current);
+  var html = '';
+  for (var i = 0; i < flow.length; i++) {
+    var cls = i < idx ? 'done' : (i === idx ? 'active' : '');
+    html += '<span class="step-dot' + (cls ? ' '+cls : '') + '"></span>';
+  }
+  dotsEl.innerHTML = html;
+}
+
+// ── postHeight ────────────────────────────────────────────────────────────────
+var _phTimer = null;
+function postHeight() {
+  if (_phTimer) clearTimeout(_phTimer);
+  _phTimer = setTimeout(function(){
+    try {
+      var h = document.documentElement.scrollHeight || document.body.scrollHeight;
+      window.parent.postMessage({ type:'RSVP:HEIGHT', height: h }, '*');
+    } catch(_){}
+  }, 60);
+}
+
+// ── API ───────────────────────────────────────────────────────────────────────
+function loading(on) {
+  var el = $('loading');
+  if (el) el.classList.toggle('on', !!on);
+}
+
+function apiLookup(code, cb) {
+  if (DEV_MODE) {
+    var fake = DEV_INVITES[code.toUpperCase()];
+    if (!fake) { cb({ ok:false, error:"Hmm, that code doesn\u2019t ring a bell. Check it and try again?" }); return; }
+    // Deep-clone to avoid mutations across re-entries
+    cb(JSON.parse(JSON.stringify(fake)));
+    return;
+  }
+  loading(true);
+  fetch(API_URL, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ action:'lookup', code: code })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){ loading(false); cb(d); })
+  .catch(function(){ loading(false); cb({ ok:false, error:'' }); });
+}
+
+function apiSubmit(payload, cb) {
+  if (DEV_MODE) {
+    console.log('[dev] submit payload', payload);
+    cb({ ok:true });
+    return;
+  }
+  loading(true);
+  fetch(API_URL, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){ loading(false); cb(d); })
+  .catch(function(){ loading(false); cb({ ok:false, error:'' }); });
+}
+
+// ── Error helper ──────────────────────────────────────────────────────────────
+function setErr(id, msg) {
+  var el = $(id);
+  if (!el) return;
+  el.textContent = msg || '';
+  el.classList.toggle('visible', !!msg);
+}
+function clearErr(id) { setErr(id, ''); }
+
+// ── Phone helpers ─────────────────────────────────────────────────────────────
+function fmtPhone(v) {
+  var d = String(v||'').replace(/\D+/g,'');
+  if (d.indexOf('63')===0 && d.length>=12) d = '0'+d.slice(2);
+  if (d.indexOf('9')===0  && d.length===10)  d = '0'+d;
+  d = d.slice(0,11);
+  if (d.length <= 4) return d;
+  if (d.length <= 7) return d.slice(0,4)+' '+d.slice(4);
+  return d.slice(0,4)+' '+d.slice(4,7)+' '+d.slice(7,11);
+}
+function normalizePhone(v) {
+  var d = String(v||'').replace(/\D+/g,'');
+  if (d.indexOf('63')===0 && d.length>=12) d = '0'+d.slice(2);
+  if (d.indexOf('9')===0  && d.length===10)  d = '0'+d;
+  d = d.slice(0,11);
+  if (!/^09\d{9}$/.test(d)) return '';
+  return d.slice(0,4)+' '+d.slice(4,7)+' '+d.slice(7,11);
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Stepper helper ────────────────────────────────────────────────────────────
+function makeStepperHandlers(decId, incId, valId, getVal, setVal, getMin, getMax, onChange) {
+  var dec = $(decId), inc = $(incId), val = $(valId);
+  function refresh() {
+    var v = getVal();
+    if (val) val.textContent = String(v);
+    if (dec) dec.disabled = v <= getMin();
+    if (inc) inc.disabled = v >= getMax();
+    if (onChange) onChange(v);
+  }
+  if (dec) dec.addEventListener('click', function(){
+    var v = getVal(); if (v > getMin()){ setVal(v-1); refresh(); postHeight(); }
+  });
+  if (inc) inc.addEventListener('click', function(){
+    var v = getVal(); if (v < getMax()){ setVal(v+1); refresh(); postHeight(); }
+  });
+  return refresh;
+}
+
+// ── STEP: code ────────────────────────────────────────────────────────────────
+var codeInput = $('code-input');
+var codeNext  = $('code-next');
+
+function doCodeNext() {
+  clearErr('code-error');
+  var code = (codeInput.value||'').trim();
+  if (!code) { setErr('code-error','Your invite code is on your invite.'); postHeight(); return; }
+
+  codeNext.disabled = true;
+  apiLookup(code, function(r) {
+    codeNext.disabled = false;
+    if (!r || !r.ok) {
+      if (r && r.closed) { showStep('closed'); return; }
+      setErr('code-error', r && r.error
+        ? r.error
+        : "Hmm, that code doesn\u2019t ring a bell. Check it and try again?");
+      postHeight(); return;
     }
-    updateDvh();
-    window.addEventListener('resize', updateDvh);
-    window.addEventListener('orientationchange', updateDvh);
-    if (window.visualViewport) {
-      try {
-        window.visualViewport.addEventListener('resize', updateDvh);
-        window.visualViewport.addEventListener('scroll', updateDvh);
-      } catch (_) {}
-    }
+    S.code        = code;
+    S.inviteName  = r.invite_name || '';
+    S.maxSeats    = Math.max(1, parseInt(r.max_seats,10)||1);
+    S.skipStay    = !!r.skip_stay;
 
-    const steps = {
-      search: document.getElementById('step-search'),
-      matches: document.getElementById('step-matches'),
-      notInList: document.getElementById('step-not-in-list'),
-      attendance: document.getElementById('step-attendance'),
-      transport: document.getElementById('step-transport'),
-      phone: document.getElementById('step-phone'),
-      notes: document.getElementById('step-notes'),
-      review: document.getElementById('step-review'),
-      thanks: document.getElementById('step-thanks')
-    };
+    // Pre-fill from existing answers
+    prefillFromExisting(r.existing || {});
 
-    // refs
-    const nameInput = document.getElementById('nameInput');
-    const findBtn = document.getElementById('findBtn');
-    const searchErr = document.getElementById('searchErr');
-    const matchesEl = document.getElementById('matches');
+    // Set display name
+    var nameEl = $('invite-name-display');
+    if (nameEl) nameEl.textContent = S.inviteName;
 
-    const dontSeeBtn = document.getElementById('dontSeeBtn');
-    const backToSearch = document.getElementById('backToSearch');
-
-    const attendanceSelect = document.getElementById('attendanceSelect');
-    const attendanceDynamic = document.getElementById('attendanceDynamic');
-    const attendeeError = document.getElementById('attendeeError');
-    const attendanceBack = document.getElementById('attendanceBack');
-    const attendanceNext = document.getElementById('attendanceNext');
-
-    const transportSelect = document.getElementById('transportSelect');
-    const transportBack = document.getElementById('transportBack');
-    const transportNext = document.getElementById('transportNext');
-
-    const phoneInput = document.getElementById('phoneInput');
-    const phoneErr = document.getElementById('phoneErr');
-    const phoneBack = document.getElementById('phoneBack');
-    const phoneNext = document.getElementById('phoneNext');
-
-    const notesInput = document.getElementById('notesInput');
-    const notesBack = document.getElementById('notesBack');
-    const notesNext = document.getElementById('notesNext');
-
-    const reviewSummary = document.getElementById('reviewSummary');
-    const reviewError = document.getElementById('reviewError');
-    const reviewBack = document.getElementById('reviewBack');
-    const submitBtn = document.getElementById('submitBtn');
-
-    const thanksMessage = document.getElementById('thanksMessage');
-    const thanksClose = document.getElementById('thanksClose');
-
-    const notInListBack = document.getElementById('notInListBack');
-    const notInListClose = document.getElementById('notInListClose');
-
-    const loadingOverlay = document.getElementById('loading');
-
-    let currentInvite = null, currentMaxSeats = 1, selectedStatus = "", selectedNumber = 1, selectedAttendees = [], selectedTransport = "", selectedPhoneStored = "", selectedNotes = "";
-
-    // showStep now toggles 'active' class so CSS can center steps reliably
-    function showStep(name) {
-      // restore the matches-screen action buttons by default (they may have been hidden for locked flow)
-      try {
-        if (dontSeeBtn) dontSeeBtn.style.display = '';
-        if (backToSearch) backToSearch.style.display = '';
-      } catch (_) {}
-
-      Object.values(steps).forEach(function(s) {
-        if (!s) return;
-        s.classList.remove('active');
-        s.style.display = ''; // clear inline display to let CSS control visibility
-      });
-      if (steps[name]) {
-        steps[name].classList.add('active');
-        steps[name].style.display = ''; // ensure no inline blocking display
-      }
-      const stepsWithBottomClose = new Set(['notInList','thanks']);
-      notifyParentHasBottomClose(name, stepsWithBottomClose.has(name));
-      setTimeout(function() { focusFirstControl(name); postHeight(); }, 80);
-    }
-
-    function focusFirstControl(stepName){
-      try {
-        const step = steps[stepName];
-        if(!step) return;
-        const first = step.querySelector('input,select,button,textarea');
-        if(first) first.focus();
-      } catch(_) {}
-    }
-
-    function setError(el, msg){ if(!el) return; if(msg){ el.textContent = msg; el.style.display = 'block'; } else { el.textContent = ''; el.style.display = 'none'; } }
-    function loading(on){ loadingOverlay.style.display = on ? 'flex' : 'none'; }
-
-    async function jsonFetch(payload){
-      loading(true);
-      try {
-        const res = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-        const txt = await res.text();
-        try { return JSON.parse(txt); } catch(e){ return { ok:false, error:'Invalid server response' }; }
-      } catch(err){ console.error(err); return { ok:false, error:'Network error' }; } finally { loading(false); }
-    }
-
-    function titleCaseName(s){ s=String(s||'').replace(/\s+/g,' ').trim().toLowerCase(); if(!s) return ''; return s.split(/([\s\-'])/).map(p=> /[\s\-']/.test(p)?p: p.charAt(0).toUpperCase()+p.slice(1)).join(''); }
-    function formatPhoneInput(v){ var d=String(v||'').replace(/\D+/g,''); if(d.indexOf('63')===0 && d.length>=12) d='0'+d.slice(2); if(d.indexOf('9')===0 && d.length===10) d='0'+d; d=d.slice(0,11); if(d.length<=2) return d; if(d.length<=4) return d.slice(0,4); if(d.length<=7) return d.slice(0,4)+' '+d.slice(4); return d.slice(0,4)+' '+d.slice(4,7)+' '+d.slice(7,11); }
-    function normalizePhoneToStored(input){ var d=String(input||'').replace(/\D+/g,''); if(!d) return ''; if(d.indexOf('63')===0 && d.length>=12) d='0'+d.slice(2); if(d.indexOf('9')===0 && d.length===10) d='0'+d; d=d.slice(0,11); if(!/^09\d{9}$/.test(d)) return ''; return d.slice(0,4)+' '+d.slice(4,7)+' '+d.slice(7,11); }
-
-    function notifyParentHasBottomClose(stepName, hasBottom) { try { window.parent.postMessage({ type:'RSVP:HAS_BOTTOM_CLOSE', hasBottomClose: !!hasBottom }, '*'); } catch(_) {} }
-
-    var postTimer = null;
-    function postHeight() {
-      try {
-        if (postTimer) clearTimeout(postTimer);
-        postTimer = setTimeout(function(){
-          try {
-            var h = document.documentElement.scrollHeight || document.body.scrollHeight;
-            window.parent.postMessage({ type:'RSVP:HEIGHT', height: h }, '*');
-          } catch(e) {}
-        }, 80);
-      } catch(e){}
-    }
-
-    // Search
-    async function doFind(){
-      setError(searchErr,''); matchesEl.innerHTML = '';
-      const q = (nameInput.value||'').trim();
-      if(!q || q.length < 3){ setError(searchErr, 'Please type at least 3 characters.'); postHeight(); return; }
-      findBtn.disabled = true;
-      const r = await jsonFetch({ action:'find', name: q, client_id: 'guest-'+Date.now() });
-      findBtn.disabled = false;
-      if(!r || !r.ok){ setError(searchErr, r && r.error ? r.error : 'Server error'); postHeight(); return; }
-      if(!r.matches || r.matches.length === 0){ setError(searchErr, 'No matches found. Please try again.'); postHeight(); return; }
-      matchesEl.innerHTML = '';
-      r.matches.forEach(m=>{
-        const btn = document.createElement('button'); btn.type='button'; btn.className='match-btn';
-        btn.innerHTML = "<div><strong>"+escapeHtml(m.display_name)+"</strong></div>";
-        btn.addEventListener('click', ()=> selectInvite(m));
-        matchesEl.appendChild(btn);
-      });
-      showStep('matches');
-    }
-
-    // wire matches controls
-    if (dontSeeBtn) dontSeeBtn.addEventListener('click', ()=> showStep('notInList'));
-    if (backToSearch) backToSearch.addEventListener('click', ()=> showStep('search'));
-
-    // FIX: ensure notInList Back button works
-    if (notInListBack) {
-      notInListBack.addEventListener('click', function(){
-        showStep('matches');
-      });
-    }
-
-    async function selectInvite(m){
-      setError(searchErr,'');
-      const r = await jsonFetch({ action:'get', invite_id: m.invite_id });
-      if(!r || !r.ok){ setError(searchErr, r && r.error ? r.error : 'Server error'); postHeight(); return; }
-
-      if(r.locked){
-        // show locked message and ONLY bottom Close
-        matchesEl.innerHTML = "<div class='message'>This invitation has already been answered.</div>";
-        const wrapper = document.createElement('div'); wrapper.style.marginTop='0.6rem'; wrapper.style.display='flex'; wrapper.style.justifyContent='center';
-        const closeBtn = document.createElement('button'); closeBtn.className='btn primary'; closeBtn.textContent='Close';
-        closeBtn.addEventListener('click', function(){ try{ window.parent.postMessage({ type:'RSVP:CLOSE' }, '*'); }catch(_){} try{ window.close(); }catch(_){} });
-        wrapper.appendChild(closeBtn);
-        matchesEl.appendChild(wrapper);
-
-        // Hide the "I don't see my name" and "Back" buttons for this locked view
-        try {
-          if (dontSeeBtn) dontSeeBtn.style.display = 'none';
-          if (backToSearch) backToSearch.style.display = 'none';
-        } catch(_) {}
-
-        notifyParentHasBottomClose('matches', true);
-        postHeight();
-        return;
-      }
-
-      currentInvite = r.invite || m;
-      currentInvite.invite_id = m.invite_id;
-      currentMaxSeats = Math.min(currentInvite.max_seats ? parseInt(currentInvite.max_seats,10) : (m.max_seats || 1), 4);
-      selectedStatus=''; selectedNumber=1; selectedAttendees=[]; selectedTransport=''; selectedPhoneStored=''; selectedNotes='';
-      attendanceSelect.value=''; attendanceDynamic.innerHTML=''; setError(attendeeError,'');
-      notifyParentHasBottomClose('attendance', false);
+    // Navigate to first step that needs answering
+    var ex = r.existing || {};
+    if (ex.status) {
+      var target = firstIncompleteStep(ex);
+      showStep(target);
+    } else {
       showStep('attendance');
     }
+  });
+}
 
-    // Attendance
-    attendanceBack.addEventListener('click', ()=> showStep('matches'));
+codeNext.addEventListener('click', doCodeNext);
+codeInput.addEventListener('keydown', function(e){
+  if (e.key === 'Enter') { e.preventDefault(); doCodeNext(); }
+});
 
-    attendanceSelect.addEventListener('change', function(){
-      setError(attendeeError,''); attendanceDynamic.innerHTML = '';
-      const v=(attendanceSelect.value||'').trim();
-      if(v === 'Attending'){
-        if(currentMaxSeats <= 1){ postHeight(); return; }
-        const row=document.createElement('div'); row.className = 'form-row';
-        const lbl=document.createElement('label'); lbl.textContent='How many people are attending (including you)?';
-        const sel=document.createElement('select'); sel.id='numSelect';
-        const placeholder=document.createElement('option'); placeholder.value=''; placeholder.textContent='-- choose --'; sel.appendChild(placeholder);
-        for(let i=1;i<=currentMaxSeats;i++){ const opt=document.createElement('option'); opt.value=String(i); opt.textContent=String(i); sel.appendChild(opt); }
-        sel.value=''; sel.addEventListener('change', ()=> renderGuestInputs(parseInt(sel.value,10) || 0));
-        row.appendChild(lbl); row.appendChild(sel); attendanceDynamic.appendChild(row);
-        const gdiv=document.createElement('div'); gdiv.id='guestInputs'; gdiv.style.marginTop='0.5rem'; attendanceDynamic.appendChild(gdiv);
-        postHeight();
-      } else { attendanceDynamic.innerHTML=''; postHeight(); }
+// ── STEP: attendance ──────────────────────────────────────────────────────────
+$('not-you-btn').addEventListener('click', function(){
+  S.code=''; S.inviteName=''; S.status=''; S.returnToReview=false;
+  codeInput.value='';
+  document.querySelectorAll('input[name="attendance"]').forEach(function(r){ r.checked=false; });
+  showStep('code');
+});
+
+$('attendance-back').addEventListener('click', function(){ showStep('code'); });
+
+$('attendance-next').addEventListener('click', function(){
+  clearErr('attendance-error');
+  var checked = document.querySelector('input[name="attendance"]:checked');
+  if (!checked) { setErr('attendance-error','Choose one — we just want to know!'); postHeight(); return; }
+  S.status = checked.value;
+  if (S.status === 'Declined') {
+    // Update heading/sub for declined thanks
+  }
+  renderCountStep();
+  goNext('attendance');
+});
+
+// ── STEP: absent-note ─────────────────────────────────────────────────────────
+$('absent-note-back').addEventListener('click', function(){ goBack('absent-note'); });
+$('absent-note-next').addEventListener('click', function(){
+  S.absentNote = ($('absent-note-input').value||'').trim();
+  buildReview();
+  goNext('absent-note');
+});
+
+// ── STEP: count ───────────────────────────────────────────────────────────────
+var phoneInput = $('phone-input');
+
+phoneInput.addEventListener('input', function(){
+  phoneInput.value = fmtPhone(phoneInput.value);
+});
+
+function renderCountStep() {
+  // Set stepper bounds
+  refreshCountStepper();
+  renderAttendeeNameFields();
+}
+
+var refreshCountStepper = makeStepperHandlers(
+  'count-dec','count-inc','count-val',
+  function(){ return S.attendingCount; },
+  function(v){ S.attendingCount = v; renderAttendeeNameFields(); },
+  function(){ return 1; },
+  function(){ return S.maxSeats; },
+  null
+);
+
+function renderAttendeeNameFields() {
+  var container = $('attendee-name-fields');
+  if (!container) return;
+  if (S.maxSeats <= 1) { container.innerHTML=''; postHeight(); return; }
+  var html = '';
+  for (var i = 0; i < S.attendingCount; i++) {
+    var val  = escHtml(S.attendeeNames[i] || '');
+    var lbl  = i === 0 ? 'Your full name' : 'Guest '+i+' full name';
+    var pid  = 'attendee-'+i;
+    html += '<div class="attendee-name-wrap">'
+          + '<label for="'+pid+'">'+escHtml(lbl)+'</label>'
+          + '<input type="text" id="'+pid+'" class="attendee-input"'
+          + ' value="'+val+'" autocomplete="'+(i===0?'name':'off')+'"'
+          + ' placeholder="Full name" maxlength="80">'
+          + '</div>';
+  }
+  container.innerHTML = html;
+  postHeight();
+}
+
+$('count-back').addEventListener('click', function(){
+  S.returnToReview ? goBack('count') : goBack('count');
+});
+
+$('count-next').addEventListener('click', function(){
+  clearErr('count-error');
+  // Collect names
+  if (S.maxSeats <= 1) {
+    S.attendeeNames = [];
+  } else {
+    var inputs = document.querySelectorAll('.attendee-input');
+    var names  = [];
+    var ok     = true;
+    inputs.forEach(function(inp, idx){
+      var v = (inp.value||'').trim();
+      if (!v) { ok = false; }
+      names.push(v);
     });
+    if (!ok) { setErr('count-error','Please fill all name fields.'); postHeight(); return; }
+    S.attendeeNames = names;
+  }
+  // Phone
+  var ph = normalizePhone(phoneInput.value);
+  if (!ph) { setErr('count-error','Phone must be 11 digits starting with 09 (e.g. 0917 123 4567)'); postHeight(); return; }
+  S.phone = ph;
+  phoneInput.value = ph; // normalize display
+  goNext('count');
+});
 
-    function renderGuestInputs(n){
-      const gdiv=document.getElementById('guestInputs'); if(!gdiv) return; gdiv.innerHTML=''; if(!n || n<1){ postHeight(); return; }
-      for(let i=0;i<n;i++){ const input=document.createElement('input'); input.type='text'; input.placeholder='Guest full name'; input.className='guest-name-input'; input.style.marginBottom='0.5rem'; gdiv.appendChild(input); }
-      selectedNumber = n; postHeight();
+// ── STEP: stay ────────────────────────────────────────────────────────────────
+document.querySelectorAll('input[name="stay"]').forEach(function(r){
+  r.addEventListener('change', function(){
+    var box = $('transport-box');
+    if (box) box.hidden = r.value !== 'Club Balai';
+    // Clear transport if switching away
+    if (r.value !== 'Club Balai') {
+      document.querySelectorAll('input[name="transport"]').forEach(function(t){ t.checked=false; });
+      clearErr('transport-error');
     }
+    postHeight();
+  });
+});
 
-    attendanceNext.addEventListener('click', function(){
-      setError(attendeeError,'');
-      const val=(attendanceSelect.value||'').trim();
-      if(!val){ setError(attendeeError,'Please choose whether you will attend or decline.'); postHeight(); return; }
-      selectedStatus = val;
-      if(selectedStatus === 'Declined'){ selectedAttendees = []; buildReview(); showStep('review'); return; }
-      if(currentMaxSeats <= 1){ selectedAttendees = []; showStep('transport'); return; }
-      const sel = document.getElementById('numSelect');
-      if(!sel || !sel.value){ setError(attendeeError,'Please choose how many people are attending.'); postHeight(); return; }
-      const gdiv=document.getElementById('guestInputs'); if(!gdiv){ setError(attendeeError,'Please choose how many people are attending.'); postHeight(); return; }
-      const inputs = Array.from(gdiv.querySelectorAll('.guest-name-input'));
-      const names = inputs.map(i=>i.value.trim()).filter(Boolean);
-      if(names.length < parseInt(sel.value,10)){ setError(attendeeError,'Please fill all guest name boxes.'); postHeight(); return; }
-      selectedAttendees = names.slice(0,parseInt(sel.value,10)).map(titleCaseName);
-      showStep('transport');
-    });
+$('stay-back').addEventListener('click', function(){ goBack('stay'); });
 
-    // Transport
-    transportBack.addEventListener('click', ()=> showStep('attendance'));
-    transportNext.addEventListener('click', function(){ const v=(transportSelect.value||'').trim(); if(!v){ setError(attendeeError,'Please choose Yes or No for airport transfer.'); postHeight(); return; } selectedTransport = v==='Yes'?'Yes':'No'; setError(attendeeError,''); showStep('phone'); });
+$('stay-next').addEventListener('click', function(){
+  clearErr('stay-error');
+  clearErr('transport-error');
+  var checked = document.querySelector('input[name="stay"]:checked');
+  if (!checked) { setErr('stay-error','Please choose one.'); postHeight(); return; }
+  S.stay = checked.value;
+  if (S.stay === 'Club Balai') {
+    var trans = document.querySelector('input[name="transport"]:checked');
+    if (!trans) { setErr('transport-error','Please let us know about the airport ride.'); postHeight(); return; }
+    S.transportation = trans.value;
+  } else {
+    S.transportation = '';
+  }
+  // Show/hide Club Balai note on events step
+  var cbn = $('club-balai-note');
+  if (cbn) cbn.hidden = S.stay !== 'Club Balai';
+  goNext('stay');
+});
 
-    // Phone
-    phoneInput.addEventListener('input', ()=> { phoneInput.value = formatPhoneInput(phoneInput.value); postHeight(); });
-    phoneBack.addEventListener('click', ()=> showStep('transport'));
-    phoneNext.addEventListener('click', function(){ setError(phoneErr,''); if(selectedStatus==='Attending'){ const s = normalizePhoneToStored(phoneInput.value); if(!s){ setError(phoneErr,'Phone must be 11 digits starting with 09 (e.g. 0917 123 4567)'); postHeight(); return; } selectedPhoneStored = s; } else selectedPhoneStored=''; showStep('notes'); });
+// ── STEP: events ──────────────────────────────────────────────────────────────
+var refreshOct14 = makeStepperHandlers(
+  'oct14-dec','oct14-inc','oct14-val',
+  function(){ return S.oct14Count; },
+  function(v){ S.oct14Count = v; },
+  function(){ return 0; },
+  function(){ return S.attendingCount; },
+  null
+);
 
-    // Notes
-    notesBack.addEventListener('click', ()=> showStep('phone'));
-    notesNext.addEventListener('click', ()=> { selectedNotes = (notesInput.value||'').trim(); buildReview(); showStep('review'); });
+var refreshOct16 = makeStepperHandlers(
+  'oct16-dec','oct16-inc','oct16-val',
+  function(){ return S.oct16Count; },
+  function(v){ S.oct16Count = v; },
+  function(){ return 0; },
+  function(){ return S.attendingCount; },
+  null
+);
 
-    // Review
-    reviewBack.addEventListener('click', ()=> showStep('attendance'));
-    function buildReview(){
-      const statusText = selectedStatus === 'Attending' ? 'ATTENDING' : 'DECLINED';
-      let html = "<div style='font-weight:700'>"+escapeHtml(currentInvite.display_name)+"</div>";
-      html += "<div style='margin-top:0.4rem;font-weight:600'>"+statusText+"</div>";
-      if(selectedStatus === 'Attending'){
-        if(currentMaxSeats > 1){
-          html += "<div style='margin-top:.5rem'><strong>Guest names:</strong><ul style='list-style:none;padding:0;margin:8px 0'>";
-          selectedAttendees.forEach(n=> html += "<li>"+escapeHtml(n)+"</li>");
-          html += "</ul></div>";
-        }
-        html += "<div style='margin-top:0.25rem'><strong>Airport transfer:</strong> "+escapeHtml(selectedTransport)+"</div>";
-        html += "<div style='margin-top:0.25rem'><strong>Phone:</strong> "+escapeHtml(selectedPhoneStored)+"</div>";
+function initEventSteppers() {
+  // Default counts to attendingCount (or existing values)
+  if (S.oct14Count === null || S.oct14Count === undefined) S.oct14Count = S.attendingCount;
+  if (S.oct16Count === null || S.oct16Count === undefined) S.oct16Count = S.attendingCount;
+  // Clamp to current attendingCount
+  S.oct14Count = Math.min(S.oct14Count, S.attendingCount);
+  S.oct16Count = Math.min(S.oct16Count, S.attendingCount);
+  refreshOct14();
+  refreshOct16();
+}
+
+$('events-back').addEventListener('click', function(){ goBack('events'); });
+
+$('events-next').addEventListener('click', function(){
+  goNext('events');
+});
+
+// ── STEP: notes ───────────────────────────────────────────────────────────────
+$('notes-back').addEventListener('click', function(){ goBack('notes'); });
+
+$('notes-next').addEventListener('click', function(){
+  S.notes = ($('notes-input').value||'').trim();
+  buildReview();
+  goNext('notes');
+});
+
+// ── STEP: review ──────────────────────────────────────────────────────────────
+function buildReview() {
+  var list = $('review-list');
+  if (!list) return;
+  var rows = [];
+
+  if (S.status === 'Attending') {
+    rows.push(['Status',      'Present!',  'attendance']);
+    var names = S.maxSeats <= 1
+      ? (S.inviteName || '')
+      : (S.attendeeNames.join(', ') || S.inviteName);
+    rows.push(['Guests',      names,        'count']);
+    rows.push(['Phone',       S.phone,      'count']);
+    if (!S.skipStay) {
+      rows.push(['Staying',   S.stay === 'Club Balai' ? 'Club Balai Isabel' : 'Somewhere else', 'stay']);
+      if (S.stay === 'Club Balai') {
+        rows.push(['Airport ride', S.transportation === 'Yes' ? 'Please follow up' : 'No thanks', 'stay']);
       }
-      if(selectedNotes) html += "<div style='margin-top:0.4rem'><strong>Notes:</strong> "+escapeHtml(selectedNotes)+"</div>";
-      reviewSummary.innerHTML = html;
-      reviewError.style.display = 'none';
-      postHeight();
     }
+    rows.push(['Welcome dinner (Oct 14)', S.oct14Count + ' of ' + S.attendingCount, 'events']);
+    rows.push(['Wedding (Oct 15)',        S.attendingCount + ' of ' + S.attendingCount + ' — locked in', null]);
+    rows.push(['Farewell lunch (Oct 16)', S.oct16Count   + ' of ' + S.attendingCount, 'events']);
+    if (S.notes) rows.push(['Notes', S.notes, 'notes']);
+  } else {
+    rows.push(['Status', 'Absent, sadly', 'attendance']);
+    if (S.absentNote) rows.push(['Note', S.absentNote, 'absent-note']);
+  }
 
-    // Submit
-    submitBtn.addEventListener('click', async function(){
-      reviewError.style.display = 'none';
-      const payload = { action:'submit', invite_id: currentInvite.invite_id, status:selectedStatus, attending_count:(selectedStatus==='Attending'?(currentMaxSeats<=1?1:Math.min(selectedAttendees.length,currentMaxSeats)):0), attendees:(selectedStatus==='Attending'?(currentMaxSeats<=1?[ titleCaseName(currentInvite.display_name) ]:selectedAttendees.slice(0,currentMaxSeats)):[]), phone:(selectedStatus==='Attending'?selectedPhoneStored:''), transportation:(selectedStatus==='Attending'?selectedTransport:''), notes:selectedNotes||'' };
-      submitBtn.disabled = true;
-      const r = await jsonFetch(payload);
-      submitBtn.disabled = false;
-      if(!r || !r.ok){ reviewError.textContent = (r && r.error) ? r.error : 'Server error'; reviewError.style.display = ''; postHeight(); return; }
-      if(r.locked){ reviewError.textContent = "This invitation has already been responded to."; reviewError.style.display = ''; postHeight(); return; }
-      if(selectedStatus === 'Attending') thanksMessage.innerHTML = "<strong>See you there — we're excited to celebrate with you!</strong><div class='small' style='margin-top:.4rem'>If you need to make changes, contact us: +1 778 977 4975 (WhatsApp/Viber)</div>";
-      else thanksMessage.innerHTML = "<strong>We're sorry you can't join us.</strong><div class='small' style='margin-top:.4rem'>If you need to make changes, contact us: +1 778 977 4975 (WhatsApp/Viber)</div>";
-      notifyParentHasBottomClose('thanks', true);
-      showStep('thanks');
+  var html = '';
+  rows.forEach(function(row){
+    var label   = row[0], value = row[1], editStep = row[2];
+    var editBtn = editStep
+      ? '<button class="review-edit-btn" data-step="'+escHtml(editStep)+'" type="button">edit</button>'
+      : '';
+    html += '<div class="review-row">'
+          + '<div class="review-left">'
+          + '<div class="review-label">'+escHtml(label)+'</div>'
+          + '<div class="review-value">'+escHtml(value)+'</div>'
+          + '</div>'
+          + editBtn
+          + '</div>';
+  });
+  list.innerHTML = html;
+
+  list.querySelectorAll('.review-edit-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      S.returnToReview = true;
+      var step = btn.getAttribute('data-step');
+      if (step === 'events') initEventSteppers();
+      showStep(step);
     });
+  });
 
-    if (thanksClose) thanksClose.addEventListener('click', function(){ try{ window.parent.postMessage({ type:'RSVP:CLOSE' }, '*'); }catch(_){} try{ window.close(); }catch(_){} });
-    if (notInListClose) notInListClose.addEventListener('click', function(){ try{ window.parent.postMessage({ type:'RSVP:CLOSE' }, '*'); }catch(_){} try{ window.close(); }catch(_){} });
+  clearErr('review-error');
+  postHeight();
+}
 
-    findBtn.addEventListener('click', doFind);
-    nameInput.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); doFind(); } });
+$('submit-btn').addEventListener('click', function(){
+  clearErr('review-error');
+  var btn     = $('submit-btn');
+  btn.disabled = true;
 
-    window.addEventListener('load', function(){ setTimeout(postHeight, 60); });
-    try { var mo = new MutationObserver(function(){ postHeight(); }); mo.observe(document.body, { childList:true, subtree:true, attributes:true, characterData:true }); } catch(e){}
-    try { var ro = new ResizeObserver(function(){ postHeight(); }); ro.observe(document.documentElement); } catch(e){}
-    setInterval(postHeight, 1200);
+  var payload = { action:'submit', invite_id: S.code, status: S.status, notes: S.notes };
 
-    window.addEventListener('message', function (e) { try { if (e && e.data && e.data.type === 'RSVP:REQUEST_HEIGHT') postHeight(); } catch (_) {} });
+  if (S.status === 'Attending') {
+    var actualCount = S.maxSeats <= 1 ? 1 : S.attendingCount;
+    var names = S.maxSeats <= 1 ? [] : S.attendeeNames.slice(0, actualCount);
+    payload.attending_count = actualCount;
+    payload.attendees       = names;
+    payload.phone           = S.phone;
+    payload.stay            = S.skipStay ? '' : S.stay;
+    payload.transportation  = (S.stay === 'Club Balai' && !S.skipStay) ? S.transportation : '';
+    payload.oct14_count     = S.oct14Count;
+    payload.oct16_count     = S.oct16Count;
+  } else {
+    payload.attending_count = 0;
+    payload.attendees       = [];
+    payload.phone           = '';
+    payload.stay            = '';
+    payload.transportation  = '';
+    payload.oct14_count     = 0;
+    payload.oct16_count     = 0;
+    // For declined, notes come from absentNote
+    payload.notes           = S.absentNote || S.notes || '';
+  }
 
-    function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+  apiSubmit(payload, function(r){
+    btn.disabled = false;
+    if (!r || !r.ok) {
+      if (r && r.closed) { showStep('closed'); return; }
+      setErr('review-error', r && r.error ? r.error : 'Something went wrong on our side. Try again, or message us.');
+      postHeight(); return;
+    }
+    buildThanks();
+    showStep('thanks');
+  });
+});
 
-    showStep('search');
-    try { nameInput.focus(); } catch(_) {}
+// ── STEP: thanks ──────────────────────────────────────────────────────────────
+function buildThanks() {
+  var heading = $('thanks-heading');
+  var sub     = $('thanks-sub');
+  var box     = $('thanks-box');
+  if (!box) return;
 
-  })();
-  </script>
+  if (S.status === 'Attending') {
+    if (heading) heading.textContent = 'present. noted.';
+    if (sub)     sub.textContent     = 'We\u2019re so excited to celebrate with you.';
+    var n     = S.maxSeats <= 1 ? 1 : S.attendingCount;
+    var names = S.maxSeats <= 1 ? (S.inviteName||'') : (S.attendeeNames.slice(0,n).join(', ')||S.inviteName);
+    var rows  = [
+      ['Guests',  names],
+      ['Phone',   S.phone]
+    ];
+    if (!S.skipStay) rows.push(['Staying', S.stay === 'Club Balai' ? 'Club Balai Isabel' : 'Somewhere else']);
+    rows.push(['Wedding', 'Oct 15 — locked in \u2714']);
+    if (S.oct14Count > 0) rows.push(['Welcome dinner', 'Oct 14 \u00b7 '+S.oct14Count+' attending']);
+    if (S.oct16Count > 0) rows.push(['Farewell lunch', 'Oct 16 \u00b7 '+S.oct16Count+' attending']);
+    if (S.notes) rows.push(['Notes', S.notes]);
+    var html = '';
+    rows.forEach(function(row){
+      html += '<div class="thanks-row"><span class="thanks-row-label">'+escHtml(row[0])+'</span><span class="thanks-row-val">'+escHtml(row[1])+'</span></div>';
+    });
+    box.innerHTML = html;
+  } else {
+    if (heading) heading.textContent = 'noted.';
+    if (sub)     sub.textContent     = 'We\u2019ll miss you. Drinks soon, okay?';
+    if (S.absentNote) {
+      box.innerHTML = '<div class="thanks-row"><span class="thanks-row-label">Your note</span><span class="thanks-row-val">'+escHtml(S.absentNote)+'</span></div>';
+    } else {
+      box.innerHTML = '';
+    }
+  }
+}
+
+$('change-answer-btn').addEventListener('click', function(){
+  // Reset and start over
+  S.code=''; S.inviteName=''; S.status=''; S.attendingCount=1;
+  S.attendeeNames=[]; S.phone=''; S.stay=''; S.transportation='';
+  S.oct14Count=0; S.oct16Count=0; S.notes=''; S.absentNote='';
+  S.returnToReview=false;
+  codeInput.value='';
+  document.querySelectorAll('input[name="attendance"],input[name="stay"],input[name="transport"]').forEach(function(r){ r.checked=false; });
+  $('absent-note-input').value='';
+  $('notes-input').value='';
+  showStep('code');
+});
+
+// ── STEP: error ───────────────────────────────────────────────────────────────
+$('error-retry-btn').addEventListener('click', function(){ showStep('code'); });
+
+// ── Pre-fill from existing answers ────────────────────────────────────────────
+function prefillFromExisting(ex) {
+  if (!ex) return;
+  if (ex.status) {
+    S.status = ex.status;
+    var r = document.querySelector('input[name="attendance"][value="'+ex.status+'"]');
+    if (r) r.checked = true;
+  }
+  if (ex.attending_count) S.attendingCount = Math.max(1, ex.attending_count);
+  if (ex.attendee_names && ex.attendee_names.length) S.attendeeNames = ex.attendee_names;
+  if (ex.phone) { S.phone = ex.phone; phoneInput.value = ex.phone; }
+  if (ex.stay) {
+    S.stay = ex.stay;
+    var sr = document.querySelector('input[name="stay"][value="'+ex.stay+'"]');
+    if (sr) { sr.checked = true; }
+    var tb = $('transport-box');
+    if (tb) tb.hidden = ex.stay !== 'Club Balai';
+  }
+  if (ex.transportation) {
+    S.transportation = ex.transportation;
+    var tr = document.querySelector('input[name="transport"][value="'+ex.transportation+'"]');
+    if (tr) tr.checked = true;
+  }
+  S.oct14Count = ex.oct14_count !== null && ex.oct14_count !== undefined ? ex.oct14_count : null;
+  S.oct16Count = ex.oct16_count !== null && ex.oct16_count !== undefined ? ex.oct16_count : null;
+  if (ex.notes) { S.notes = ex.notes; $('notes-input').value = ex.notes; }
+}
+
+function firstIncompleteStep(ex) {
+  if (!ex || !ex.status) return 'attendance';
+  if (ex.status === 'Declined') return 'review';
+  if (!ex.phone) return 'count';
+  if (!S.skipStay && !ex.stay) return 'stay';
+  if (ex.oct14_count === null || ex.oct16_count === null) {
+    initEventSteppers();
+    return 'events';
+  }
+  buildReview();
+  return 'review';
+}
+
+// ── On showStep for events, init steppers ─────────────────────────────────────
+// Wrap showStep to init event steppers when navigating there
+var _origShowStep = showStep;
+showStep = function(name) {
+  if (name === 'events') initEventSteppers();
+  if (name === 'count')  { refreshCountStepper(); renderAttendeeNameFields(); }
+  _origShowStep(name);
+};
+
+// ── Resize & height reporting ─────────────────────────────────────────────────
+window.addEventListener('resize', postHeight);
+window.addEventListener('message', function(e){
+  try {
+    if (e && e.data && e.data.type === 'RSVP:REQUEST_HEIGHT') postHeight();
+  } catch(_){}
+});
+try {
+  var ro = new ResizeObserver(postHeight);
+  ro.observe(document.body);
+} catch(_){}
+// Interval fallback
+setInterval(postHeight, 2000);
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+showStep('code');
+try { codeInput.focus(); } catch(_){}
+
+if (DEV_MODE) {
+  console.log('%c[RSVP dev mode] No real network calls. Codes: TEST01 TEST02 TEST03 TEST04', 'color:#A8323A;font-weight:bold');
+  codeInput.placeholder = 'TEST01, TEST02, TEST03, TEST04';
+}
+
+})();
+</script>
 </body>
 </html>
