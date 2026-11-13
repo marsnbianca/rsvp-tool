@@ -616,12 +616,11 @@
 
     <!-- Closed -->
     <section id="step-closed" class="step" aria-label="Replies closed" tabindex="-1">
-      <h2 class="step-heading" tabindex="-1">oh no.</h2>
-      <div class="info-box">
-        Replies closed on March 30. We're so sorry to have missed you.
-        Please contact us and we'll sort it out.
-        <div class="contact-line">+1 778 977 4975 (WhatsApp / Viber)</div>
-      </div>
+      <h2 class="step-heading" tabindex="-1">rsvps are closed.</h2>
+      <div class="thanks-band" aria-hidden="true"></div>
+      <p id="closed-body" class="thanks-contact"></p>
+      <p id="closed-on-file" class="thanks-contact" hidden></p>
+      <p class="thanks-contact">+1&nbsp;778&nbsp;977&nbsp;4975 (WhatsApp&nbsp;/&nbsp;Viber)</p>
     </section>
 
     <!-- Contact (no invite code) -->
@@ -655,36 +654,40 @@
 (function () {
 'use strict';
 
-var API_URL     = 'https://rsvp-proxy.marsnbianca.workers.dev/';
-var DEV_MODE    = /[?&]dev=1/.test(location.search);
-var BALAI_EMAIL = 'sampleemail@clubbalaiisabel.com'; // ← update here
+var API_URL          = 'https://rsvp-proxy.marsnbianca.workers.dev/';
+var DEV_MODE         = /[?&]dev=1/.test(location.search);
+var DEV_CLOSED       = /[?&]closed=1/.test(location.search); // simulate deadline passed in dev
+var DISPLAY_DEADLINE = 'March 31, 2027'; // ← change here if the deadline shifts
+var BALAI_EMAIL      = 'sampleemail@clubbalaiisabel.com'; // ← update here
 
 var DEV_INVITES = {
   'TEST01': {
     ok:true, invite_name:'Solo Test', max_seats:1, skip_stay:false,
-    deadline:'March 30, 2027', closed:false,
+    deadline:'March 31, 2027', closed:false,
     existing:{ status:'', attending_count:0, attendee_names:[], phone:'', transportation:'', stay:'', oct14_count:null, oct16_count:null }
   },
   'TEST02': {
     ok:true, invite_name:'Duo Test', max_seats:2, skip_stay:false,
-    deadline:'March 30, 2027', closed:false,
+    deadline:'March 31, 2027', closed:false,
     existing:{ status:'', attending_count:0, attendee_names:[], phone:'', transportation:'', stay:'', oct14_count:null, oct16_count:null }
   },
   'TEST03': {
     ok:true, invite_name:'Family Test', max_seats:4, skip_stay:true,
-    deadline:'March 30, 2027', closed:false,
+    deadline:'March 31, 2027', closed:false,
     existing:{ status:'', attending_count:0, attendee_names:[], phone:'', transportation:'', stay:'', oct14_count:null, oct16_count:null }
   },
   'TEST04': {
     ok:true, invite_name:'Declined Test', max_seats:1, skip_stay:false,
-    deadline:'March 30, 2027', closed:false,
+    deadline:'March 31, 2027', closed:false,
     existing:{ status:'Declined', attending_count:0, attendee_names:[], phone:'', transportation:'', stay:'', oct14_count:0, oct16_count:0 }
   },
   'TEST05': {
     ok:true, invite_name:'Returning Attending', max_seats:2, skip_stay:false,
-    deadline:'March 30, 2027', closed:false,
+    deadline:'March 31, 2027', closed:false,
     existing:{ status:'Attending', attending_count:2, attendee_names:['Mars Dela Cruz','Bianca Matira'], phone:'0917 123 4567', transportation:'Yes', stay:'Balai', oct14_count:2, oct16_count:1 }
-  }
+  },
+  // TEST06: always shows the closed screen (no existing answer)
+  'TEST06': { ok:false, closed:true, existing:{ status:'' } }
 };
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -784,8 +787,14 @@ function loading(on){ var el=$('loading'); if(el) el.classList.toggle('on',!!on)
 
 function apiLookup(code, cb) {
   if (DEV_MODE) {
-    var fake = DEV_INVITES[code.toUpperCase()];
+    var key  = code.toUpperCase();
+    var fake = DEV_INVITES[key];
     if (!fake) { cb({ ok:false, error:"Hmm, that code doesn\u2019t ring a bell. Check it and try again?" }); return; }
+    // ?closed=1 simulates the deadline being past for TEST05 (attending, on-file line)
+    if (DEV_CLOSED && key === 'TEST05') {
+      var exSt = fake.existing && fake.existing.status ? fake.existing.status : '';
+      cb({ ok:false, closed:true, existing:{ status:exSt } }); return;
+    }
     cb(JSON.parse(JSON.stringify(fake))); return;
   }
   loading(true);
@@ -842,7 +851,11 @@ function doLookup() {
   apiLookup(code, function(r) {
     codeNext.disabled = false;
     if (!r||!r.ok) {
-      if (r&&r.closed) { showStep('closed'); return; }
+      if (r&&r.closed) {
+        // Carry over the existing status so buildClosed can show the on-file line
+        if (r.existing && r.existing.status) S.status = r.existing.status;
+        showStep('closed'); return;
+      }
       setErr('code-error', r&&r.error ? r.error : "Hmm, that code doesn\u2019t ring a bell. Check it and try again?");
       postHeight(); return;
     }
@@ -1208,6 +1221,24 @@ function buildThanks() {
   }
 }
 
+// ── Closed ────────────────────────────────────────────────────────────────────
+function buildClosed() {
+  var bodyEl = $('closed-body');
+  if (bodyEl) bodyEl.textContent = 'The reply deadline was ' + DISPLAY_DEADLINE + ', so we can\u2019t take new answers here. Need to change something? Message us and we\u2019ll sort it out.';
+  var onFileEl = $('closed-on-file');
+  if (onFileEl) {
+    if (S.status === 'Attending') {
+      onFileEl.textContent = 'We have you down as attending.';
+      onFileEl.hidden = false;
+    } else if (S.status === 'Declined') {
+      onFileEl.textContent = 'We have you down as not attending.';
+      onFileEl.hidden = false;
+    } else {
+      onFileEl.hidden = true;
+    }
+  }
+}
+
 $('change-answer-btn').addEventListener('click', function(){
   if (S.returningGuest) {
     // Keep all pre-filled state; jump straight to attendance so they can change their answer
@@ -1289,6 +1320,7 @@ showStep = function(name) {
   if (name==='events') initEventCtrls();
   if (name==='count')  renderCountStepper();
   if (name==='stay')   updateStayNote();
+  if (name==='closed') buildClosed();
   _origShow(name);
 };
 
@@ -1316,8 +1348,8 @@ showStep('code');
 try { codeInput.focus(); } catch(_){}
 
 if (DEV_MODE) {
-  console.log('%c[RSVP dev] No network calls. Codes: TEST01 TEST02 TEST03 TEST04(returning-declined) TEST05(returning-attending)', 'color:#A8323A;font-weight:bold');
-  codeInput.placeholder = 'TEST01–TEST05';
+  console.log('%c[RSVP dev] No network calls. Codes: TEST01–TEST06. Add ?closed=1 to simulate deadline passed (TEST05 shows on-file line).', 'color:#A8323A;font-weight:bold');
+  codeInput.placeholder = 'TEST01–TEST06  (?closed=1 for deadline)';
 }
 
 })();

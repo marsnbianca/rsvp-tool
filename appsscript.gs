@@ -10,9 +10,9 @@ var RSVP_SECRET =
 var SHEET_NAME      = "GuestList";
 var TIMESTAMP_FORMAT = "MM/dd/yyyy HH:mm:ss";
 
-// Reply deadline: March 30 2027, 11:59 PM Philippine Standard Time (UTC+8).
+// Reply deadline: March 31 2027, 11:59 PM Philippine Standard Time (UTC+8).
 // Change this string if the deadline shifts. Format: ISO 8601 with offset.
-var REPLY_DEADLINE = new Date("2027-03-30T23:59:59+08:00");
+var REPLY_DEADLINE = new Date("2027-03-31T23:59:59+08:00");
 
 var RL_SUBMIT_COOLDOWN_SEC = 20;
 
@@ -54,12 +54,10 @@ function doPost(e) {
 // unknown code takes the same path length as a valid one.
 
 function lookup_(data) {
-  if (isPastDeadline_()) {
-    return { ok: false, closed: true };
-  }
+  var closed = isPastDeadline_();
 
   var code = String(data.code || "").trim();
-  if (!code) return { ok: false, error: "Code is required." };
+  if (!code) return { ok: false, closed: closed, error: "Code is required." };
 
   var sheet = openSheet_();
   var map   = indexMap_(sheet);
@@ -72,7 +70,9 @@ function lookup_(data) {
   ]);
 
   var rowIndex = findInviteRowIndex_(sheet, map, code);
-  if (!rowIndex) return { ok: false, error: "Code not found." };
+  // When past deadline the front end shows the closed screen regardless of
+  // whether the code is valid, so don't leak "Code not found" after March 31.
+  if (!rowIndex) return { ok: false, closed: closed, error: closed ? null : "Code not found." };
 
   var row          = sheet.getRange(rowIndex, 1, 1, sheet.getLastColumn()).getValues()[0];
   var inviteName   = String(getCell_(row, map, "invite_name")   || "").trim();
@@ -91,6 +91,16 @@ function lookup_(data) {
   var existOct14 = (oct14Raw === "" || oct14Raw === null || oct14Raw === undefined) ? null : toInt_(oct14Raw, 0);
   var existOct16 = (oct16Raw === "" || oct16Raw === null || oct16Raw === undefined) ? null : toInt_(oct16Raw, 0);
 
+  // When past deadline return only the existing status so the front end can
+  // show "We have you down as attending / not attending." on the closed screen.
+  if (closed) {
+    return {
+      ok:       false,
+      closed:   true,
+      existing: { status: existStatus },
+    };
+  }
+
   var existNames = getAttendeeNames_(sheet, map, rowIndex, code, existCount);
 
   return {
@@ -98,7 +108,7 @@ function lookup_(data) {
     invite_name: inviteName,
     max_seats:   maxSeats,
     skip_stay:   skipStay,
-    deadline:    "March 30, 2027",
+    deadline:    "March 31, 2027",
     closed:      false,
     existing: {
       status:          existStatus,
