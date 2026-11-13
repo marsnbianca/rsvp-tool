@@ -388,14 +388,23 @@
       .btn, .choice-card-inner, .chip, .step-dot { transition: none; }
     }
 
-    /* ── Mobile ── */
-    @media (max-width: 540px) {
+    /* ── Narrow / tablet (≤600px) — card stays contained with rounded corners ──
+       Covers: Readymag desktop embed (~432px), tablets, narrow browser windows.
+       Card keeps padding + border-radius; just bumps scale to 0.9.           */
+    @media (max-width: 600px) {
       :root { --ui-scale: 0.9; }
+      body { padding: 0.75rem; }
+    }
+
+    /* ── Phone (≤430px) — full-bleed native-app feel ──
+       Covers: iPhone SE (375px), iPhone 14/15 (390–393px), most Androids.
+       Overrides the padding set above; card becomes edge-to-edge.            */
+    @media (max-width: 430px) {
       body { padding: 0; }
       .card { border-radius: 0; box-shadow: none; min-height: 100vh; }
       .card-inner { padding: 1rem 1rem 1.25rem; }
       .thanks-band { margin-left: -1rem; margin-right: -1rem; }
-      /* Physical 44px tap targets regardless of scale */
+      /* Physical 44px tap targets */
       .btn                { min-height: 44px; }
       .stepper-btn        { min-height: 44px; min-width: 44px; }
       #count-stepper-wrap .stepper-btn { min-height: 44px; min-width: 44px; }
