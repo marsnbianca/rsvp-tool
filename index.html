@@ -68,8 +68,13 @@
       height: var(--card-h-desktop);
       position: relative;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
-    .card-inner { padding: 1.4rem 1.4rem 1.75rem; text-align: center; }
+    .card-inner {
+      padding: 1.4rem 1.4rem 1.75rem; text-align: center;
+      flex: 1; min-height: 0; display: flex; flex-direction: column;
+    }
 
     .card-scallop {
       height: 0.625rem;
@@ -81,7 +86,7 @@
     /* ── Step dots ── */
     .step-dots {
       display: flex; gap: 0.375rem; justify-content: center;
-      margin-bottom: 1rem;
+      margin-bottom: 1rem; flex-shrink: 0;
     }
     .step-dot {
       width: 0.5rem; height: 0.5rem; border-radius: 50%;
@@ -102,7 +107,7 @@
       max-width: 100%;
     }
     .reply-pill strong { color: var(--cherry); }
-    #reply-pill-wrap { text-align: center; margin-bottom: 0.875rem; }
+    #reply-pill-wrap { text-align: center; margin-bottom: 0.875rem; flex-shrink: 0; }
     .not-you-link {
       background: none; border: none;
       color: var(--cherry); font-size: 0.6875rem;
@@ -114,7 +119,15 @@
 
     /* ── Steps ── */
     .step { display: none; }
-    .step.active { display: block; }
+    .step.active { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+
+    /* scrollable content area; centers when short, scrolls when tall */
+    .step-body {
+      flex: 0 1 auto; min-height: 0;
+      overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none;
+      margin-top: auto; margin-bottom: auto;
+    }
+    .step-body::-webkit-scrollbar { display: none; }
 
     /* ── Typography ── */
     .step-heading {
@@ -122,14 +135,14 @@
       font-variation-settings: 'SOFT' 100;
       font-size: 1.625rem;    /* 26px @ scale 1 */
       color: var(--cherry);
-      line-height: 1.1; margin-bottom: 0.375rem;
+      line-height: 1.1; margin-bottom: 0.25rem;
       font-weight: 600; outline: none;
     }
     .step-sub {
       font-family: 'Fraunces', Georgia, serif;
       font-variation-settings: 'SOFT' 100;
       color: var(--cherry-dark); font-size: 1rem;   /* 16px @ scale 1 */
-      margin-bottom: 0.75rem; line-height: 1.4;
+      margin-bottom: 0.4rem; line-height: 1.4;
     }
     .deadline-note { font-size: .8rem; color: var(--garden); margin-bottom: 1.125rem; }
 
@@ -179,7 +192,8 @@
     .btn-secondary:hover:not(:disabled) { background: var(--cherry-tint); }
 
     .actions {
-      display: flex; gap: 0.5rem; margin-top: 1.25rem; align-items: center;
+      display: flex; gap: 0.5rem; align-items: center;
+      flex-shrink: 0; padding-top: 0.75rem;
     }
     .actions .btn { flex: 1; }
 
@@ -211,7 +225,7 @@
     .choice-sub { display: block; font-size: 0.75rem; font-weight: 400; color: var(--garden); margin-top: 0.125rem; }
 
     /* ── Count stepper ── */
-    #count-stepper-wrap { display: flex; justify-content: center; margin: 1rem 0 0.875rem; }
+    #count-stepper-wrap { display: flex; justify-content: center; margin: 0.5rem 0 0.5rem; }
     #count-stepper-wrap .stepper { border-color: var(--cherry); }
     #count-stepper-wrap .stepper-btn { font-size: 1.5rem; min-width: 2.75rem; min-height: 2.75rem; color: var(--cherry); }
     #count-stepper-wrap .stepper-val { font-size: 1.3rem; min-width: 2.75rem; padding: 0.5rem 0.375rem; }
@@ -231,9 +245,9 @@
     .chip:focus-visible { outline: 3px solid var(--butter); outline-offset: 3px; }
 
     /* ── Attendee name fields ── */
-    .attendee-names { margin-bottom: 0.875rem; }
-    .attendee-name-wrap { margin-bottom: 0.4375rem; }
-    .attendee-name-wrap label { font-size: .76rem; color: var(--garden); margin-bottom: 0.1875rem; }
+    .attendee-names { margin-bottom: 0.5rem; }
+    .attendee-name-wrap { margin-bottom: 0.3rem; }
+    .attendee-name-wrap label { font-size: .76rem; color: var(--garden); margin-bottom: 0.125rem; }
 
     /* ── Stepper ── */
     .stepper {
@@ -256,12 +270,15 @@
     }
 
     /* ── Event rows ── */
-    .event-rows { margin: 0.625rem 0 0.25rem; }
+    .event-rows { margin: 0.1rem 0 0; }
     .event-row {
       display: flex; align-items: center; justify-content: space-between;
-      gap: 0.75rem; padding: 0.625rem 0;
+      gap: 0.75rem; padding: 0.3rem 0;
       border-bottom: 1px solid #e8d8d0;
     }
+    /* Event steppers smaller than the main count stepper */
+    #oct14-ctrl .stepper-btn, #oct16-ctrl .stepper-btn { min-height: 2.25rem; min-width: 2.25rem; }
+    #oct14-ctrl .stepper-val,  #oct16-ctrl .stepper-val  { padding: 0.25rem 0.1875rem; }
     .event-row:last-child { border-bottom: none; }
     .event-row-name { font-weight: 600; font-size: .93rem; color: var(--cherry-dark); text-align: left; }
     .event-row-when { font-size: .75rem; color: var(--garden); margin-top: 1px; text-align: left; }
@@ -289,8 +306,8 @@
     /* ── Transport step — vans note ── */
     .vans-note {
       background: var(--sky-tint); border-radius: 0.625rem;
-      padding: 0.625rem 0.8125rem; font-size: 0.875rem; color: var(--cherry-dark);
-      line-height: 1.4; margin-bottom: 0.875rem; text-align: left;
+      padding: 0.4rem 0.8125rem; font-size: 0.875rem; color: var(--cherry-dark);
+      line-height: 1.4; margin-bottom: 0.375rem; text-align: left;
     }
 
     /* ── Review ── */
@@ -451,13 +468,15 @@
 
     <!-- S1: invite code -->
     <section id="step-code" class="step active" aria-label="Enter invite code">
-      <h1 class="step-heading" tabindex="-1">find your invitation.</h1>
-      <div class="field">
-        <label for="code-input">Pop in the unique code from your invitation.</label>
-        <input id="code-input" type="text" autocomplete="off" spellcheck="false"
-               autocapitalize="characters" inputmode="text" maxlength="40" placeholder="e.g. ABC123">
+      <div class="step-body">
+        <h1 class="step-heading" tabindex="-1">find your invitation.</h1>
+        <div class="field">
+          <label for="code-input">Pop in the unique code from your invitation.</label>
+          <input id="code-input" type="text" autocomplete="off" spellcheck="false"
+                 autocapitalize="characters" inputmode="text" maxlength="40" placeholder="e.g. ABC123">
+        </div>
+        <div class="error" id="code-error" role="alert" aria-live="polite"></div>
       </div>
-      <div class="error" id="code-error" role="alert" aria-live="polite"></div>
       <div class="actions">
         <button id="no-code-btn" class="btn btn-secondary">No code?</button>
         <button id="code-next" class="btn btn-primary">Go</button>
@@ -466,21 +485,23 @@
 
     <!-- S2: attendance -->
     <section id="step-attendance" class="step" aria-label="Are you coming?" tabindex="-1">
-      <h2 class="step-heading" tabindex="-1">will you be joining us?</h2>
-      <fieldset>
-        <legend class="sr-only">Will you be joining us?</legend>
-        <div class="choice-cards">
-          <label class="choice-card">
-            <input type="radio" name="attendance" value="Attending" id="attend-yes">
-            <span class="choice-card-inner">Yes, I'll be there</span>
-          </label>
-          <label class="choice-card">
-            <input type="radio" name="attendance" value="Declined" id="attend-no">
-            <span class="choice-card-inner">Sadly, no</span>
-          </label>
-        </div>
-      </fieldset>
-      <div class="error" id="attendance-error" role="alert" aria-live="polite"></div>
+      <div class="step-body">
+        <h2 class="step-heading" tabindex="-1">will you be joining us?</h2>
+        <fieldset>
+          <legend class="sr-only">Will you be joining us?</legend>
+          <div class="choice-cards">
+            <label class="choice-card">
+              <input type="radio" name="attendance" value="Attending" id="attend-yes">
+              <span class="choice-card-inner">Yes, I'll be there</span>
+            </label>
+            <label class="choice-card">
+              <input type="radio" name="attendance" value="Declined" id="attend-no">
+              <span class="choice-card-inner">Sadly, no</span>
+            </label>
+          </div>
+        </fieldset>
+        <div class="error" id="attendance-error" role="alert" aria-live="polite"></div>
+      </div>
       <div class="actions">
         <button id="attendance-back" class="btn btn-secondary">Back</button>
         <button id="attendance-next" class="btn btn-primary">Next</button>
@@ -489,11 +510,13 @@
 
     <!-- S3: how many (only if max_seats >= 2) -->
     <section id="step-count" class="step" aria-label="How many coming?" tabindex="-1">
-      <h2 class="step-heading" tabindex="-1">how many?</h2>
-      <p class="step-sub">How many of you, including yourself?</p>
-      <div id="count-stepper-wrap"></div>
-      <div class="attendee-names" id="attendee-name-fields"></div>
-      <div class="error" id="count-error" role="alert" aria-live="polite"></div>
+      <div class="step-body">
+        <h2 class="step-heading" tabindex="-1">how many?</h2>
+        <p class="step-sub">How many of you, including yourself?</p>
+        <div id="count-stepper-wrap"></div>
+        <div class="attendee-names" id="attendee-name-fields"></div>
+        <div class="error" id="count-error" role="alert" aria-live="polite"></div>
+      </div>
       <div class="actions">
         <button id="count-back" class="btn btn-secondary">Back</button>
         <button id="count-next" class="btn btn-primary">Next</button>
@@ -502,22 +525,24 @@
 
     <!-- S4: which events -->
     <section id="step-events" class="step" aria-label="Which events?" tabindex="-1">
-      <h2 class="step-heading" tabindex="-1">which days are you in?</h2>
-      <p class="step-sub">The wedding on Oct 15 is automatic.</p>
-      <div class="event-rows" id="event-rows">
-        <div class="event-row">
-          <div class="event-row-left">
-            <div class="event-row-name">Welcome Dinner</div>
-            <div class="event-row-when">Thu Oct 14 · 5:30 PM · Club Balai Isabel</div>
+      <div class="step-body">
+        <h2 class="step-heading" tabindex="-1">which days are you in?</h2>
+        <p class="step-sub">The wedding on Oct 15 is automatic.</p>
+        <div class="event-rows" id="event-rows">
+          <div class="event-row">
+            <div class="event-row-left">
+              <div class="event-row-name">Welcome Dinner</div>
+              <div class="event-row-when">Thu Oct 14 · 5:30 PM · Club Balai Isabel</div>
+            </div>
+            <div class="event-row-right" id="oct14-ctrl"></div>
           </div>
-          <div class="event-row-right" id="oct14-ctrl"></div>
-        </div>
-        <div class="event-row">
-          <div class="event-row-left">
-            <div class="event-row-name">Farewell Lunch</div>
-            <div class="event-row-when">Sat Oct 16 · 12:30 PM · Farmer's Table</div>
+          <div class="event-row">
+            <div class="event-row-left">
+              <div class="event-row-name">Farewell Lunch</div>
+              <div class="event-row-when">Sat Oct 16 · 12:30 PM · Farmer's Table</div>
+            </div>
+            <div class="event-row-right" id="oct16-ctrl"></div>
           </div>
-          <div class="event-row-right" id="oct16-ctrl"></div>
         </div>
       </div>
       <div class="actions">
@@ -528,29 +553,31 @@
 
     <!-- S5: where staying (skipped for immediate family) -->
     <section id="step-stay" class="step" aria-label="Where are you staying?" tabindex="-1">
-      <h2 class="step-heading" tabindex="-1">where are you staying?</h2>
-      <p class="step-sub">Two choices below.</p>
-      <fieldset>
-        <legend class="sr-only">Accommodation</legend>
-        <div class="choice-cards">
-          <label class="choice-card">
-            <input type="radio" name="stay" value="Balai" id="stay-balai">
-            <span class="choice-card-inner">
-              Club Balai Isabel
-              <span class="choice-sub">two nights, on us</span>
-            </span>
-          </label>
-          <label class="choice-card">
-            <input type="radio" name="stay" value="Other" id="stay-other">
-            <span class="choice-card-inner">
-              Somewhere else
-              <span class="choice-sub">you book your own</span>
-            </span>
-          </label>
-        </div>
-      </fieldset>
-      <p id="stay-note" class="stay-note" hidden></p>
-      <div class="error" id="stay-error" role="alert" aria-live="polite"></div>
+      <div class="step-body">
+        <h2 class="step-heading" tabindex="-1">where are you staying?</h2>
+        <p class="step-sub">Two choices below.</p>
+        <fieldset>
+          <legend class="sr-only">Accommodation</legend>
+          <div class="choice-cards">
+            <label class="choice-card">
+              <input type="radio" name="stay" value="Balai" id="stay-balai">
+              <span class="choice-card-inner">
+                Club Balai Isabel
+                <span class="choice-sub">two nights, on us</span>
+              </span>
+            </label>
+            <label class="choice-card">
+              <input type="radio" name="stay" value="Other" id="stay-other">
+              <span class="choice-card-inner">
+                Somewhere else
+                <span class="choice-sub">you book your own</span>
+              </span>
+            </label>
+          </div>
+        </fieldset>
+        <p id="stay-note" class="stay-note" hidden></p>
+        <div class="error" id="stay-error" role="alert" aria-live="polite"></div>
+      </div>
       <div class="actions">
         <button id="stay-back" class="btn btn-secondary">Back</button>
         <button id="stay-next" class="btn btn-primary">Next</button>
@@ -559,26 +586,27 @@
 
     <!-- S6: getting around (Club Balai guests only) -->
     <section id="step-transport" class="step" aria-label="Getting around" tabindex="-1">
-      <h2 class="step-heading" tabindex="-1">getting around.</h2>
-      <div class="vans-note">
-        Vans run between Club Balai Isabel, Nuuk and Farmer's Table. They don't go to the airport.
-      </div>
-      <p class="step-sub">Need a ride from the airport (NAIA)?</p>
-      <p class="field-help" style="margin-bottom:12px">Not included. Say yes and we'll follow up.</p>
-      <fieldset>
-        <legend class="sr-only">Airport ride interest</legend>
-        <div class="choice-cards">
-          <label class="choice-card">
-            <input type="radio" name="transport" value="Yes" id="transport-yes">
-            <span class="choice-card-inner">Yes, follow up</span>
-          </label>
-          <label class="choice-card">
-            <input type="radio" name="transport" value="No" id="transport-no">
-            <span class="choice-card-inner">No thanks</span>
-          </label>
+      <div class="step-body">
+        <h2 class="step-heading" tabindex="-1">getting around.</h2>
+        <div class="vans-note">
+          Vans cover Club Balai ↔ Nuuk ↔ Farmer's Table — not the airport.<br>
+          Need a pickup from NAIA? Not included, but say yes and we'll help arrange it.
         </div>
-      </fieldset>
-      <div class="error" id="transport-error" role="alert" aria-live="polite"></div>
+        <fieldset>
+          <legend class="sr-only">Airport ride interest</legend>
+          <div class="choice-cards">
+            <label class="choice-card">
+              <input type="radio" name="transport" value="Yes" id="transport-yes">
+              <span class="choice-card-inner">Yes, follow up</span>
+            </label>
+            <label class="choice-card">
+              <input type="radio" name="transport" value="No" id="transport-no">
+              <span class="choice-card-inner">No thanks</span>
+            </label>
+          </div>
+        </fieldset>
+        <div class="error" id="transport-error" role="alert" aria-live="polite"></div>
+      </div>
       <div class="actions">
         <button id="transport-back" class="btn btn-secondary">Back</button>
         <button id="transport-next" class="btn btn-primary">Next</button>
@@ -587,13 +615,15 @@
 
     <!-- S7: phone number -->
     <section id="step-phone" class="step" aria-label="Phone number" tabindex="-1">
-      <h2 class="step-heading" tabindex="-1">your number.</h2>
-      <p class="step-sub">We'll only use this if we need to reach you.</p>
-      <div class="field">
-        <input id="phone-input" type="tel" inputmode="tel"
-               placeholder="Phone number" autocomplete="tel" maxlength="15">
+      <div class="step-body">
+        <h2 class="step-heading" tabindex="-1">your number.</h2>
+        <p class="step-sub">We'll only use this if we need to reach you.</p>
+        <div class="field">
+          <input id="phone-input" type="tel" inputmode="tel"
+                 placeholder="Phone number" autocomplete="tel" maxlength="15">
+        </div>
+        <div class="error" id="phone-error" role="alert" aria-live="polite"></div>
       </div>
-      <div class="error" id="phone-error" role="alert" aria-live="polite"></div>
       <div class="actions">
         <button id="phone-back" class="btn btn-secondary">Back</button>
         <button id="phone-next" class="btn btn-primary">Review</button>
@@ -602,14 +632,16 @@
 
     <!-- Review -->
     <section id="step-review" class="step" aria-label="Review your RSVP" tabindex="-1">
-      <h2 class="review-name" id="review-heading" tabindex="-1"></h2>
-      <div class="review-pill-row">
-        <div id="review-status-pill"></div>
-        <span id="review-guests" hidden></span>
+      <div class="step-body">
+        <h2 class="review-name" id="review-heading" tabindex="-1"></h2>
+        <div class="review-pill-row">
+          <div id="review-status-pill"></div>
+          <span id="review-guests" hidden></span>
+        </div>
+        <div id="review-rows"></div>
+        <div class="review-info" id="review-info"></div>
+        <div class="error" id="review-error" role="alert" aria-live="polite"></div>
       </div>
-      <div id="review-rows"></div>
-      <div class="review-info" id="review-info"></div>
-      <div class="error" id="review-error" role="alert" aria-live="polite"></div>
       <div class="actions">
         <button id="review-back" class="btn btn-secondary">Back</button>
         <button id="submit-btn" class="btn btn-primary">Submit RSVP</button>
@@ -618,10 +650,12 @@
 
     <!-- Thanks -->
     <section id="step-thanks" class="step" aria-label="RSVP confirmed" tabindex="-1">
-      <h2 class="step-heading" tabindex="-1" id="thanks-heading"></h2>
-      <p class="step-sub" id="thanks-sub"></p>
-      <div class="thanks-band" aria-hidden="true"></div>
-      <p class="thanks-contact">Questions? Message us at +1&nbsp;778&nbsp;977&nbsp;4975 (WhatsApp&nbsp;/&nbsp;Viber).</p>
+      <div class="step-body">
+        <h2 class="step-heading" tabindex="-1" id="thanks-heading"></h2>
+        <p class="step-sub" id="thanks-sub"></p>
+        <div class="thanks-band" aria-hidden="true"></div>
+        <p class="thanks-contact">Questions? Message us at +1&nbsp;778&nbsp;977&nbsp;4975 (WhatsApp&nbsp;/&nbsp;Viber).</p>
+      </div>
       <div class="actions" style="justify-content:center">
         <button id="change-answer-btn" class="btn btn-secondary" style="flex:0 1 auto">Change my answer</button>
       </div>
@@ -629,19 +663,23 @@
 
     <!-- Closed -->
     <section id="step-closed" class="step" aria-label="Replies closed" tabindex="-1">
-      <h2 class="step-heading" tabindex="-1">rsvps are closed.</h2>
-      <div class="thanks-band" aria-hidden="true"></div>
-      <p id="closed-body" class="thanks-contact"></p>
-      <p id="closed-on-file" class="thanks-contact" hidden></p>
-      <p class="thanks-contact">+1&nbsp;778&nbsp;977&nbsp;4975 (WhatsApp&nbsp;/&nbsp;Viber)</p>
+      <div class="step-body">
+        <h2 class="step-heading" tabindex="-1">rsvps are closed.</h2>
+        <div class="thanks-band" aria-hidden="true"></div>
+        <p id="closed-body" class="thanks-contact"></p>
+        <p id="closed-on-file" class="thanks-contact" hidden></p>
+        <p class="thanks-contact">+1&nbsp;778&nbsp;977&nbsp;4975 (WhatsApp&nbsp;/&nbsp;Viber)</p>
+      </div>
     </section>
 
     <!-- Contact (no invite code) -->
     <section id="step-contact" class="step" aria-label="Contact us" tabindex="-1">
-      <h2 class="step-heading" tabindex="-1">let's sort it.</h2>
-      <p class="step-sub">No invite code? Drop us a line and we'll figure it out.</p>
-      <div class="info-box">
-        +1 778 977 4975 (WhatsApp / Viber)
+      <div class="step-body">
+        <h2 class="step-heading" tabindex="-1">let's sort it.</h2>
+        <p class="step-sub">No invite code? Drop us a line and we'll figure it out.</p>
+        <div class="info-box">
+          +1 778 977 4975 (WhatsApp / Viber)
+        </div>
       </div>
       <div class="actions">
         <button id="contact-back-btn" class="btn btn-secondary">Back</button>
@@ -650,10 +688,12 @@
 
     <!-- Error -->
     <section id="step-error" class="step" aria-label="Something went wrong" tabindex="-1">
-      <h2 class="step-heading" tabindex="-1">hmm.</h2>
-      <div class="info-box">
-        Something went wrong on our side. Try again, or message us.
-        <div class="contact-line">+1 778 977 4975 (WhatsApp / Viber)</div>
+      <div class="step-body">
+        <h2 class="step-heading" tabindex="-1">hmm.</h2>
+        <div class="info-box">
+          Something went wrong on our side. Try again, or message us.
+          <div class="contact-line">+1 778 977 4975 (WhatsApp / Viber)</div>
+        </div>
       </div>
       <div class="actions">
         <button id="error-retry-btn" class="btn btn-primary">Try again</button>
@@ -784,12 +824,17 @@ function updateDots(current) {
 }
 
 // ── postHeight ────────────────────────────────────────────────────────────────
+// Sends a constant iframe height: card height + body padding at each breakpoint.
+//   phone  (≤430px): 369px card + 0 body padding    = 369px
+//   tablet (≤600px): 378px card + 2×10.8px padding  = 400px
+//   desktop (>600px): 337px card + 2×13.6px padding = 365px
 var _pht = null;
 function postHeight() {
   if (_pht) clearTimeout(_pht);
   _pht = setTimeout(function(){
     try {
-      var h = document.documentElement.scrollHeight || document.body.scrollHeight;
+      var w = window.innerWidth;
+      var h = w <= 430 ? 369 : w <= 600 ? 400 : 365;
       window.parent.postMessage({ type:'RSVP:HEIGHT', height:h }, '*');
     } catch(_){}
   }, 60);
