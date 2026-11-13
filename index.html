@@ -330,11 +330,12 @@
     }
     .pill-attending { background: var(--garden-tint); color: var(--garden); }
     .pill-declined  { background: var(--cherry-tint); color: var(--cherry); }
-    /* "with" label — small green, DM Sans, NOT uppercase */
+    /* "with" label — block so it sits on its own line */
     .review-with {
+      display: block;
       font-family: 'DM Sans', system-ui, sans-serif;
       font-size: 0.6875rem; color: var(--garden);
-      font-weight: 500; text-align: center; margin-bottom: 0.125rem;
+      font-weight: 500; margin-bottom: 0.125rem;
     }
     /* guest names — Fraunces cherry 16px */
     .review-guest-names {
@@ -644,7 +645,6 @@
         <div class="review-pill-row">
           <div id="review-status-pill"></div>
         </div>
-        <div id="review-with-wrap" hidden><span class="review-with">with</span></div>
         <div id="review-guest-names" class="review-guest-names" hidden></div>
         <div id="review-rows"></div>
         <div class="review-info" id="review-info"></div>
@@ -1170,14 +1170,12 @@ function buildReview() {
   }
 
   var guestsEl = $('review-guest-names');
-  var withEl   = $('review-with-wrap');
   var rowsEl   = $('review-rows');
   var infoEl   = $('review-info');
 
   // Not attending — name + pill + buttons only
   if (S.status === 'Declined') {
     if (guestsEl) guestsEl.hidden = true;
-    if (withEl)   withEl.hidden = true;
     if (rowsEl)   rowsEl.innerHTML = '';
     if (infoEl)   infoEl.innerHTML = '';
     clearErr('review-error'); postHeight(); return;
@@ -1185,21 +1183,18 @@ function buildReview() {
 
   var n = S.maxSeats < 2 ? 1 : S.attendingCount;
 
-  // "with" label + guest names on separate lines
+  // "with" on its own line (block span), then guest names below
   if (guestsEl) {
     if (n >= 2 && S.attendeeNames.length >= 2) {
       var extras = S.attendeeNames.slice(1, n).filter(Boolean);
       if (extras.length) {
-        guestsEl.textContent = extras.join(', ');
+        guestsEl.innerHTML = '<span class="review-with">with</span>' + escHtml(extras.join(', '));
         guestsEl.hidden = false;
-        if (withEl) withEl.hidden = false;
       } else {
         guestsEl.hidden = true;
-        if (withEl) withEl.hidden = true;
       }
     } else {
       guestsEl.hidden = true;
-      if (withEl) withEl.hidden = true;
     }
   }
 
