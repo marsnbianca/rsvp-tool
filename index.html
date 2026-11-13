@@ -73,13 +73,12 @@
 
     /* ── Shared reply pill ── */
     .reply-pill {
-      display: inline-flex; align-items: center; justify-content: center;
+      display: block; width: fit-content; margin: 0 auto 4px;
       background: var(--cherry-tint);
       color: var(--cherry-dark);
       font-size: 15px; font-weight: 500;
       padding: 5px 14px;
       border-radius: 100px;
-      margin: 0 auto 4px;
       max-width: 100%;
     }
     .reply-pill strong { color: var(--cherry); }
@@ -188,7 +187,13 @@
     .choice-card input[type="radio"]:focus-visible + .choice-card-inner { box-shadow: 0 0 0 3px var(--butter); }
     .choice-sub { display: block; font-size: 13px; font-weight: 400; color: var(--garden); margin-top: 2px; }
 
-    /* ── Count chips ── */
+    /* ── Count stepper ── */
+    #count-stepper-wrap { display: flex; justify-content: center; margin: 16px 0 14px; }
+    #count-stepper-wrap .stepper { border-color: var(--cherry); }
+    #count-stepper-wrap .stepper-btn { font-size: 1.5rem; min-width: 52px; min-height: 52px; color: var(--cherry); }
+    #count-stepper-wrap .stepper-val { font-size: 1.3rem; min-width: 52px; padding: 10px 6px; }
+
+    /* ── Count chips (kept for reference) ── */
     .chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 14px; }
     .chip {
       font-family: 'DM Sans', system-ui, sans-serif;
@@ -235,8 +240,8 @@
       border-bottom: 1px solid #e8d8d0;
     }
     .event-row:last-child { border-bottom: none; }
-    .event-row-name { font-weight: 600; font-size: .93rem; color: var(--cherry-dark); }
-    .event-row-when { font-size: .75rem; color: var(--garden); margin-top: 1px; }
+    .event-row-name { font-weight: 600; font-size: .93rem; color: var(--cherry-dark); text-align: left; }
+    .event-row-when { font-size: .75rem; color: var(--garden); margin-top: 1px; text-align: left; }
     .event-row-right { flex-shrink: 0; }
 
     .ev-ctrl-wrap { display: flex; flex-direction: column; align-items: center; gap: 2px; }
@@ -353,31 +358,28 @@
 
     <!-- Shared reply pill (screens 2–7) -->
     <div id="reply-pill-wrap" hidden>
-      <div id="reply-pill" class="reply-pill">Replying as <strong id="reply-name"></strong></div>
+      <div id="reply-pill" class="reply-pill">Replying as&nbsp;<strong id="reply-name"></strong></div>
       <button type="button" id="not-you-btn" class="not-you-link">not you?</button>
     </div>
 
     <!-- S1: invite code -->
     <section id="step-code" class="step active" aria-label="Enter invite code">
-      <h1 class="step-heading" tabindex="-1">roll call.</h1>
-      <p class="step-sub">Got your invite code? Pop it in.</p>
-      <p class="deadline-note">Please reply by March 30.</p>
+      <h1 class="step-heading" tabindex="-1">find your invitation.</h1>
       <div class="field">
-        <label for="code-input">Your invite code</label>
+        <label for="code-input">Invite code</label>
         <input id="code-input" type="text" autocomplete="off" spellcheck="false"
-               inputmode="text" maxlength="40" placeholder="e.g. ABC123">
-        <p class="field-help">It's on your invite.</p>
+               autocapitalize="characters" inputmode="text" maxlength="40" placeholder="e.g. ABC123">
       </div>
       <div class="error" id="code-error" role="alert" aria-live="polite"></div>
       <div class="actions">
-        <button id="no-code-btn" class="btn btn-secondary">No invite code</button>
-        <button id="code-next" class="btn btn-primary">Find my invite</button>
+        <button id="no-code-btn" class="btn btn-secondary">I don't have one</button>
+        <button id="code-next" class="btn btn-primary">Find my invitation</button>
       </div>
     </section>
 
     <!-- S2: attendance -->
     <section id="step-attendance" class="step" aria-label="Are you coming?" tabindex="-1">
-      <h2 class="step-heading" tabindex="-1">coming?</h2>
+      <h2 class="step-heading" tabindex="-1">will you be joining us?</h2>
       <fieldset>
         <legend class="sr-only">Will you be joining us?</legend>
         <div class="choice-cards">
@@ -400,9 +402,9 @@
 
     <!-- S3: how many (only if max_seats >= 2) -->
     <section id="step-count" class="step" aria-label="How many coming?" tabindex="-1">
-      <h2 class="step-heading" tabindex="-1">who's coming?</h2>
-      <p class="step-sub" id="count-sub">How many of you?</p>
-      <div class="chip-row" id="count-chips" role="group" aria-label="Number of guests"></div>
+      <h2 class="step-heading" tabindex="-1">how many?</h2>
+      <p class="step-sub">How many of you, including yourself?</p>
+      <div id="count-stepper-wrap"></div>
       <div class="attendee-names" id="attendee-name-fields"></div>
       <div class="error" id="count-error" role="alert" aria-live="polite"></div>
       <div class="actions">
@@ -439,7 +441,7 @@
 
     <!-- S5: where sleeping (skipped for immediate family) -->
     <section id="step-stay" class="step" aria-label="Where are you sleeping?" tabindex="-1">
-      <h2 class="step-heading" tabindex="-1">where are you sleeping?</h2>
+      <h2 class="step-heading" tabindex="-1">where are you staying?</h2>
       <fieldset>
         <legend class="sr-only">Accommodation</legend>
         <div class="choice-cards">
@@ -810,33 +812,35 @@ $('attendance-next').addEventListener('click', function(){
   if (S.status === 'Declined') {
     buildReview(); goNext('attendance'); return;
   }
-  renderCountChips();
+  renderCountStepper();
   goNext('attendance');
 });
 
 // ── S3: count ─────────────────────────────────────────────────────────────────
-function renderCountChips() {
-  var container = $('count-chips'); if (!container) return;
-  var max = Math.min(S.maxSeats, 4);
-  var html = '';
-  for (var i=1; i<=max; i++) {
-    var sel = i===S.attendingCount ? ' selected' : '';
-    html += '<button type="button" class="chip'+sel+'" data-n="'+i+'" aria-pressed="'+(sel?'true':'false')+'">'+i+'</button>';
+function renderCountStepper() {
+  var c = $('count-stepper-wrap'); if (!c) return;
+  if (!S.attendingCount || S.attendingCount < 1) S.attendingCount = 1;
+  S.attendingCount = Math.min(S.attendingCount, S.maxSeats);
+
+  var stpr   = document.createElement('div'); stpr.className = 'stepper';
+  var decBtn = document.createElement('button'); decBtn.type='button'; decBtn.className='stepper-btn'; decBtn.setAttribute('aria-label','Fewer'); decBtn.textContent='\u2212';
+  var valEl  = document.createElement('span');  valEl.className='stepper-val'; valEl.setAttribute('aria-live','polite');
+  var incBtn = document.createElement('button'); incBtn.type='button'; incBtn.className='stepper-btn'; incBtn.setAttribute('aria-label','More'); incBtn.textContent='+';
+  stpr.appendChild(decBtn); stpr.appendChild(valEl); stpr.appendChild(incBtn);
+  c.innerHTML = ''; c.appendChild(stpr);
+
+  function refresh() {
+    valEl.textContent = String(S.attendingCount);
+    decBtn.disabled = (S.attendingCount <= 1);
+    incBtn.disabled = (S.attendingCount >= S.maxSeats);
   }
-  container.innerHTML = html;
-  container.querySelectorAll('.chip').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      S.attendingCount = parseInt(btn.getAttribute('data-n'),10);
-      container.querySelectorAll('.chip').forEach(function(b){
-        b.classList.remove('selected');
-        b.setAttribute('aria-pressed','false');
-      });
-      btn.classList.add('selected');
-      btn.setAttribute('aria-pressed','true');
-      renderAttendeeNameFields();
-      postHeight();
-    });
+  decBtn.addEventListener('click', function(){
+    if (S.attendingCount > 1) { S.attendingCount--; refresh(); renderAttendeeNameFields(); postHeight(); }
   });
+  incBtn.addEventListener('click', function(){
+    if (S.attendingCount < S.maxSeats) { S.attendingCount++; refresh(); renderAttendeeNameFields(); postHeight(); }
+  });
+  refresh();
   renderAttendeeNameFields();
 }
 
@@ -847,11 +851,12 @@ function renderAttendeeNameFields() {
   for (var i=0; i<S.attendingCount; i++) {
     var defaultVal = i===0 ? S.inviteName : '';
     var stored     = S.attendeeNames[i] !== undefined ? S.attendeeNames[i] : defaultVal;
-    var lbl = i===0 ? 'Guest 1 (you)' : 'Guest '+(i+1)+' full name';
+    var lbl = i===0 ? 'Guest 1 (you)' : 'Guest '+(i+1);
     var pid = 'att-'+i;
     html += '<div class="attendee-name-wrap">'
           + '<label for="'+pid+'">'+escHtml(lbl)+'</label>'
           + '<input type="text" id="'+pid+'" class="att-inp"'
+          + (i===0 ? ' readonly style="background:var(--ivory);cursor:default;opacity:.75"' : '')
           + ' value="'+escHtml(stored)+'" placeholder="Full name" maxlength="80">'
           + '</div>';
   }
@@ -1154,7 +1159,7 @@ function firstIncompleteStep(ex) {
 var _origShow = showStep;
 showStep = function(name) {
   if (name==='events') initEventCtrls();
-  if (name==='count') { renderCountChips(); }
+  if (name==='count') { renderCountStepper(); }
   _origShow(name);
 };
 
