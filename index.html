@@ -28,7 +28,7 @@
       --card-max:    460px;
       /* ── fixed card heights (review worst-case: group-of-4, stay + airport + phone)
          measured with Playwright; +4px sub-pixel buffer added to each          ── */
-      --card-h-desktop: 337px;   /* viewport > 600px                               */
+      --card-h-desktop: 354px;   /* viewport > 600px                               */
       --card-h-tablet:  378px;   /* viewport 431–600px (worst case at 431–432px)   */
       --card-h-phone:   369px;   /* viewport ≤ 430px                               */
       /* ── card appearance — adjust these if needed ── */
@@ -72,7 +72,7 @@
       flex-direction: column;
     }
     .card-inner {
-      padding: 1.4rem 1.4rem 1.75rem; text-align: center;
+      padding: 0.875rem 1.4rem 1.75rem; text-align: center;
       flex: 1; min-height: 0; display: flex; flex-direction: column;
     }
 
@@ -86,7 +86,7 @@
     /* ── Step dots ── */
     .step-dots {
       display: flex; gap: 0.375rem; justify-content: center;
-      margin-bottom: 1rem; flex-shrink: 0;
+      margin-bottom: 0.5rem; flex-shrink: 0;
     }
     .step-dot {
       width: 0.5rem; height: 0.5rem; border-radius: 50%;
@@ -102,12 +102,12 @@
       background: var(--cherry-tint);
       color: var(--cherry-dark);
       font-size: 0.75rem; font-weight: 500;
-      padding: 0.25rem 0.75rem;
+      padding: 0.125rem 0.75rem;
       border-radius: 100px;
       max-width: 100%;
     }
     .reply-pill strong { color: var(--cherry); }
-    #reply-pill-wrap { text-align: center; margin-bottom: 0.875rem; flex-shrink: 0; }
+    #reply-pill-wrap { text-align: center; margin-bottom: 0.5rem; flex-shrink: 0; }
     .not-you-link {
       background: none; border: none;
       color: var(--cherry); font-size: 0.6875rem;
@@ -227,8 +227,8 @@
     /* ── Count stepper ── */
     #count-stepper-wrap { display: flex; justify-content: center; margin: 0.5rem 0 0.5rem; }
     #count-stepper-wrap .stepper { border-color: var(--cherry); }
-    #count-stepper-wrap .stepper-btn { font-size: 1.5rem; min-width: 2.75rem; min-height: 2.75rem; color: var(--cherry); }
-    #count-stepper-wrap .stepper-val { font-size: 1.3rem; min-width: 2.75rem; padding: 0.5rem 0.375rem; }
+    #count-stepper-wrap .stepper-btn { font-size: 1.25rem; min-width: 2.25rem; min-height: 2.25rem; color: var(--cherry); }
+    #count-stepper-wrap .stepper-val { font-size: 1.125rem; min-width: 2.25rem; padding: 0.3rem 0.375rem; }
 
     /* ── Count chips (kept for reference) ── */
     .chip-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.75rem 0 0.875rem; }
@@ -256,17 +256,17 @@
     }
     .stepper-btn {
       background: none; border: none; font-size: 1.2rem; line-height: 1;
-      color: var(--cherry); padding: 0 0.75rem;
-      min-width: 2.75rem; min-height: 2.75rem; cursor: pointer;
+      color: var(--cherry); padding: 0 0.5rem;
+      min-width: 2.25rem; min-height: 2.25rem; cursor: pointer;
       font-family: inherit; display: flex; align-items: center; justify-content: center;
     }
     .stepper-btn:focus-visible { outline: 3px solid var(--butter); outline-offset: 1px; }
     .stepper-btn:disabled { opacity: .3; cursor: not-allowed; }
     .stepper-val {
-      min-width: 1.875rem; text-align: center;
+      min-width: 1.75rem; text-align: center;
       font-size: .95rem; font-weight: 600; color: var(--cherry-dark);
       border-left: 1px solid #ddd0c4; border-right: 1px solid #ddd0c4;
-      padding: 0.4rem 0.1875rem; display: flex; align-items: center; justify-content: center;
+      padding: 0.3rem 0.1875rem; display: flex; align-items: center; justify-content: center;
     }
 
     /* ── Event rows ── */
@@ -319,10 +319,10 @@
       font-weight: 600; line-height: 1.1; margin-bottom: 0.3rem;
       outline: none;
     }
-    /* pill + "with Guest 2, Guest 3" on one centred line */
+    /* pill only, centred */
     .review-pill-row {
-      display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
-      gap: 0.25rem 0.4rem; margin-bottom: 0.6rem;
+      display: flex; justify-content: center; align-items: center;
+      margin-bottom: 0.4rem;
     }
     .status-pill {
       display: inline-block; padding: 0.1875rem 0.6875rem;
@@ -330,25 +330,32 @@
     }
     .pill-attending { background: var(--garden-tint); color: var(--garden); }
     .pill-declined  { background: var(--cherry-tint); color: var(--cherry); }
-    .review-pill-guests {
+    /* "with" label — small green, DM Sans, NOT uppercase */
+    .review-with {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      font-size: 0.6875rem; color: var(--garden);
+      font-weight: 500; text-align: center; margin-bottom: 0.125rem;
+    }
+    /* guest names — Fraunces cherry 16px */
+    .review-guest-names {
       font-family: 'Fraunces', Georgia, serif;
       font-variation-settings: 'SOFT' 100;
-      font-size: 1rem;        /* 16px @ scale 1 */
-      color: var(--cherry); font-weight: 400; line-height: 1.3;
+      font-size: 1rem; color: var(--cherry);
+      text-align: center; margin-bottom: 0.4rem; line-height: 1.3;
     }
 
-    /* Events: 3-col grid, same visual style as the info items below */
+    /* Events: 3-col grid with thin green lines above and below */
     .review-events {
-      display: flex; gap: 0.5rem; justify-content: center; margin: 0 0 0.25rem;
+      display: flex; gap: 0.5rem; justify-content: center;
+      border-top: 1px solid var(--garden);
+      border-bottom: 1px solid var(--garden);
+      padding: 0.375rem 0;
+      margin: 0.25rem 0;
     }
     .review-events-col { flex: 1; min-width: 0; text-align: center; }
-    .review-events-date {
-      display: block; font-size: 0.6875rem; color: var(--garden);
-      font-weight: 500; margin-bottom: 0.1875rem;
-    }
 
     /* Shared label/value style (events + stay + airport + phone) */
-    .review-info { display: block; margin-top: 0.5rem; }
+    .review-info { display: block; margin-top: 0.4rem; }
     .review-info-item { text-align: center; margin-bottom: 0.4rem; }
     .review-info-item:last-child { margin-bottom: 0; }
     .review-info-label {
@@ -421,7 +428,7 @@
     @media (max-width: 430px) {
       body { padding: 0; }
       .card { border-radius: 0; box-shadow: none; height: var(--card-h-phone); }
-      .card-inner { padding: 1rem 1rem 1.25rem; }
+      .card-inner { padding: 0.625rem 1rem 1.25rem; }
       .thanks-band { margin-left: -1rem; margin-right: -1rem; }
       /* Physical 44px tap targets */
       .btn                { min-height: 44px; }
@@ -636,8 +643,9 @@
         <h2 class="review-name" id="review-heading" tabindex="-1"></h2>
         <div class="review-pill-row">
           <div id="review-status-pill"></div>
-          <span id="review-guests" hidden></span>
         </div>
+        <div id="review-with-wrap" hidden><span class="review-with">with</span></div>
+        <div id="review-guest-names" class="review-guest-names" hidden></div>
         <div id="review-rows"></div>
         <div class="review-info" id="review-info"></div>
         <div class="error" id="review-error" role="alert" aria-live="polite"></div>
@@ -827,14 +835,14 @@ function updateDots(current) {
 // Sends a constant iframe height: card height + body padding at each breakpoint.
 //   phone  (≤430px): 369px card + 0 body padding    = 369px
 //   tablet (≤600px): 378px card + 2×10.8px padding  = 400px
-//   desktop (>600px): 337px card + 2×13.6px padding = 365px
+//   desktop (>600px): 354px card + 2×13.6px padding = 382px
 var _pht = null;
 function postHeight() {
   if (_pht) clearTimeout(_pht);
   _pht = setTimeout(function(){
     try {
       var w = window.innerWidth;
-      var h = w <= 430 ? 369 : w <= 600 ? 400 : 365;
+      var h = w <= 430 ? 369 : w <= 600 ? 400 : 382;
       window.parent.postMessage({ type:'RSVP:HEIGHT', height:h }, '*');
     } catch(_){}
   }, 60);
@@ -1161,13 +1169,15 @@ function buildReview() {
     }
   }
 
-  var guestsEl = $('review-guests');
+  var guestsEl = $('review-guest-names');
+  var withEl   = $('review-with-wrap');
   var rowsEl   = $('review-rows');
   var infoEl   = $('review-info');
 
   // Not attending — name + pill + buttons only
   if (S.status === 'Declined') {
-    if (guestsEl) { guestsEl.hidden = true; }
+    if (guestsEl) guestsEl.hidden = true;
+    if (withEl)   withEl.hidden = true;
     if (rowsEl)   rowsEl.innerHTML = '';
     if (infoEl)   infoEl.innerHTML = '';
     clearErr('review-error'); postHeight(); return;
@@ -1175,18 +1185,21 @@ function buildReview() {
 
   var n = S.maxSeats < 2 ? 1 : S.attendingCount;
 
-  // "with Guest 2, Guest 3" — inline beside the pill
+  // "with" label + guest names on separate lines
   if (guestsEl) {
     if (n >= 2 && S.attendeeNames.length >= 2) {
       var extras = S.attendeeNames.slice(1, n).filter(Boolean);
       if (extras.length) {
-        guestsEl.innerHTML = '<span class="review-pill-guests">with ' + escHtml(extras.join(', ')) + '</span>';
+        guestsEl.textContent = extras.join(', ');
         guestsEl.hidden = false;
+        if (withEl) withEl.hidden = false;
       } else {
         guestsEl.hidden = true;
+        if (withEl) withEl.hidden = true;
       }
     } else {
       guestsEl.hidden = true;
+      if (withEl) withEl.hidden = true;
     }
   }
 
@@ -1204,9 +1217,9 @@ function buildReview() {
 
   if (rowsEl) {
     rowsEl.innerHTML = '<div class="review-events">'
-      + '<div class="review-events-col"><span class="review-info-label">Welcome Dinner</span><span class="review-events-date">Oct 14</span><span class="review-info-val">'+escHtml(oct14Lbl)+'</span></div>'
-      + '<div class="review-events-col"><span class="review-info-label">Wedding</span><span class="review-events-date">Oct 15</span><span class="review-info-val">'+escHtml(oct15Lbl)+'</span></div>'
-      + '<div class="review-events-col"><span class="review-info-label">Farewell Lunch</span><span class="review-events-date">Oct 16</span><span class="review-info-val">'+escHtml(oct16Lbl)+'</span></div>'
+      + '<div class="review-events-col"><span class="review-info-label">Welcome Dinner</span><span class="review-info-val">'+escHtml(oct14Lbl)+'</span></div>'
+      + '<div class="review-events-col"><span class="review-info-label">Wedding</span><span class="review-info-val">'+escHtml(oct15Lbl)+'</span></div>'
+      + '<div class="review-events-col"><span class="review-info-label">Farewell Lunch</span><span class="review-info-val">'+escHtml(oct16Lbl)+'</span></div>'
       + '</div>';
   }
 
@@ -1408,6 +1421,7 @@ if (DEV_MODE) {
   console.log('%c[RSVP dev] No network calls. Codes: TEST01–TEST06. Add ?closed=1 to simulate deadline passed (TEST05 shows on-file line).', 'color:#A8323A;font-weight:bold');
   codeInput.placeholder = 'TEST01–TEST06  (?closed=1 for deadline)';
 }
+
 
 })();
 </script>
