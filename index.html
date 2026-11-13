@@ -257,52 +257,59 @@
     }
     .event-chk-label span { font-size: .72rem; color: var(--cherry-dark); }
 
+    /* ── Stay note ── */
+    .stay-note {
+      font-size: 14px; color: var(--cherry-dark); line-height: 1.5;
+      margin: 10px 0 2px; text-align: center;
+    }
+
     /* ── Transport step — vans note ── */
     .vans-note {
       background: var(--sky-tint); border-radius: 10px;
-      padding: 10px 13px; font-size: .8rem; color: var(--cherry-dark);
-      line-height: 1.4; margin-bottom: 14px;
+      padding: 10px 13px; font-size: 15px; color: var(--cherry-dark);
+      line-height: 1.4; margin-bottom: 14px; text-align: left;
     }
 
     /* ── Review ── */
     .review-name {
       font-family: 'Fraunces', Georgia, serif;
       font-variation-settings: 'SOFT' 100;
-      font-size: 1.6rem; color: var(--cherry-dark);
+      font-size: 44px; color: var(--cherry-dark);
       font-weight: 600; line-height: 1.1; margin-bottom: 7px;
       outline: none;
     }
+    .review-guests {
+      font-size: 15px; color: var(--garden); margin-bottom: 14px;
+      font-style: italic;
+    }
     .status-pill {
       display: inline-block; padding: 3px 11px;
-      border-radius: 100px; font-size: .78rem; font-weight: 600; margin-bottom: 14px;
+      border-radius: 100px; font-size: 14px; font-weight: 600; margin-bottom: 12px;
     }
     .pill-attending { background: var(--garden-tint); color: var(--garden); }
     .pill-declined  { background: var(--cherry-tint); color: var(--cherry); }
 
     .review-rows { margin-bottom: 4px; }
-    .review-row {
-      display: flex; justify-content: space-between; align-items: flex-start;
-      gap: 10px; padding: 8px 0; border-bottom: 1px solid #e8d8d0;
-    }
-    .review-row:last-child { border-bottom: none; }
     .r-label {
-      font-size: .68rem; font-weight: 700; letter-spacing: .07em;
-      text-transform: uppercase; color: var(--garden); margin-bottom: 2px;
+      font-size: 11px; font-weight: 700; letter-spacing: .07em;
+      text-transform: uppercase; color: var(--garden); margin-bottom: 3px;
     }
-    .r-val { font-size: .88rem; color: var(--cherry-dark); line-height: 1.4; }
-    .r-edit {
-      background: none; border: none; color: var(--cherry);
-      font-size: .78rem; cursor: pointer; text-decoration: underline;
-      font-family: inherit; white-space: nowrap;
-      min-height: 44px; padding: 0 2px;
-      display: flex; align-items: center;
-    }
-    .r-edit:focus-visible { outline: 3px solid var(--butter); outline-offset: 2px; border-radius: 3px; }
+    .r-val { font-size: 15px; color: var(--cherry-dark); line-height: 1.4; }
 
     .events-grid {
       display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;
+      margin: 6px 0 2px;
     }
-    .events-grid-col .r-val { font-size: .85rem; }
+    .events-grid-col { padding: 8px 4px; }
+    .events-grid-col .r-val { font-size: 15px; }
+
+    .review-info { margin-top: 18px; }
+    .review-info-line { font-size: 15px; color: var(--cherry-dark); line-height: 2; }
+    .review-info-label {
+      font-size: 11px; font-weight: 700; letter-spacing: .07em;
+      text-transform: uppercase; color: var(--garden);
+      margin-right: 5px;
+    }
 
     /* ── Thanks ── */
     .thanks-line { font-size: .88rem; color: var(--cherry-dark); margin-top: 4px; }
@@ -439,28 +446,30 @@
       </div>
     </section>
 
-    <!-- S5: where sleeping (skipped for immediate family) -->
-    <section id="step-stay" class="step" aria-label="Where are you sleeping?" tabindex="-1">
+    <!-- S5: where staying (skipped for immediate family) -->
+    <section id="step-stay" class="step" aria-label="Where are you staying?" tabindex="-1">
       <h2 class="step-heading" tabindex="-1">where are you staying?</h2>
+      <p class="step-sub">Two choices below.</p>
       <fieldset>
         <legend class="sr-only">Accommodation</legend>
         <div class="choice-cards">
           <label class="choice-card">
             <input type="radio" name="stay" value="Balai" id="stay-balai">
             <span class="choice-card-inner">
-              Club Balai Isabel, on us.
-              <span class="choice-sub">Two nights, paid for.</span>
+              Club Balai Isabel
+              <span class="choice-sub">two nights, on us</span>
             </span>
           </label>
           <label class="choice-card">
             <input type="radio" name="stay" value="Other" id="stay-other">
             <span class="choice-card-inner">
-              Somewhere else.
-              <span class="choice-sub">You'll drive yourself. Ideas are on the page above.</span>
+              Somewhere else
+              <span class="choice-sub">you book your own</span>
             </span>
           </label>
         </div>
       </fieldset>
+      <p id="stay-note" class="stay-note" hidden></p>
       <div class="error" id="stay-error" role="alert" aria-live="polite"></div>
       <div class="actions">
         <button id="stay-back" class="btn btn-secondary">Back</button>
@@ -472,20 +481,16 @@
     <section id="step-transport" class="step" aria-label="Getting around" tabindex="-1">
       <h2 class="step-heading" tabindex="-1">getting around.</h2>
       <div class="vans-note">
-        Vans run between Club Balai Isabel, Nuuk and Farmer's Table for Club Balai guests.
-        That's inside Batangas and Tagaytay only. It doesn't include the airport.
+        Vans run between Club Balai Isabel, Nuuk and Farmer's Table. They don't go to the airport.
       </div>
-      <p class="step-sub">Want a ride from the airport (NAIA)?</p>
-      <p class="field-help" style="margin-bottom:0">
-        We're still working out whether we can arrange one, so it isn't included automatically.
-        Say yes and we'll follow up. Rides would go to Club Balai Isabel only.
-      </p>
-      <fieldset style="margin-top:12px">
+      <p class="step-sub">Need a ride from the airport (NAIA)?</p>
+      <p class="field-help" style="margin-bottom:12px">Not included. Say yes and we'll follow up.</p>
+      <fieldset>
         <legend class="sr-only">Airport ride interest</legend>
         <div class="choice-cards">
           <label class="choice-card">
             <input type="radio" name="transport" value="Yes" id="transport-yes">
-            <span class="choice-card-inner">Yes, follow up with me</span>
+            <span class="choice-card-inner">Yes, follow up</span>
           </label>
           <label class="choice-card">
             <input type="radio" name="transport" value="No" id="transport-no">
@@ -505,9 +510,8 @@
       <h2 class="step-heading" tabindex="-1">your number.</h2>
       <p class="step-sub">We'll only use this if we need to reach you.</p>
       <div class="field">
-        <label for="phone-input">Phone number</label>
-        <input id="phone-input" type="tel" inputmode="numeric"
-               placeholder="0917 123 4567" autocomplete="tel" maxlength="15">
+        <input id="phone-input" type="tel" inputmode="tel"
+               placeholder="Phone number" autocomplete="tel" maxlength="15">
       </div>
       <div class="error" id="phone-error" role="alert" aria-live="polite"></div>
       <div class="actions">
@@ -520,7 +524,9 @@
     <section id="step-review" class="step" aria-label="Review your RSVP" tabindex="-1">
       <h2 class="review-name" id="review-heading" tabindex="-1"></h2>
       <div id="review-status-pill"></div>
+      <p id="review-guests" class="review-guests" hidden></p>
       <div class="review-rows" id="review-rows"></div>
+      <div class="review-info" id="review-info"></div>
       <div class="error" id="review-error" role="alert" aria-live="polite"></div>
       <div class="actions">
         <button id="review-back" class="btn btn-secondary">Back</button>
@@ -577,8 +583,9 @@
 (function () {
 'use strict';
 
-var API_URL  = 'https://rsvp-proxy.marsnbianca.workers.dev/';
-var DEV_MODE = /[?&]dev=1/.test(location.search);
+var API_URL     = 'https://rsvp-proxy.marsnbianca.workers.dev/';
+var DEV_MODE    = /[?&]dev=1/.test(location.search);
+var BALAI_EMAIL = 'sampleemail@clubbalaiisabel.com'; // ← update here
 
 var DEV_INVITES = {
   'TEST01': {
@@ -939,6 +946,22 @@ $('events-back').addEventListener('click', function(){ goBack('events'); });
 $('events-next').addEventListener('click', function(){ goNext('events'); });
 
 // ── S5: stay ──────────────────────────────────────────────────────────────────
+function updateStayNote() {
+  var noteEl = $('stay-note'); if (!noteEl) return;
+  var checked = document.querySelector('input[name="stay"]:checked');
+  if (!checked) { noteEl.hidden = true; return; }
+  if (checked.value === 'Balai') {
+    noteEl.textContent = 'Want to stay a night before or after (Oct\u00a013 or 17)? Contact Club Balai Isabel directly at ' + BALAI_EMAIL + '.';
+  } else {
+    noteEl.textContent = 'Ideas are on the page above.';
+  }
+  noteEl.hidden = false;
+  postHeight();
+}
+document.querySelectorAll('input[name="stay"]').forEach(function(r){
+  r.addEventListener('change', updateStayNote);
+});
+
 $('stay-back').addEventListener('click', function(){ goBack('stay'); });
 $('stay-next').addEventListener('click', function(){
   clearErr('stay-error');
@@ -982,71 +1005,69 @@ function buildReview() {
     }
   }
 
-  var rowsEl = $('review-rows'); if (!rowsEl) return;
-  if (S.status === 'Declined') { rowsEl.innerHTML = ''; clearErr('review-error'); postHeight(); return; }
+  var guestsEl = $('review-guests');
+  var rowsEl   = $('review-rows');
+  var infoEl   = $('review-info');
 
-  var rows = [];
+  // Not attending — name + pill + buttons only
+  if (S.status === 'Declined') {
+    if (guestsEl) { guestsEl.hidden = true; }
+    if (rowsEl)   rowsEl.innerHTML = '';
+    if (infoEl)   infoEl.innerHTML = '';
+    clearErr('review-error'); postHeight(); return;
+  }
+
   var n = S.maxSeats < 2 ? 1 : S.attendingCount;
 
-  // Extra guests (guests 2+) — only shown when attendingCount >= 2
-  if (n >= 2) {
-    var extras = S.attendeeNames.slice(1,n);
-    rows.push({ label:'Guests', val: extras.length ? extras.join(', ') : '\u2014', step:'count' });
-  }
-
-  // Events — 3-column grid
-  var oct14Val, oct16Val, oct15Val;
-  if (n===1) {
-    oct14Val = S.oct14Count > 0 ? 'Yes' : 'No';
-    oct16Val = S.oct16Count > 0 ? 'Yes' : 'No';
-    oct15Val = 'Yes \u2714';
-  } else {
-    oct14Val = String(S.oct14Count)+'\u00a0of\u00a0'+n;
-    oct16Val = String(S.oct16Count)+'\u00a0of\u00a0'+n;
-    oct15Val = String(n)+'\u00a0of\u00a0'+n+' \u2714';
-  }
-
-  // Stay
-  if (!S.skipStay) {
-    var stayLabel = S.stay === 'Balai' ? 'Club Balai Isabel' : 'Somewhere else';
-    rows.push({ label:'Stay', val:stayLabel, step:'stay' });
-    if (S.stay === 'Balai') {
-      rows.push({ label:'Airport ride', val:S.transportation==='Yes'?'Please follow up':'No', step:'transport' });
+  // "with Guest 2, Guest 3" line
+  if (guestsEl) {
+    if (n >= 2 && S.attendeeNames.length >= 2) {
+      var extras = S.attendeeNames.slice(1, n).filter(Boolean);
+      if (extras.length) {
+        guestsEl.textContent = 'with ' + extras.join(', ');
+        guestsEl.hidden = false;
+      } else {
+        guestsEl.hidden = true;
+      }
+    } else {
+      guestsEl.hidden = true;
     }
   }
 
-  rows.push({ label:'Phone', val:S.phone, step:'phone' });
+  // Events 3-col grid
+  var oct14Lbl, oct15Lbl, oct16Lbl;
+  if (n === 1) {
+    oct14Lbl = S.oct14Count > 0 ? 'Going' : 'Not going';
+    oct15Lbl = 'Going';
+    oct16Lbl = S.oct16Count > 0 ? 'Going' : 'Not going';
+  } else {
+    oct14Lbl = S.oct14Count > 0 ? S.oct14Count + '\u00a0going' : 'Not going';
+    oct15Lbl = n + '\u00a0going';
+    oct16Lbl = S.oct16Count > 0 ? S.oct16Count + '\u00a0going' : 'Not going';
+  }
 
-  // Build HTML
-  var html='';
+  if (rowsEl) {
+    rowsEl.innerHTML = '<div class="events-grid">'
+      + '<div class="events-grid-col"><div class="r-label">Welcome Dinner</div><div class="r-label" style="color:var(--garden)">Oct 14</div><div class="r-val">'+escHtml(oct14Lbl)+'</div></div>'
+      + '<div class="events-grid-col"><div class="r-label">Wedding</div><div class="r-label" style="color:var(--garden)">Oct 15</div><div class="r-val">'+escHtml(oct15Lbl)+'</div></div>'
+      + '<div class="events-grid-col"><div class="r-label">Farewell Lunch</div><div class="r-label" style="color:var(--garden)">Oct 16</div><div class="r-val">'+escHtml(oct16Lbl)+'</div></div>'
+      + '</div>';
+  }
 
-  // Events grid row
-  html += '<div class="review-row">'
-        + '<div style="flex:1"><div class="r-label">Events</div>'
-        + '<div class="events-grid" style="margin-top:4px">'
-        + '<div class="events-grid-col"><div class="r-label" style="font-size:.62rem">Welcome Dinner</div><div class="r-val">Oct 14<br>'+escHtml(oct14Val)+'</div></div>'
-        + '<div class="events-grid-col"><div class="r-label" style="font-size:.62rem">Wedding</div><div class="r-val">Oct 15<br>'+escHtml(oct15Val)+'</div></div>'
-        + '<div class="events-grid-col"><div class="r-label" style="font-size:.62rem">Farewell Lunch</div><div class="r-val">Oct 16<br>'+escHtml(oct16Val)+'</div></div>'
-        + '</div></div>'
-        + '<button class="r-edit" data-step="events" type="button">edit</button>'
-        + '</div>';
-
-  rows.forEach(function(r){
-    html += '<div class="review-row">'
-          + '<div><div class="r-label">'+escHtml(r.label)+'</div><div class="r-val">'+escHtml(r.val)+'</div></div>'
-          + '<button class="r-edit" data-step="'+escHtml(r.step)+'" type="button">edit</button>'
-          + '</div>';
-  });
-
-  rowsEl.innerHTML = html;
-  rowsEl.querySelectorAll('.r-edit').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      S.returnToReview = true;
-      var step = btn.getAttribute('data-step');
-      if (step==='events') initEventCtrls();
-      showStep(step);
-    });
-  });
+  // Info block: Stay, Airport ride, Phone — centred lines, no dividers
+  if (infoEl) {
+    var html = '';
+    if (!S.skipStay) {
+      var stayLbl = S.stay === 'Balai' ? 'Club Balai Isabel' : 'Somewhere else';
+      html += '<div class="review-info-line"><span class="review-info-label">Stay</span>'+escHtml(stayLbl)+'</div>';
+      if (S.stay === 'Balai') {
+        var rideLbl = S.transportation === 'Yes' ? 'Yes, follow up' : 'No thanks';
+        html += '<div class="review-info-line"><span class="review-info-label">Airport ride</span>'+escHtml(rideLbl)+'</div>';
+      }
+    }
+    html += '<div class="review-info-line"><span class="review-info-label">Phone</span>'+escHtml(S.phone)+'</div>';
+    infoEl.innerHTML = html;
+  }
 
   clearErr('review-error');
   postHeight();
@@ -1134,6 +1155,7 @@ function prefillFromExisting(ex) {
     S.stay = stayVal;
     var sr = document.querySelector('input[name="stay"][value="'+stayVal+'"]');
     if (sr) sr.checked = true;
+    updateStayNote();
   }
   if (ex.transportation) {
     S.transportation = ex.transportation;
@@ -1159,7 +1181,8 @@ function firstIncompleteStep(ex) {
 var _origShow = showStep;
 showStep = function(name) {
   if (name==='events') initEventCtrls();
-  if (name==='count') { renderCountStepper(); }
+  if (name==='count')  renderCountStepper();
+  if (name==='stay')   updateStayNote();
   _origShow(name);
 };
 
