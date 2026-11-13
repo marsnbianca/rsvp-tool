@@ -68,7 +68,7 @@ function lookup_(data) {
     "invite_id", "invite_name", "relationship", "max_seats",
     "status", "attending_count", "attendee_fullname",
     "phone", "transportation", "stay",
-    "oct14_count", "oct16_count", "notes", "updated_at",
+    "oct14_count", "oct16_count", "updated_at",
   ]);
 
   var rowIndex = findInviteRowIndex_(sheet, map, code);
@@ -85,7 +85,6 @@ function lookup_(data) {
   var existPhone       = String(getCell_(row, map, "phone")            || "").trim();
   var existTransport   = String(getCell_(row, map, "transportation")   || "").trim();
   var existStay        = String(getCell_(row, map, "stay")             || "").trim();
-  var existNotes       = String(getCell_(row, map, "notes")            || "").trim();
 
   var oct14Raw = getCell_(row, map, "oct14_count");
   var oct16Raw = getCell_(row, map, "oct16_count");
@@ -110,7 +109,6 @@ function lookup_(data) {
       stay:            existStay,
       oct14_count:     existOct14,
       oct16_count:     existOct16,
-      notes:           existNotes,
     },
   };
 }
@@ -133,7 +131,7 @@ function submit_(data) {
       "invite_id", "invite_name", "max_seats",
       "status", "attending_count", "attendee_fullname",
       "phone", "transportation", "stay",
-      "oct14_count", "oct16_count", "notes", "updated_at",
+      "oct14_count", "oct16_count", "updated_at",
     ]);
 
     var inviteId = String(data.invite_id || "").trim();
@@ -180,20 +178,20 @@ function submit_(data) {
       if (!phoneStored)             return { ok: false, error: "Phone number is required." };
       if (!isValidPhoneStored_(phoneStored)) return { ok: false, error: "Phone number is invalid. Please type 11 digits starting with 09." };
 
-      // stay — required unless immediate family
-      stay = String(data.stay || "").trim();
-      if (!isImmediateFamily_(relationship)) {
-        if (stay !== "Club Balai" && stay !== "Other") return { ok: false, error: "Please choose where you are staying." };
+      // stay + transportation
+      if (isImmediateFamily_(relationship)) {
+        stay           = "Nuuk"; // they stay at Nuuk; airport is automatic
+        transportation = "";     // not recorded — family ride is automatic
       } else {
-        stay = ""; // immediate family: leave blank
-      }
-
-      // transportation — only for Club Balai guests
-      transportation = String(data.transportation || "").trim();
-      if (stay === "Club Balai") {
-        if (transportation !== "Yes" && transportation !== "No") transportation = "";
-      } else {
-        transportation = "";
+        stay = String(data.stay || "").trim();
+        if (stay !== "Balai" && stay !== "Other") return { ok: false, error: "Please choose where you are staying." };
+        // transportation: only asked of Club Balai guests (stay="Balai")
+        transportation = String(data.transportation || "").trim();
+        if (stay === "Balai") {
+          if (transportation !== "Yes" && transportation !== "No") transportation = "";
+        } else {
+          transportation = "";
+        }
       }
 
       // event counts — must be 0..attendingCount
@@ -203,8 +201,6 @@ function submit_(data) {
       oct16Count = (rawOct16 === null || rawOct16 === undefined) ? attendingCount : Math.max(0, Math.min(toInt_(rawOct16, 0), attendingCount));
     }
 
-    var notes = String(data.notes || "").trim().slice(0, 2000);
-
     // Write to sheet (always overwrite — latest submission wins)
     setCell_(sheet, map, inviteRowIndex, "status",          sanitizeCell_(status));
     setCell_(sheet, map, inviteRowIndex, "attending_count", status === "Attending" ? attendingCount : 0);
@@ -213,7 +209,6 @@ function submit_(data) {
     setCell_(sheet, map, inviteRowIndex, "transportation",  sanitizeCell_(transportation));
     setCell_(sheet, map, inviteRowIndex, "oct14_count",     status === "Attending" ? oct14Count : 0);
     setCell_(sheet, map, inviteRowIndex, "oct16_count",     status === "Attending" ? oct16Count : 0);
-    setCell_(sheet, map, inviteRowIndex, "notes",           sanitizeCell_(notes));
     setCell_(sheet, map, inviteRowIndex, "attendee_fullname",
       status === "Attending" ? sanitizeCell_(attendees[0]) : "");
     stampUpdated_(sheet, map, inviteRowIndex);
@@ -307,7 +302,6 @@ function insertAttendeeRows_(sheet, map, inviteRowIndex, inviteId, attendeeNames
     setCell_(sheet, map, target, "transportation",   "");
     setCell_(sheet, map, target, "oct14_count",      "");
     setCell_(sheet, map, target, "oct16_count",      "");
-    setCell_(sheet, map, target, "notes",            "");
     setCell_(sheet, map, target, "updated_at",       "");
   }
 }

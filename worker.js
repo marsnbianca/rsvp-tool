@@ -94,7 +94,7 @@ export default {
         if (typeof name !== "string" || name.length > 120) return json({ ok: false, error: "Bad request." }, 400);
       }
       if (p.phone !== undefined && typeof p.phone !== "string") return json({ ok: false, error: "Bad request." }, 400);
-      if (p.stay !== undefined && p.stay !== "" && !["Club Balai", "Other"].includes(p.stay)) {
+      if (p.stay !== undefined && p.stay !== "" && !["Balai", "Other"].includes(p.stay)) {
         return json({ ok: false, error: "Bad request." }, 400);
       }
       if (p.transportation !== undefined && p.transportation !== "" && !["Yes", "No"].includes(p.transportation)) {
@@ -102,7 +102,6 @@ export default {
       }
       const isInt = v => v === undefined || (Number.isInteger(v) && v >= 0 && v <= 20);
       if (!isInt(p.oct14_count) || !isInt(p.oct16_count)) return json({ ok: false, error: "Bad request." }, 400);
-      if (typeof p.notes !== "string" || p.notes.length > 2000) return json({ ok: false, error: "Bad request." }, 400);
     }
 
     // Strip any unexpected keys — only pass known fields to Apps Script
@@ -119,7 +118,6 @@ export default {
       clean.transportation  = String(p.transportation || "");
       clean.oct14_count     = p.oct14_count !== undefined ? p.oct14_count : null;
       clean.oct16_count     = p.oct16_count !== undefined ? p.oct16_count : null;
-      clean.notes           = String(p.notes || "");
     }
 
     const resp = await fetch(APPS_SCRIPT_EXEC, {
