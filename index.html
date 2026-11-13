@@ -49,7 +49,7 @@
       position: relative;
       overflow: hidden;
     }
-    .card-inner { padding: 20px 22px 24px; text-align: center; }
+    .card-inner { padding: 32px 32px 36px; text-align: center; }
 
     .card-scallop {
       height: 10px;
@@ -142,7 +142,7 @@
       font-family: 'DM Sans', system-ui, sans-serif;
       font-size: 18px; font-weight: 600; letter-spacing: .02em;
       border: none; border-radius: 100px;
-      padding: 11px 24px; min-height: 46px;
+      padding: 11px 24px; min-height: 48px;
       cursor: pointer; transition: transform .12s, background .12s;
     }
     .btn:focus-visible { outline: 3px solid var(--butter); outline-offset: 3px; }
@@ -158,7 +158,7 @@
     .actions {
       display: flex; gap: 10px; margin-top: 20px; align-items: center;
     }
-    .actions .btn-primary { margin-left: auto; }
+    .actions .btn { flex: 1; }
 
     .link-btn {
       background: none; border: none; color: var(--garden);
@@ -220,7 +220,7 @@
     .stepper-btn {
       background: none; border: none; font-size: 1.2rem; line-height: 1;
       color: var(--cherry); padding: 0 12px;
-      min-width: 40px; min-height: 40px; cursor: pointer;
+      min-width: 44px; min-height: 48px; cursor: pointer;
       font-family: inherit; display: flex; align-items: center; justify-content: center;
     }
     .stepper-btn:focus-visible { outline: 3px solid var(--butter); outline-offset: 1px; }
@@ -312,7 +312,24 @@
     }
 
     /* ── Thanks ── */
-    .thanks-line { font-size: .88rem; color: var(--cherry-dark); margin-top: 4px; }
+    .thanks-tags {
+      display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+      margin: 18px 0 6px;
+    }
+    .thanks-tag {
+      font-size: 13px; font-weight: 600; color: var(--cherry-dark);
+      padding: 5px 14px; border-radius: 100px;
+    }
+    .thanks-band {
+      height: 18px; margin: 20px -32px;
+      background-image:
+        repeating-linear-gradient(90deg, rgba(168,50,58,.09) 0, rgba(168,50,58,.09) 12px, transparent 12px, transparent 24px),
+        repeating-linear-gradient(0deg,  rgba(168,50,58,.09) 0, rgba(168,50,58,.09) 12px, transparent 12px, transparent 24px),
+        var(--cherry-tint);
+    }
+    .thanks-contact {
+      font-size: 14px; color: var(--cherry-dark); line-height: 1.5; margin: 18px 0 6px;
+    }
 
     /* ── Closed / Contact / Error ── */
     .info-box {
@@ -341,10 +358,31 @@
       .spinner { animation: none; border-top-color: var(--cherry); }
       .btn, .choice-card-inner, .chip, .step-dot { transition: none; }
     }
-    @media (max-width: 400px) {
-      body { padding: 8px; }
-      .card-inner { padding: 18px 14px 22px; }
-      .step-heading { font-size: 1.5rem; }
+    /* ── Mobile ── */
+    @media (max-width: 540px) {
+      body { padding: 0; }
+      .card { border-radius: 0; box-shadow: none; min-height: 100vh; }
+    }
+    @media (max-width: 430px) {
+      .card-inner { padding: 20px 20px 24px; }
+      .step-heading { font-size: 32px; }
+      .review-name { font-size: 32px; }
+      body, .step-sub, .choice-card-inner, .btn { font-size: 16px; }
+      input[type="text"], input[type="tel"] { font-size: 16px; }
+      .thanks-band { margin-left: -20px; margin-right: -20px; }
+    }
+    @media (max-width: 380px) {
+      .event-row { flex-wrap: wrap; }
+      .event-row-left { flex: 1 1 100%; }
+      .event-row-right { flex: 1 1 100%; display: flex; justify-content: center; margin-top: 4px; }
+      .event-row-name, .event-row-when { text-align: center; }
+    }
+    @media (max-width: 360px) {
+      .step-heading { font-size: 30px; }
+      .step-dots { gap: 4px; }
+      .step-dot { width: 6px; height: 6px; }
+      .choice-cards { flex-direction: column; gap: 8px; }
+      .choice-card { flex: none; }
     }
 
     .sr-only {
@@ -538,8 +576,16 @@
     <section id="step-thanks" class="step" aria-label="RSVP confirmed" tabindex="-1">
       <h2 class="step-heading" tabindex="-1" id="thanks-heading"></h2>
       <p class="step-sub" id="thanks-sub"></p>
-      <p class="thanks-line" id="thanks-line"></p>
-      <button id="change-answer-btn" class="link-btn" style="margin-top:8px">change my answer</button>
+      <div id="thanks-tags" class="thanks-tags" hidden>
+        <span class="thanks-tag" style="background:var(--cherry-tint)">Thu Oct 14</span>
+        <span class="thanks-tag" style="background:var(--butter-tint)">Fri Oct 15</span>
+        <span class="thanks-tag" style="background:var(--garden-tint)">Sat Oct 16</span>
+      </div>
+      <div class="thanks-band" aria-hidden="true"></div>
+      <p class="thanks-contact">Questions? Message us at +1&nbsp;778&nbsp;977&nbsp;4975 (WhatsApp&nbsp;/&nbsp;Viber).</p>
+      <div class="actions" style="justify-content:center">
+        <button id="change-answer-btn" class="btn btn-secondary" style="flex:0 1 auto">Change my answer</button>
+      </div>
     </section>
 
     <!-- Closed -->
@@ -1112,23 +1158,23 @@ $('submit-btn').addEventListener('click', function(){
 
 // ── Thanks ────────────────────────────────────────────────────────────────────
 function buildThanks() {
-  var h=$('thanks-heading'), sub=$('thanks-sub'), line=$('thanks-line');
+  var h=$('thanks-heading'), sub=$('thanks-sub'), tags=$('thanks-tags');
   if (S.status==='Attending') {
-    if(h) h.textContent='see you there.';
-    if(sub) sub.textContent='Can\u2019t wait for October 14\u201316.';
-    if(line) line.textContent='';
+    if(h)    h.textContent = 'see you there.';
+    if(sub)  sub.textContent = 'Can\u2019t wait for October 14\u201316.';
+    if(tags) tags.hidden = false;
   } else {
-    if(h) h.textContent='sorry we\u2019ll miss you.';
-    if(sub) sub.textContent='Drinks soon, we hope.';
-    if(line) line.textContent='';
+    if(h)    h.textContent = 'sorry we\u2019ll miss you.';
+    if(sub)  sub.textContent = 'Drinks soon, we hope.';
+    if(tags) tags.hidden = true;
   }
 }
 
 $('change-answer-btn').addEventListener('click', function(){
   S.code=''; S.inviteName=''; S.status=''; S.attendingCount=1;
   S.attendeeNames=[]; S.phone=''; S.stay=''; S.transportation='';
-  S.oct14Count=0; S.oct16Count=0; S.returnToReview=false;
-  codeInput.value='';
+  S.oct14Count=null; S.oct16Count=null; S.returnToReview=false;
+  codeInput.value=''; phoneInput.value='';
   document.querySelectorAll('input[name="attendance"],input[name="stay"],input[name="transport"]').forEach(function(r){ r.checked=false; });
   showStep('code');
 });
@@ -1188,11 +1234,22 @@ showStep = function(name) {
 
 // ── Resize & height ───────────────────────────────────────────────────────────
 window.addEventListener('resize', postHeight);
+window.addEventListener('orientationchange', function(){ setTimeout(postHeight, 400); });
 window.addEventListener('message', function(e){
   try { if (e&&e.data&&e.data.type==='RSVP:REQUEST_HEIGHT') postHeight(); } catch(_){}
 });
 try { var ro=new ResizeObserver(postHeight); ro.observe(document.body); } catch(_){}
 setInterval(postHeight, 2000);
+
+// ── Keep Next visible when keyboard opens ─────────────────────────────────────
+document.addEventListener('focusin', function(e) {
+  if (!e.target || e.target.tagName !== 'INPUT') return;
+  setTimeout(function() {
+    var step = e.target.closest && e.target.closest('.step');
+    var actions = step && step.querySelector('.actions');
+    if (actions) actions.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, 350);
+}, true);
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 showStep('code');
