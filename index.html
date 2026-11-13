@@ -308,19 +308,21 @@
       display: flex; gap: 8px; justify-content: center;
       margin: 10px 0 4px; flex-wrap: wrap;
     }
-    .events-pill {
+    .events-pill-wrap {
       flex: 1; min-width: 80px; max-width: 140px;
-      padding: 10px 8px 10px; border-radius: 12px; text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+    }
+    .events-pill {
+      width: 100%;
+      padding: 10px 8px 8px; border-radius: 12px; text-align: center;
     }
     .events-pill-name { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--cherry-dark); margin-bottom: 2px; }
-    .events-pill-date { font-size: 11px; color: var(--garden); font-weight: 500; margin-bottom: 6px; }
-    .events-pill-count { font-size: 15px; font-weight: 600; color: var(--cherry-dark); }
+    .events-pill-date { font-size: 11px; color: var(--garden); font-weight: 500; }
+    .events-pill-count { font-family: 'DM Sans', system-ui, sans-serif; font-size: 14px; font-weight: 700; color: var(--cherry-dark); text-align: center; }
 
-    .review-info {
-      display: flex; gap: 24px; justify-content: center; flex-wrap: wrap;
-      margin-top: 18px;
-    }
-    .review-info-item { text-align: center; }
+    .review-info { display: block; margin-top: 18px; }
+    .review-info-item { text-align: center; margin-bottom: 10px; }
+    .review-info-item:last-child { margin-bottom: 0; }
     .review-info-label {
       display: block;
       font-size: 11px; font-weight: 700; letter-spacing: .07em;
@@ -1108,9 +1110,9 @@ function buildReview() {
 
   if (rowsEl) {
     rowsEl.innerHTML = '<div class="events-pills">'
-      + '<div class="events-pill" style="background:var(--cherry-tint)"><div class="events-pill-name">Welcome Dinner</div><div class="events-pill-date">Oct 14</div><div class="events-pill-count">'+escHtml(oct14Lbl)+'</div></div>'
-      + '<div class="events-pill" style="background:var(--butter-tint)"><div class="events-pill-name">Wedding</div><div class="events-pill-date">Oct 15</div><div class="events-pill-count">'+escHtml(oct15Lbl)+'</div></div>'
-      + '<div class="events-pill" style="background:var(--garden-tint)"><div class="events-pill-name">Farewell Lunch</div><div class="events-pill-date">Oct 16</div><div class="events-pill-count">'+escHtml(oct16Lbl)+'</div></div>'
+      + '<div class="events-pill-wrap"><div class="events-pill" style="background:var(--cherry-tint)"><div class="events-pill-name">Welcome Dinner</div><div class="events-pill-date">Oct 14</div></div><div class="events-pill-count">'+escHtml(oct14Lbl)+'</div></div>'
+      + '<div class="events-pill-wrap"><div class="events-pill" style="background:var(--butter-tint)"><div class="events-pill-name">Wedding</div><div class="events-pill-date">Oct 15</div></div><div class="events-pill-count">'+escHtml(oct15Lbl)+'</div></div>'
+      + '<div class="events-pill-wrap"><div class="events-pill" style="background:var(--garden-tint)"><div class="events-pill-name">Farewell Lunch</div><div class="events-pill-date">Oct 16</div></div><div class="events-pill-count">'+escHtml(oct16Lbl)+'</div></div>'
       + '</div>';
   }
 
