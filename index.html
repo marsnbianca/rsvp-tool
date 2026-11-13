@@ -291,52 +291,47 @@
     .review-name {
       font-family: 'Fraunces', Georgia, serif;
       font-variation-settings: 'SOFT' 100;
-      font-size: 1.875rem;    /* 30px @ scale 1 */
+      font-size: 1.625rem;    /* 26px @ scale 1 */
       color: var(--cherry-dark);
-      font-weight: 600; line-height: 1.1; margin-bottom: 0.4375rem;
+      font-weight: 600; line-height: 1.1; margin-bottom: 0.3rem;
       outline: none;
     }
-    .review-guests { margin-bottom: 0.875rem; }
-    .review-guests-with { display: block; font-size: 0.6875rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--garden); margin-bottom: 0.1875rem; }
-    .review-guests-names { display: block; font-family: 'Fraunces', Georgia, serif; font-variation-settings: 'SOFT' 100; font-size: 1.25rem; color: var(--cherry); font-weight: 600; line-height: 1.2; }
+    /* pill + "with Guest 2, Guest 3" on one centred line */
+    .review-pill-row {
+      display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
+      gap: 0.25rem 0.4rem; margin-bottom: 0.6rem;
+    }
     .status-pill {
       display: inline-block; padding: 0.1875rem 0.6875rem;
-      border-radius: 100px; font-size: 0.8125rem; font-weight: 600; margin-bottom: 0.75rem;
+      border-radius: 100px; font-size: 0.8125rem; font-weight: 600;
     }
     .pill-attending { background: var(--garden-tint); color: var(--garden); }
     .pill-declined  { background: var(--cherry-tint); color: var(--cherry); }
+    .review-pill-guests {
+      font-family: 'Fraunces', Georgia, serif;
+      font-variation-settings: 'SOFT' 100;
+      font-size: 1rem;        /* 16px @ scale 1 */
+      color: var(--cherry); font-weight: 400; line-height: 1.3;
+    }
 
-    .review-rows { margin-bottom: 0.25rem; }
-    .r-label {
-      font-size: 0.6875rem; font-weight: 700; letter-spacing: .07em;
-      text-transform: uppercase; color: var(--garden); margin-bottom: 0.1875rem;
+    /* Events: 3-col grid, same visual style as the info items below */
+    .review-events {
+      display: flex; gap: 0.5rem; justify-content: center; margin: 0 0 0.25rem;
     }
-    .r-val { font-size: 0.875rem; color: var(--cherry-dark); line-height: 1.4; }
+    .review-events-col { flex: 1; min-width: 0; text-align: center; }
+    .review-events-date {
+      display: block; font-size: 0.6875rem; color: var(--garden);
+      font-weight: 500; margin-bottom: 0.1875rem;
+    }
 
-    .events-pills {
-      display: flex; gap: 0.5rem; justify-content: center;
-      margin: 0.625rem 0 0.25rem; flex-wrap: wrap;
-    }
-    .events-pill-wrap {
-      flex: 1; min-width: 5rem; max-width: 8.75rem;
-      display: flex; flex-direction: column; align-items: center; gap: 0.3125rem;
-    }
-    .events-pill {
-      width: 100%;
-      padding: 0.625rem 0.5rem 0.5rem; border-radius: 0.75rem; text-align: center;
-    }
-    .events-pill-name { font-size: 0.6875rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--cherry-dark); margin-bottom: 0.125rem; }
-    .events-pill-date { font-size: 0.6875rem; color: var(--garden); font-weight: 500; }
-    .events-pill-count { font-family: 'DM Sans', system-ui, sans-serif; font-size: 0.8125rem; font-weight: 700; color: var(--cherry-dark); text-align: center; }
-
-    .review-info { display: block; margin-top: 1.125rem; }
-    .review-info-item { text-align: center; margin-bottom: 0.625rem; }
+    /* Shared label/value style (events + stay + airport + phone) */
+    .review-info { display: block; margin-top: 0.5rem; }
+    .review-info-item { text-align: center; margin-bottom: 0.4rem; }
     .review-info-item:last-child { margin-bottom: 0; }
     .review-info-label {
       display: block;
       font-size: 0.6875rem; font-weight: 700; letter-spacing: .07em;
-      text-transform: uppercase; color: var(--garden);
-      margin-bottom: 0.1875rem;
+      text-transform: uppercase; color: var(--garden); margin-bottom: 0.125rem;
     }
     .review-info-val { display: block; font-size: 0.875rem; color: var(--cherry-dark); }
 
@@ -601,9 +596,11 @@
     <!-- Review -->
     <section id="step-review" class="step" aria-label="Review your RSVP" tabindex="-1">
       <h2 class="review-name" id="review-heading" tabindex="-1"></h2>
-      <div id="review-status-pill"></div>
-      <p id="review-guests" class="review-guests" hidden></p>
-      <div class="review-rows" id="review-rows"></div>
+      <div class="review-pill-row">
+        <div id="review-status-pill"></div>
+        <span id="review-guests" hidden></span>
+      </div>
+      <div id="review-rows"></div>
       <div class="review-info" id="review-info"></div>
       <div class="error" id="review-error" role="alert" aria-live="polite"></div>
       <div class="actions">
@@ -1126,13 +1123,12 @@ function buildReview() {
 
   var n = S.maxSeats < 2 ? 1 : S.attendingCount;
 
-  // "with Guest 2, Guest 3" line
+  // "with Guest 2, Guest 3" — inline beside the pill
   if (guestsEl) {
     if (n >= 2 && S.attendeeNames.length >= 2) {
       var extras = S.attendeeNames.slice(1, n).filter(Boolean);
       if (extras.length) {
-        guestsEl.innerHTML = '<span class="review-guests-with">with</span>'
-          + '<span class="review-guests-names">' + escHtml(extras.join(', ')) + '</span>';
+        guestsEl.innerHTML = '<span class="review-pill-guests">with ' + escHtml(extras.join(', ')) + '</span>';
         guestsEl.hidden = false;
       } else {
         guestsEl.hidden = true;
@@ -1142,7 +1138,7 @@ function buildReview() {
     }
   }
 
-  // Events 3-col grid
+  // Events 3-col grid (label / date / answer — no pills, no tints)
   var oct14Lbl, oct15Lbl, oct16Lbl;
   if (n === 1) {
     oct14Lbl = S.oct14Count > 0 ? 'Going' : 'Not going';
@@ -1155,10 +1151,10 @@ function buildReview() {
   }
 
   if (rowsEl) {
-    rowsEl.innerHTML = '<div class="events-pills">'
-      + '<div class="events-pill-wrap"><div class="events-pill" style="background:var(--cherry-tint)"><div class="events-pill-name">Welcome Dinner</div><div class="events-pill-date">Oct 14</div></div><div class="events-pill-count">'+escHtml(oct14Lbl)+'</div></div>'
-      + '<div class="events-pill-wrap"><div class="events-pill" style="background:var(--butter-tint)"><div class="events-pill-name">Wedding</div><div class="events-pill-date">Oct 15</div></div><div class="events-pill-count">'+escHtml(oct15Lbl)+'</div></div>'
-      + '<div class="events-pill-wrap"><div class="events-pill" style="background:var(--garden-tint)"><div class="events-pill-name">Farewell Lunch</div><div class="events-pill-date">Oct 16</div></div><div class="events-pill-count">'+escHtml(oct16Lbl)+'</div></div>'
+    rowsEl.innerHTML = '<div class="review-events">'
+      + '<div class="review-events-col"><span class="review-info-label">Welcome Dinner</span><span class="review-events-date">Oct 14</span><span class="review-info-val">'+escHtml(oct14Lbl)+'</span></div>'
+      + '<div class="review-events-col"><span class="review-info-label">Wedding</span><span class="review-events-date">Oct 15</span><span class="review-info-val">'+escHtml(oct15Lbl)+'</span></div>'
+      + '<div class="review-events-col"><span class="review-info-label">Farewell Lunch</span><span class="review-events-date">Oct 16</span><span class="review-info-val">'+escHtml(oct16Lbl)+'</span></div>'
       + '</div>';
   }
 
