@@ -23,6 +23,10 @@
       --garden-tint: #DCE5D0;
       --radius:      14px;
       --card-max:    560px;
+      /* ── card appearance — adjust these if needed ── */
+      --card-opacity:   .5;    /* 0 = fully transparent · 1 = fully opaque */
+      --card-blur:      6px;   /* backdrop blur behind the card */
+      --page-bg-image:  none;  /* testing: set to url("…") to preview over a photo */
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -37,11 +41,16 @@
       justify-content: center;
       align-items: flex-start;
       padding: 16px;
+      background-image: var(--page-bg-image);
+      background-size: cover;
+      background-position: center;
     }
 
     /* ── Card ── */
     .card {
-      background: var(--ivory);
+      background: rgba(249,244,234, var(--card-opacity));
+      -webkit-backdrop-filter: blur(var(--card-blur));
+      backdrop-filter: blur(var(--card-blur));
       border-radius: var(--radius);
       box-shadow: 0 4px 32px rgba(100,40,40,.10);
       width: 100%;
@@ -54,7 +63,7 @@
     .card-scallop {
       height: 10px;
       background:
-        radial-gradient(circle at 10px 10px, var(--ivory) 10px, transparent 11px) 0 0 / 20px 20px repeat-x,
+        radial-gradient(circle at 10px 10px, rgba(249,244,234,var(--card-opacity)) 10px, transparent 11px) 0 0 / 20px 20px repeat-x,
         var(--cherry-tint);
     }
 
@@ -278,10 +287,9 @@
       font-weight: 600; line-height: 1.1; margin-bottom: 7px;
       outline: none;
     }
-    .review-guests {
-      font-size: 15px; color: var(--garden); margin-bottom: 14px;
-      font-style: italic;
-    }
+    .review-guests { margin-bottom: 14px; }
+    .review-guests-with { display: block; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--garden); margin-bottom: 3px; }
+    .review-guests-names { display: block; font-family: 'Fraunces', Georgia, serif; font-variation-settings: 'SOFT' 100; font-size: 22px; color: var(--cherry); font-weight: 600; line-height: 1.2; }
     .status-pill {
       display: inline-block; padding: 3px 11px;
       border-radius: 100px; font-size: 14px; font-weight: 600; margin-bottom: 12px;
@@ -296,20 +304,30 @@
     }
     .r-val { font-size: 15px; color: var(--cherry-dark); line-height: 1.4; }
 
-    .events-grid {
-      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;
-      margin: 6px 0 2px;
+    .events-pills {
+      display: flex; gap: 8px; justify-content: center;
+      margin: 10px 0 4px; flex-wrap: wrap;
     }
-    .events-grid-col { padding: 8px 4px; }
-    .events-grid-col .r-val { font-size: 15px; }
+    .events-pill {
+      flex: 1; min-width: 80px; max-width: 140px;
+      padding: 10px 8px 10px; border-radius: 12px; text-align: center;
+    }
+    .events-pill-name { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--cherry-dark); margin-bottom: 2px; }
+    .events-pill-date { font-size: 11px; color: var(--garden); font-weight: 500; margin-bottom: 6px; }
+    .events-pill-count { font-size: 15px; font-weight: 600; color: var(--cherry-dark); }
 
-    .review-info { margin-top: 18px; }
-    .review-info-line { font-size: 15px; color: var(--cherry-dark); line-height: 2; }
+    .review-info {
+      display: flex; gap: 24px; justify-content: center; flex-wrap: wrap;
+      margin-top: 18px;
+    }
+    .review-info-item { text-align: center; }
     .review-info-label {
+      display: block;
       font-size: 11px; font-weight: 700; letter-spacing: .07em;
       text-transform: uppercase; color: var(--garden);
-      margin-right: 5px;
+      margin-bottom: 3px;
     }
+    .review-info-val { display: block; font-size: 15px; color: var(--cherry-dark); }
 
     /* ── Thanks ── */
     .thanks-tags {
@@ -411,14 +429,14 @@
     <section id="step-code" class="step active" aria-label="Enter invite code">
       <h1 class="step-heading" tabindex="-1">find your invitation.</h1>
       <div class="field">
-        <label for="code-input">Invite code</label>
+        <label for="code-input">Pop in the unique code from your invitation.</label>
         <input id="code-input" type="text" autocomplete="off" spellcheck="false"
                autocapitalize="characters" inputmode="text" maxlength="40" placeholder="e.g. ABC123">
       </div>
       <div class="error" id="code-error" role="alert" aria-live="polite"></div>
       <div class="actions">
-        <button id="no-code-btn" class="btn btn-secondary">I don't have one</button>
-        <button id="code-next" class="btn btn-primary">Find my invitation</button>
+        <button id="no-code-btn" class="btn btn-secondary">No code?</button>
+        <button id="code-next" class="btn btn-primary">Go</button>
       </div>
     </section>
 
@@ -576,11 +594,6 @@
     <section id="step-thanks" class="step" aria-label="RSVP confirmed" tabindex="-1">
       <h2 class="step-heading" tabindex="-1" id="thanks-heading"></h2>
       <p class="step-sub" id="thanks-sub"></p>
-      <div id="thanks-tags" class="thanks-tags" hidden>
-        <span class="thanks-tag" style="background:var(--cherry-tint)">Thu Oct 14</span>
-        <span class="thanks-tag" style="background:var(--butter-tint)">Fri Oct 15</span>
-        <span class="thanks-tag" style="background:var(--garden-tint)">Sat Oct 16</span>
-      </div>
       <div class="thanks-band" aria-hidden="true"></div>
       <p class="thanks-contact">Questions? Message us at +1&nbsp;778&nbsp;977&nbsp;4975 (WhatsApp&nbsp;/&nbsp;Viber).</p>
       <div class="actions" style="justify-content:center">
@@ -1070,7 +1083,8 @@ function buildReview() {
     if (n >= 2 && S.attendeeNames.length >= 2) {
       var extras = S.attendeeNames.slice(1, n).filter(Boolean);
       if (extras.length) {
-        guestsEl.textContent = 'with ' + extras.join(', ');
+        guestsEl.innerHTML = '<span class="review-guests-with">with</span>'
+          + '<span class="review-guests-names">' + escHtml(extras.join(', ')) + '</span>';
         guestsEl.hidden = false;
       } else {
         guestsEl.hidden = true;
@@ -1093,10 +1107,10 @@ function buildReview() {
   }
 
   if (rowsEl) {
-    rowsEl.innerHTML = '<div class="events-grid">'
-      + '<div class="events-grid-col"><div class="r-label">Welcome Dinner</div><div class="r-label" style="color:var(--garden)">Oct 14</div><div class="r-val">'+escHtml(oct14Lbl)+'</div></div>'
-      + '<div class="events-grid-col"><div class="r-label">Wedding</div><div class="r-label" style="color:var(--garden)">Oct 15</div><div class="r-val">'+escHtml(oct15Lbl)+'</div></div>'
-      + '<div class="events-grid-col"><div class="r-label">Farewell Lunch</div><div class="r-label" style="color:var(--garden)">Oct 16</div><div class="r-val">'+escHtml(oct16Lbl)+'</div></div>'
+    rowsEl.innerHTML = '<div class="events-pills">'
+      + '<div class="events-pill" style="background:var(--cherry-tint)"><div class="events-pill-name">Welcome Dinner</div><div class="events-pill-date">Oct 14</div><div class="events-pill-count">'+escHtml(oct14Lbl)+'</div></div>'
+      + '<div class="events-pill" style="background:var(--butter-tint)"><div class="events-pill-name">Wedding</div><div class="events-pill-date">Oct 15</div><div class="events-pill-count">'+escHtml(oct15Lbl)+'</div></div>'
+      + '<div class="events-pill" style="background:var(--garden-tint)"><div class="events-pill-name">Farewell Lunch</div><div class="events-pill-date">Oct 16</div><div class="events-pill-count">'+escHtml(oct16Lbl)+'</div></div>'
       + '</div>';
   }
 
@@ -1105,13 +1119,13 @@ function buildReview() {
     var html = '';
     if (!S.skipStay) {
       var stayLbl = S.stay === 'Balai' ? 'Club Balai Isabel' : 'Somewhere else';
-      html += '<div class="review-info-line"><span class="review-info-label">Stay</span>'+escHtml(stayLbl)+'</div>';
+      html += '<div class="review-info-item"><span class="review-info-label">Stay</span><span class="review-info-val">'+escHtml(stayLbl)+'</span></div>';
       if (S.stay === 'Balai') {
         var rideLbl = S.transportation === 'Yes' ? 'Yes, follow up' : 'No thanks';
-        html += '<div class="review-info-line"><span class="review-info-label">Airport ride</span>'+escHtml(rideLbl)+'</div>';
+        html += '<div class="review-info-item"><span class="review-info-label">Airport ride</span><span class="review-info-val">'+escHtml(rideLbl)+'</span></div>';
       }
     }
-    html += '<div class="review-info-line"><span class="review-info-label">Phone</span>'+escHtml(S.phone)+'</div>';
+    html += '<div class="review-info-item"><span class="review-info-label">Phone</span><span class="review-info-val">'+escHtml(S.phone)+'</span></div>';
     infoEl.innerHTML = html;
   }
 
@@ -1158,15 +1172,13 @@ $('submit-btn').addEventListener('click', function(){
 
 // ── Thanks ────────────────────────────────────────────────────────────────────
 function buildThanks() {
-  var h=$('thanks-heading'), sub=$('thanks-sub'), tags=$('thanks-tags');
+  var h=$('thanks-heading'), sub=$('thanks-sub');
   if (S.status==='Attending') {
-    if(h)    h.textContent = 'see you there.';
-    if(sub)  sub.textContent = 'Can\u2019t wait for October 14\u201316.';
-    if(tags) tags.hidden = false;
+    if(h)   h.textContent = 'see you there.';
+    if(sub) sub.textContent = 'Can\u2019t wait for October 14\u201316.';
   } else {
-    if(h)    h.textContent = 'sorry we\u2019ll miss you.';
-    if(sub)  sub.textContent = 'Drinks soon, we hope.';
-    if(tags) tags.hidden = true;
+    if(h)   h.textContent = 'sorry we\u2019ll miss you.';
+    if(sub) sub.textContent = 'Drinks soon, we hope.';
   }
 }
 
