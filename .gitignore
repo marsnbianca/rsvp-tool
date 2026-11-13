@@ -1,0 +1,4 @@
+appsscript_current.gs
+worker_current.js
+*.secret
+.DS_Store

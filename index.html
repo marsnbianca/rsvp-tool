@@ -5,610 +5,1276 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Mars + Bianca — RSVP</title>
 
-  <script>
-    // Mark embedded and provide --dvh (dynamic viewport) support for mobile address-bar reflows
-    try {
-      if (window.self !== window.top) document.documentElement.setAttribute('data-embedded', 'true');
-    } catch (e) {}
-  </script>
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..400&display=swap" rel="stylesheet">
+
   <style>
+    /* ── Tokens ── */
     :root {
-      --bg: #fff;
-      --muted: #666;
-      --accent: #222;
-      --danger: #c0392b;
-      --card-radius: 0.6rem;
-      --content-max: 42rem;
-      /* --dvh will be set by JS to 1% of the dynamic viewport height */
+      --ivory:       #F9F4EA;
+      --cherry:      #A8323A;
+      --cherry-dark: #7F2229;
+      --cherry-tint: #F2D5D4;
+      --sky-tint:    #DCEBF3;
+      --butter:      #F3CF6E;
+      --butter-tint: #FBEFC9;
+      --garden:      #5E7F45;
+      --garden-tint: #DCE5D0;
+      --radius:      14px;
+      --card-max:    560px;
+      /* ── card appearance — adjust these if needed ── */
+      --card-opacity:   .5;    /* 0 = fully transparent · 1 = fully opaque */
+      --card-blur:      6px;   /* backdrop blur behind the card */
+      --page-bg-image:  none;  /* testing: set to url("…") to preview over a photo */
     }
 
-    /* Basic page reset and font */
-    html, body {
-      height: 100%;
-      margin: 0;
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial;
-      color: #111;
-      background: var(--bg);
-    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    fieldset { border: none; padding: 0; margin: 0; }
 
-    /* Page wrap uses dynamic viewport so centering works with mobile address bars */
-    .page-wrap {
-      min-height: calc(var(--dvh, 1vh) * 100);
+    html, body { background: transparent; min-height: 100%; }
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      font-size: 17px;
+      color: var(--cherry-dark);
       display: flex;
-      align-items: center;    /* vertical centering */
-      justify-content: center;/* horizontal centering */
-      padding: 3.5vw 2vw;
-      box-sizing: border-box;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 16px;
+      background-image: var(--page-bg-image);
+      background-size: cover;
+      background-position: center;
     }
 
-    /* Card: center its content and allow shrinking on small content */
-    .app-box {
+    /* ── Card ── */
+    .card {
+      background: rgba(249,244,234, var(--card-opacity));
+      -webkit-backdrop-filter: blur(var(--card-blur));
+      backdrop-filter: blur(var(--card-blur));
+      border-radius: var(--radius);
+      box-shadow: 0 4px 32px rgba(100,40,40,.10);
       width: 100%;
-      max-width: var(--content-max);
-      background: #fff;
-      border-radius: var(--card-radius);
-      box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.12);
-      padding: 0.9rem;
-      box-sizing: border-box;
-      margin: 0 auto;
-
-      display: flex;
-      align-items: center;     /* vertically center content-column */
-      justify-content: center; /* horizontally center content-column */
-      min-height: 0;           /* allow shrinking when content is small */
+      max-width: var(--card-max);
       position: relative;
+      overflow: hidden;
+    }
+    .card-inner { padding: 32px 32px 36px; text-align: center; }
+
+    .card-scallop {
+      height: 10px;
+      background:
+        radial-gradient(circle at 10px 10px, rgba(249,244,234,var(--card-opacity)) 10px, transparent 11px) 0 0 / 20px 20px repeat-x,
+        var(--cherry-tint);
     }
 
-    /* Embedded (when in iframe) remove outer card chrome */
-    :root[data-embedded="true"] .app-box {
-      background: transparent;
-      box-shadow: none;
-      border-radius: 0;
-      padding: 0.7rem;
+    /* ── Step dots ── */
+    .step-dots {
+      display: flex; gap: 6px; justify-content: center;
+      margin-bottom: 16px;
+    }
+    .step-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--cherry-tint);
+      transition: background .2s, transform .2s;
+    }
+    .step-dot.done   { background: var(--garden); }
+    .step-dot.active { background: var(--cherry); transform: scale(1.35); }
+
+    /* ── Shared reply pill ── */
+    .reply-pill {
+      display: block; width: fit-content; margin: 0 auto 4px;
+      background: var(--cherry-tint);
+      color: var(--cherry-dark);
+      font-size: 15px; font-weight: 500;
+      padding: 5px 14px;
+      border-radius: 100px;
       max-width: 100%;
     }
-
-    /* Content column centers the active step vertically */
-    .content-column {
-      width: 100%;
-      max-width: 40rem;
-      margin: 0 auto;
-      padding: 0.4rem 0.6rem;
-      text-align: center;
-
-      display: flex;
-      flex-direction: column;
-      justify-content: center; /* vertical centering of active step content */
-      align-items: stretch;    /* inputs stretch to full width */
-      box-sizing: border-box;
+    .reply-pill strong { color: var(--cherry); }
+    #reply-pill-wrap { text-align: center; margin-bottom: 14px; }
+    .not-you-link {
+      background: none; border: none;
+      color: var(--cherry); font-size: 14px;
+      cursor: pointer; text-decoration: underline;
+      padding: 2px 4px; font-family: inherit;
+      display: inline-block;
     }
+    .not-you-link:focus-visible { outline: 2px solid var(--butter); border-radius: 2px; }
 
-    /* Steps: hide by default, display active step as a centered flex column */
+    /* ── Steps ── */
     .step { display: none; }
-    .step.active {
-      display: flex;
-      flex-direction: column;
-      justify-content: center; /* centers content vertically inside step */
-      align-items: stretch;
-      box-sizing: border-box;
-      /* increased small-screen minimum so the modal doesn't feel too short on mobile */
-      min-height: calc(var(--dvh, 1vh) * 30);
+    .step.active { display: block; }
+
+    /* ── Typography ── */
+    .step-heading {
+      font-family: 'Fraunces', Georgia, serif;
+      font-variation-settings: 'SOFT' 100;
+      font-size: 38px; color: var(--cherry);
+      line-height: 1.1; margin-bottom: 6px;
+      font-weight: 600; outline: none;
+    }
+    .step-sub {
+      font-family: 'Fraunces', Georgia, serif;
+      font-variation-settings: 'SOFT' 100;
+      color: var(--cherry-dark); font-size: 17px;
+      margin-bottom: 12px; line-height: 1.4;
+    }
+    .deadline-note { font-size: .8rem; color: var(--garden); margin-bottom: 18px; }
+
+    /* ── Fields ── */
+    .field { margin-bottom: 14px; }
+    label, .field-label {
+      display: block; font-size: 15px; font-weight: 500;
+      margin-bottom: 5px; color: var(--cherry-dark);
+    }
+    .field-help { font-size: .76rem; color: var(--garden); margin-top: 3px; }
+
+    input[type="text"], input[type="tel"] {
+      width: 100%; padding: 10px 13px;
+      font-size: 18px; font-family: 'DM Sans', system-ui, sans-serif;
+      color: var(--cherry-dark); background: white;
+      border: 2px solid #ddd0c4; border-radius: var(--radius);
+      outline: none; transition: border-color .15s; -webkit-appearance: none;
+    }
+    input[type="text"]:focus, input[type="tel"]:focus {
+      border-color: var(--cherry);
+      box-shadow: 0 0 0 3px var(--butter);
     }
 
-    /* Desktop/tablet tweaks for step minimum */
-    @media (min-width:641px) {
-      .step.active { min-height: 18rem; } /* slightly larger minimum on larger screens */
+    /* ── Errors ── */
+    .error { color: var(--cherry); font-size: .8rem; margin-top: 7px; display: none; }
+    .error.visible { display: block; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      font-family: 'DM Sans', system-ui, sans-serif;
+      font-size: 18px; font-weight: 600; letter-spacing: .02em;
+      border: none; border-radius: 100px;
+      padding: 11px 24px; min-height: 48px;
+      cursor: pointer; transition: transform .12s, background .12s;
+    }
+    .btn:focus-visible { outline: 3px solid var(--butter); outline-offset: 3px; }
+    .btn:hover:not(:disabled) { transform: translateY(-1px); }
+    .btn:active:not(:disabled) { transform: none; }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    .btn-primary { background: var(--cherry); color: var(--ivory); }
+    .btn-primary:hover:not(:disabled) { background: var(--cherry-dark); }
+    .btn-secondary { background: transparent; color: var(--cherry); border: 2px solid var(--cherry); }
+    .btn-secondary:hover:not(:disabled) { background: var(--cherry-tint); }
+
+    .actions {
+      display: flex; gap: 10px; margin-top: 20px; align-items: center;
+    }
+    .actions .btn { flex: 1; }
+
+    .link-btn {
+      background: none; border: none; color: var(--garden);
+      font-size: .8rem; cursor: pointer; text-decoration: underline;
+      padding: 4px 2px; font-family: inherit;
+      min-height: 44px; display: inline-flex; align-items: center;
+    }
+    .link-btn:focus-visible { outline: 3px solid var(--butter); outline-offset: 2px; border-radius: 3px; }
+
+    /* ── Big choice cards (attendance, stay, transport) ── */
+    .choice-cards { display: flex; flex-direction: row; gap: 8px; margin: 12px 0 4px; }
+    .choice-card { display: flex; cursor: pointer; flex: 1; }
+    .choice-card input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+    .choice-card-inner {
+      padding: 13px 16px; border-radius: var(--radius);
+      border: 2px solid #ddd0c4; background: white;
+      font-size: 17px; font-weight: 500; color: var(--cherry-dark);
+      transition: border-color .15s, background .15s; line-height: 1.35;
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      text-align: center; flex-direction: column; min-height: 60px;
+    }
+    .choice-card input[type="radio"]:checked + .choice-card-inner {
+      background: var(--garden); border-color: var(--garden); color: var(--ivory);
+    }
+    .choice-card input[type="radio"]:checked + .choice-card-inner .choice-sub { color: rgba(255,255,255,.8); }
+    .choice-card input[type="radio"]:focus-visible + .choice-card-inner { box-shadow: 0 0 0 3px var(--butter); }
+    .choice-sub { display: block; font-size: 13px; font-weight: 400; color: var(--garden); margin-top: 2px; }
+
+    /* ── Count stepper ── */
+    #count-stepper-wrap { display: flex; justify-content: center; margin: 16px 0 14px; }
+    #count-stepper-wrap .stepper { border-color: var(--cherry); }
+    #count-stepper-wrap .stepper-btn { font-size: 1.5rem; min-width: 52px; min-height: 52px; color: var(--cherry); }
+    #count-stepper-wrap .stepper-val { font-size: 1.3rem; min-width: 52px; padding: 10px 6px; }
+
+    /* ── Count chips (kept for reference) ── */
+    .chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 14px; }
+    .chip {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      font-size: 1.05rem; font-weight: 700;
+      width: 50px; height: 50px; border-radius: 50%;
+      border: 2px solid #ddd0c4; background: white;
+      color: var(--cherry-dark); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s, border-color .15s, color .15s;
+    }
+    .chip.selected { background: var(--garden); border-color: var(--garden); color: var(--ivory); }
+    .chip:focus-visible { outline: 3px solid var(--butter); outline-offset: 3px; }
+
+    /* ── Attendee name fields ── */
+    .attendee-names { margin-bottom: 14px; }
+    .attendee-name-wrap { margin-bottom: 7px; }
+    .attendee-name-wrap label { font-size: .76rem; color: var(--garden); margin-bottom: 3px; }
+
+    /* ── Stepper ── */
+    .stepper {
+      display: inline-flex; align-items: stretch;
+      border: 2px solid #ddd0c4; border-radius: 100px; overflow: hidden;
+    }
+    .stepper-btn {
+      background: none; border: none; font-size: 1.2rem; line-height: 1;
+      color: var(--cherry); padding: 0 12px;
+      min-width: 44px; min-height: 48px; cursor: pointer;
+      font-family: inherit; display: flex; align-items: center; justify-content: center;
+    }
+    .stepper-btn:focus-visible { outline: 3px solid var(--butter); outline-offset: 1px; }
+    .stepper-btn:disabled { opacity: .3; cursor: not-allowed; }
+    .stepper-val {
+      min-width: 30px; text-align: center;
+      font-size: .95rem; font-weight: 600; color: var(--cherry-dark);
+      border-left: 1px solid #ddd0c4; border-right: 1px solid #ddd0c4;
+      padding: 8px 3px; display: flex; align-items: center; justify-content: center;
     }
 
-    /* Preserve your visual styles (inputs, buttons, messages, etc.) */
-    h1 { margin:0; font-size:1.05rem; }
-    .subhead { color:var(--muted); margin-top:0.4rem; margin-bottom:0.6rem; line-height:1.05; font-size:0.95rem; }
-    .prompt { color:var(--muted); margin-bottom:0.6rem; text-align:center; display:block; font-size:0.95rem; }
-    .search-row { display:flex; gap:0.5rem; margin-bottom:0.25rem; justify-content:center; }
-    .search-row input { flex:1; max-width:24rem; padding:0.45rem; border:1px solid #e5e5e5; border-radius:0.5rem; font-size:0.95rem; }
-    .actions { display:flex; gap:0.5rem; margin-top:0.9rem; justify-content:center; align-items:center; padding-bottom:0.6rem; }
-    .actions-right { display:flex; gap:0.5rem; }
-    .btn { padding:0.45rem 0.75rem; border-radius:0.5rem; border:0; cursor:pointer; font-size:0.95rem; }
-    .btn.primary { background:var(--accent); color:#fff; }
-    .btn.ghost { background:#f3f3f3; color:#111; }
-    .error { color:var(--danger); font-size:0.92rem; margin-top:0.4rem; display:none; text-align:center; }
-    .matches { margin:0 auto 0.6rem; display:flex; flex-direction:column; gap:0.4rem; align-items:center; }
-    .match-btn { display:block; width:100%; max-width:28.75rem; padding:0.6rem; border:1px solid #f0f0f0; border-radius:0.5rem; background:#fff; cursor:pointer; text-align:center; transition:all .12s; font-size:0.95rem; }
-    .match-btn:hover { background:#fafafa; transform:translateY(-2px); }
-    .form-row { display:flex; flex-direction:column; gap:0.25rem; margin-bottom:0.6rem; align-items:center; }
-    label { font-size:0.95rem; color:#333; text-align:left; width:100%; max-width:28.75rem; display:block; }
-    select,input,textarea { padding:0.5rem; font-size:0.95rem; border:1px solid #e6e6e6; border-radius:0.5rem; width:100%; max-width:28.75rem; box-sizing:border-box; }
-    textarea { min-height:5rem; resize:vertical; }
-    .message { padding:0.5rem; background:#e7f7e7; border:1px solid #bfe6bf; border-radius:0.5rem; margin:0.4rem 0; text-align:center; }
-    .small { font-size:0.88rem; color:var(--muted); margin-top:0.4rem; }
-    .loading-overlay { position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(255,255,255,0.7); border-radius:inherit; z-index:999; }
-    .spinner { width:1.9rem; height:1.9rem; border-radius:50%; border:0.25rem solid #eee; border-top-color:var(--accent); animation:spin 1s linear infinite; }
-    @keyframes spin { to { transform:rotate(360deg); } }
+    /* ── Event rows ── */
+    .event-rows { margin: 10px 0 4px; }
+    .event-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; padding: 11px 0;
+      border-bottom: 1px solid #e8d8d0;
+    }
+    .event-row:last-child { border-bottom: none; }
+    .event-row-name { font-weight: 600; font-size: .93rem; color: var(--cherry-dark); text-align: left; }
+    .event-row-when { font-size: .75rem; color: var(--garden); margin-top: 1px; text-align: left; }
+    .event-row-right { flex-shrink: 0; }
 
-    /* When content grows taller than viewport, allow natural scrolling inside the iframe/page */
-    @media (max-width:540px) {
-      .content-column { padding:0.4rem 0.6rem; }
-      .match-btn { max-width:100%; }
-      label, select, input, textarea { max-width:100%; }
+    .ev-ctrl-wrap { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    .ev-ctrl-label { font-size: .68rem; color: var(--garden); font-weight: 600; white-space: nowrap; }
+
+    .event-chk-label {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 3px; cursor: pointer; min-width: 44px; min-height: 44px;
+      justify-content: center;
+    }
+    .event-chk-label input[type="checkbox"] {
+      width: 20px; height: 20px; accent-color: var(--garden); cursor: pointer;
+    }
+    .event-chk-label span { font-size: .72rem; color: var(--cherry-dark); }
+
+    /* ── Stay note ── */
+    .stay-note {
+      font-size: 14px; color: var(--cherry-dark); line-height: 1.5;
+      margin: 10px 0 2px; text-align: center;
     }
 
-    input[type=tel]{ font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,"Roboto Mono",monospace; }
-
-    /* ===== Mars & Bianca brand theme (lakeside social club) ===== */
-    :root {
-      --ivory:#F8F4EA; --cream:#F6EFDF; --burgundy:#6E1E2E; --sage:#A3B48A; --fern:#4F6B45; --blush:#E8B4A6; --gold:#E3B866;
-      --bg: var(--cream); --muted: var(--fern); --accent: var(--fern); --danger:#9c2b3b;
+    /* ── Transport step — vans note ── */
+    .vans-note {
+      background: var(--sky-tint); border-radius: 10px;
+      padding: 10px 13px; font-size: 15px; color: var(--cherry-dark);
+      line-height: 1.4; margin-bottom: 14px; text-align: left;
     }
-    html, body { font-family:"DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif; color:var(--burgundy); }
-    :root[data-embedded="true"], :root[data-embedded="true"] body { background:transparent; }
-    :root[data-embedded="true"] .page-wrap { min-height:0; padding:0; align-items:flex-start; }
-    :root[data-embedded="true"] .app-box { padding:0; }
-    :root[data-embedded="true"] .step.active { min-height:0; }
-    :root[data-embedded="true"] h1,
-    :root[data-embedded="true"] .subhead { display:none; }
 
-    h1 { font-family:"Fraunces", Georgia, serif; font-weight:600; font-size:1.5rem; color:var(--burgundy); }
-    .subhead { color:var(--fern); line-height:1.4; }
-    .prompt { font-family:"Fraunces", Georgia, serif; font-weight:600; font-size:1.2rem; line-height:1.3; color:var(--burgundy); margin-bottom:1rem; }
-    label { color:var(--burgundy); font-weight:500; }
-    .small { color:var(--fern); }
-
-    select, input, textarea {
-      background:var(--ivory); color:var(--burgundy); font-family:inherit; font-size:1rem;
-      border:2px solid var(--sage); border-radius:14px; padding:0.8rem 1rem; outline:none;
+    /* ── Review ── */
+    .review-name {
+      font-family: 'Fraunces', Georgia, serif;
+      font-variation-settings: 'SOFT' 100;
+      font-size: 44px; color: var(--cherry-dark);
+      font-weight: 600; line-height: 1.1; margin-bottom: 7px;
+      outline: none;
     }
-    select:focus, input:focus, textarea:focus { border-color:var(--burgundy); }
-    ::placeholder { color:#8a7a6a; opacity:1; }
-    .search-row input { max-width:28.75rem; }
+    .review-guests { margin-bottom: 14px; }
+    .review-guests-with { display: block; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--garden); margin-bottom: 3px; }
+    .review-guests-names { display: block; font-family: 'Fraunces', Georgia, serif; font-variation-settings: 'SOFT' 100; font-size: 22px; color: var(--cherry); font-weight: 600; line-height: 1.2; }
+    .status-pill {
+      display: inline-block; padding: 3px 11px;
+      border-radius: 100px; font-size: 14px; font-weight: 600; margin-bottom: 12px;
+    }
+    .pill-attending { background: var(--garden-tint); color: var(--garden); }
+    .pill-declined  { background: var(--cherry-tint); color: var(--cherry); }
 
-    .btn { font-family:inherit; font-weight:700; letter-spacing:.04em; border-radius:14px; padding:0.8rem 1.4rem; font-size:1rem; transition:transform .12s, background .12s; }
-    .btn:hover { transform:translateY(-1px); }
-    .btn.primary { background:var(--fern); color:var(--ivory); }
-    .btn.primary:hover { background:var(--burgundy); }
-    .btn.ghost { background:transparent; color:var(--burgundy); border:2px solid var(--sage); }
-    .btn.ghost:hover { background:var(--ivory); }
+    .review-rows { margin-bottom: 4px; }
+    .r-label {
+      font-size: 11px; font-weight: 700; letter-spacing: .07em;
+      text-transform: uppercase; color: var(--garden); margin-bottom: 3px;
+    }
+    .r-val { font-size: 15px; color: var(--cherry-dark); line-height: 1.4; }
 
-    .match-btn { background:var(--ivory); border:2px solid var(--sage); border-radius:14px; color:var(--burgundy); font-family:inherit; font-size:1rem; padding:0.8rem 1rem; }
-    .match-btn:hover { background:#fff; border-color:var(--burgundy); }
-    .message { background:var(--ivory); border:2px solid var(--sage); border-radius:14px; color:var(--burgundy); padding:1rem; }
-    .error { color:var(--danger); }
-    .loading-overlay { background:rgba(246,239,223,0.8); }
-    .spinner { border-color:var(--sage); border-top-color:var(--burgundy); }
-    input[type=tel] { font-family:inherit; }
+    .events-pills {
+      display: flex; gap: 8px; justify-content: center;
+      margin: 10px 0 4px; flex-wrap: wrap;
+    }
+    .events-pill-wrap {
+      flex: 1; min-width: 80px; max-width: 140px;
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+    }
+    .events-pill {
+      width: 100%;
+      padding: 10px 8px 8px; border-radius: 12px; text-align: center;
+    }
+    .events-pill-name { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--cherry-dark); margin-bottom: 2px; }
+    .events-pill-date { font-size: 11px; color: var(--garden); font-weight: 500; }
+    .events-pill-count { font-family: 'DM Sans', system-ui, sans-serif; font-size: 14px; font-weight: 700; color: var(--cherry-dark); text-align: center; }
+
+    .review-info { display: block; margin-top: 18px; }
+    .review-info-item { text-align: center; margin-bottom: 10px; }
+    .review-info-item:last-child { margin-bottom: 0; }
+    .review-info-label {
+      display: block;
+      font-size: 11px; font-weight: 700; letter-spacing: .07em;
+      text-transform: uppercase; color: var(--garden);
+      margin-bottom: 3px;
+    }
+    .review-info-val { display: block; font-size: 15px; color: var(--cherry-dark); }
+
+    /* ── Thanks ── */
+    .thanks-tags {
+      display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+      margin: 18px 0 6px;
+    }
+    .thanks-tag {
+      font-size: 13px; font-weight: 600; color: var(--cherry-dark);
+      padding: 5px 14px; border-radius: 100px;
+    }
+    .thanks-band {
+      height: 18px; margin: 20px -32px;
+      background-image:
+        repeating-linear-gradient(90deg, rgba(168,50,58,.09) 0, rgba(168,50,58,.09) 12px, transparent 12px, transparent 24px),
+        repeating-linear-gradient(0deg,  rgba(168,50,58,.09) 0, rgba(168,50,58,.09) 12px, transparent 12px, transparent 24px),
+        var(--cherry-tint);
+    }
+    .thanks-contact {
+      font-size: 14px; color: var(--cherry-dark); line-height: 1.5; margin: 18px 0 6px;
+    }
+
+    /* ── Closed / Contact / Error ── */
+    .info-box {
+      background: white; border-radius: var(--radius);
+      padding: 14px; margin: 12px 0;
+      font-size: .9rem; line-height: 1.5; color: var(--cherry-dark);
+    }
+    .info-box .contact-line { margin-top: 8px; color: var(--garden); font-size: .82rem; }
+
+    /* ── Loading ── */
+    .loading {
+      position: absolute; inset: 0;
+      background: rgba(249,244,234,.88);
+      display: none; align-items: center; justify-content: center;
+      z-index: 10; border-radius: var(--radius);
+    }
+    .loading.on { display: flex; }
+    .spinner {
+      width: 30px; height: 30px;
+      border: 3px solid var(--cherry-tint); border-top-color: var(--cherry);
+      border-radius: 50%; animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (prefers-reduced-motion: reduce) {
+      .spinner { animation: none; border-top-color: var(--cherry); }
+      .btn, .choice-card-inner, .chip, .step-dot { transition: none; }
+    }
+    /* ── Mobile ── */
+    @media (max-width: 540px) {
+      body { padding: 0; }
+      .card { border-radius: 0; box-shadow: none; min-height: 100vh; }
+    }
+    @media (max-width: 430px) {
+      .card-inner { padding: 20px 20px 24px; }
+      .step-heading { font-size: 32px; }
+      .review-name { font-size: 32px; }
+      body, .step-sub, .choice-card-inner, .btn { font-size: 16px; }
+      input[type="text"], input[type="tel"] { font-size: 16px; }
+      .thanks-band { margin-left: -20px; margin-right: -20px; }
+    }
+    @media (max-width: 380px) {
+      .event-row { flex-wrap: wrap; }
+      .event-row-left { flex: 1 1 100%; }
+      .event-row-right { flex: 1 1 100%; display: flex; justify-content: center; margin-top: 4px; }
+      .event-row-name, .event-row-when { text-align: center; }
+    }
+    @media (max-width: 360px) {
+      .step-heading { font-size: 30px; }
+      .step-dots { gap: 4px; }
+      .step-dot { width: 6px; height: 6px; }
+      .choice-cards { flex-direction: column; gap: 8px; }
+      .choice-card { flex: none; }
+    }
+
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0;
+      margin: -1px; overflow: hidden; clip: rect(0,0,0,0);
+      white-space: nowrap; border: 0;
+    }
   </style>
 </head>
 <body>
-  <div class="page-wrap">
-    <div class="app-box" id="appBox" role="dialog" aria-modal="true">
-      <div id="loading" class="loading-overlay"><div class="spinner" aria-hidden="true"></div></div>
 
-      <div class="content-column">
+<div class="card" id="card">
+  <div class="loading" id="loading" aria-hidden="true"><div class="spinner"></div></div>
+  <div class="card-scallop" aria-hidden="true"></div>
+  <div class="card-inner">
 
-        <!-- Non-sticky header (reverted) -->
-        <h1>Mars + Bianca</h1>
-        <div class="subhead">Nuuk Taal<br>October 15, 2027</div>
+    <div class="step-dots" id="step-dots" aria-hidden="true"></div>
 
-        <!-- Steps -->
-        <div id="step-search" class="step active">
-          <span class="prompt">Type your name as it appears on your invite.</span>
-          <div class="search-row">
-            <input id="nameInput" placeholder="Type your name" autocomplete="name" />
-          </div>
-          <div id="searchErr" class="error" aria-live="polite"></div>
-          <div class="actions">
-            <div class="actions-right"><button id="findBtn" class="btn primary">Find</button></div>
-          </div>
-        </div>
-
-        <div id="step-matches" class="step">
-          <span class="prompt">We found matching names — please select your name below to continue.</span>
-          <div id="matches" class="matches" aria-live="polite"></div>
-          <div class="actions">
-            <button id="dontSeeBtn" class="btn ghost">I don't see my name</button>
-            <div class="actions-right"><button id="backToSearch" class="btn ghost">Back</button></div>
-          </div>
-        </div>
-
-        <div id="step-not-in-list" class="step">
-          <span class="prompt">If your name isn't listed here, please contact us and we'll confirm your invitation status.</span>
-          <div class="message"><strong>Can't find your name?</strong><div class="small" style="margin-top:.4rem">Contact: +1 778 977 4975 (WhatsApp / Viber)</div></div>
-          <div class="actions">
-            <button id="notInListBack" class="btn ghost">Back</button>
-            <div class="actions-right"><button id="notInListClose" class="btn primary">Close</button></div>
-          </div>
-        </div>
-
-        <div id="step-attendance" class="step">
-          <span class="prompt">Please tell us whether you will join us for the celebration.</span>
-          <div class="form-row">
-            <label for="attendanceSelect">Will you be joining us?</label>
-            <select id="attendanceSelect"><option value="">-- choose --</option><option value="Attending">Yes — I/we will attend</option><option value="Declined">Regretfully decline</option></select>
-          </div>
-          <div id="attendanceDynamic" style="margin-top:.4rem"></div>
-          <div id="attendeeError" class="error"></div>
-          <div class="actions">
-            <button id="attendanceBack" class="btn ghost">Back</button>
-            <div class="actions-right"><button id="attendanceNext" class="btn primary">Next</button></div>
-          </div>
-        </div>
-
-        <div id="step-transport" class="step">
-          <span class="prompt">We offer airport transfer from NAIA to Club Balai Isabel. Please let us know if you need it.</span>
-          <div class="form-row">
-            <label for="transportSelect">Do you need airport transfer from NAIA to Club Balai Isabel (Batangas)?</label>
-            <select id="transportSelect"><option value="">-- choose --</option><option value="Yes">Yes — I/We need airport transfer</option><option value="No">No — we don't need airport transfer</option></select>
-          </div>
-          <div class="actions">
-            <button id="transportBack" class="btn ghost">Back</button>
-            <div class="actions-right"><button id="transportNext" class="btn primary">Next</button></div>
-          </div>
-        </div>
-
-        <div id="step-phone" class="step">
-          <span class="prompt">Please give the best Philippine mobile number where we can reach you if needed.</span>
-          <div class="form-row">
-            <label for="phoneInput">Phone (PH format)</label>
-            <input id="phoneInput" type="tel" placeholder="09" />
-            <div id="phoneErr" class="error"></div>
-          </div>
-          <div class="actions">
-            <button id="phoneBack" class="btn ghost">Back</button>
-            <div class="actions-right"><button id="phoneNext" class="btn primary">Next</button></div>
-          </div>
-        </div>
-
-        <div id="step-notes" class="step">
-          <span class="prompt">Optional — share dietary restrictions, song requests, or a short message.</span>
-          <div class="form-row">
-            <label for="notesInput">Notes (optional — dietary, song requests)</label>
-            <textarea id="notesInput" placeholder="E.g. vegetarian, song request..."></textarea>
-          </div>
-          <div class="actions">
-            <button id="notesBack" class="btn ghost">Back</button>
-            <div class="actions-right"><button id="notesNext" class="btn primary">Review</button></div>
-          </div>
-        </div>
-
-        <div id="step-review" class="step">
-          <span class="prompt">Please review your RSVP details before submitting.</span>
-          <div id="reviewSummary" class="form-row" style="text-align:left"></div>
-          <div id="reviewError" class="error" style="text-align:center"></div>
-          <div class="actions">
-            <button id="reviewBack" class="btn ghost">Back</button>
-            <div class="actions-right"><button id="submitBtn" class="btn primary">Submit RSVP</button></div>
-          </div>
-        </div>
-
-        <div id="step-thanks" class="step">
-          <span class="prompt">Got it. Thank you!</span>
-          <div id="thanksMessage" class="message" style="text-align:center"></div>
-          <div class="actions">
-            <div class="actions-right"><button id="thanksClose" class="btn primary">Close</button></div>
-          </div>
-        </div>
-
-      </div>
+    <!-- Shared reply pill (screens 2–7) -->
+    <div id="reply-pill-wrap" hidden>
+      <div id="reply-pill" class="reply-pill">Replying as&nbsp;<strong id="reply-name"></strong></div>
+      <button type="button" id="not-you-btn" class="not-you-link">not you?</button>
     </div>
-  </div>
 
-  <script>
-  (function () {
-    const API_URL = "https://rsvp-proxy.marsnbianca.workers.dev/"; // <-- replace with your Worker URL
+    <!-- S1: invite code -->
+    <section id="step-code" class="step active" aria-label="Enter invite code">
+      <h1 class="step-heading" tabindex="-1">find your invitation.</h1>
+      <div class="field">
+        <label for="code-input">Pop in the unique code from your invitation.</label>
+        <input id="code-input" type="text" autocomplete="off" spellcheck="false"
+               autocapitalize="characters" inputmode="text" maxlength="40" placeholder="e.g. ABC123">
+      </div>
+      <div class="error" id="code-error" role="alert" aria-live="polite"></div>
+      <div class="actions">
+        <button id="no-code-btn" class="btn btn-secondary">No code?</button>
+        <button id="code-next" class="btn btn-primary">Go</button>
+      </div>
+    </section>
 
-    // set --dvh on the child side too (helps parent and content sizing on mobile)
-    function updateDvh() {
-      try {
-        const dv = window.innerHeight * 0.01;
-        document.documentElement.style.setProperty('--dvh', dv + 'px');
-      } catch (_) {}
+    <!-- S2: attendance -->
+    <section id="step-attendance" class="step" aria-label="Are you coming?" tabindex="-1">
+      <h2 class="step-heading" tabindex="-1">will you be joining us?</h2>
+      <fieldset>
+        <legend class="sr-only">Will you be joining us?</legend>
+        <div class="choice-cards">
+          <label class="choice-card">
+            <input type="radio" name="attendance" value="Attending" id="attend-yes">
+            <span class="choice-card-inner">Yes, I'll be there</span>
+          </label>
+          <label class="choice-card">
+            <input type="radio" name="attendance" value="Declined" id="attend-no">
+            <span class="choice-card-inner">Sadly, no</span>
+          </label>
+        </div>
+      </fieldset>
+      <div class="error" id="attendance-error" role="alert" aria-live="polite"></div>
+      <div class="actions">
+        <button id="attendance-back" class="btn btn-secondary">Back</button>
+        <button id="attendance-next" class="btn btn-primary">Next</button>
+      </div>
+    </section>
+
+    <!-- S3: how many (only if max_seats >= 2) -->
+    <section id="step-count" class="step" aria-label="How many coming?" tabindex="-1">
+      <h2 class="step-heading" tabindex="-1">how many?</h2>
+      <p class="step-sub">How many of you, including yourself?</p>
+      <div id="count-stepper-wrap"></div>
+      <div class="attendee-names" id="attendee-name-fields"></div>
+      <div class="error" id="count-error" role="alert" aria-live="polite"></div>
+      <div class="actions">
+        <button id="count-back" class="btn btn-secondary">Back</button>
+        <button id="count-next" class="btn btn-primary">Next</button>
+      </div>
+    </section>
+
+    <!-- S4: which events -->
+    <section id="step-events" class="step" aria-label="Which events?" tabindex="-1">
+      <h2 class="step-heading" tabindex="-1">which days are you in?</h2>
+      <p class="step-sub">The wedding on Oct 15 is automatic.</p>
+      <div class="event-rows" id="event-rows">
+        <div class="event-row">
+          <div class="event-row-left">
+            <div class="event-row-name">Welcome Dinner</div>
+            <div class="event-row-when">Thu Oct 14 · 5:30 PM · Club Balai Isabel</div>
+          </div>
+          <div class="event-row-right" id="oct14-ctrl"></div>
+        </div>
+        <div class="event-row">
+          <div class="event-row-left">
+            <div class="event-row-name">Farewell Lunch</div>
+            <div class="event-row-when">Sat Oct 16 · 12:30 PM · Farmer's Table</div>
+          </div>
+          <div class="event-row-right" id="oct16-ctrl"></div>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="events-back" class="btn btn-secondary">Back</button>
+        <button id="events-next" class="btn btn-primary">Next</button>
+      </div>
+    </section>
+
+    <!-- S5: where staying (skipped for immediate family) -->
+    <section id="step-stay" class="step" aria-label="Where are you staying?" tabindex="-1">
+      <h2 class="step-heading" tabindex="-1">where are you staying?</h2>
+      <p class="step-sub">Two choices below.</p>
+      <fieldset>
+        <legend class="sr-only">Accommodation</legend>
+        <div class="choice-cards">
+          <label class="choice-card">
+            <input type="radio" name="stay" value="Balai" id="stay-balai">
+            <span class="choice-card-inner">
+              Club Balai Isabel
+              <span class="choice-sub">two nights, on us</span>
+            </span>
+          </label>
+          <label class="choice-card">
+            <input type="radio" name="stay" value="Other" id="stay-other">
+            <span class="choice-card-inner">
+              Somewhere else
+              <span class="choice-sub">you book your own</span>
+            </span>
+          </label>
+        </div>
+      </fieldset>
+      <p id="stay-note" class="stay-note" hidden></p>
+      <div class="error" id="stay-error" role="alert" aria-live="polite"></div>
+      <div class="actions">
+        <button id="stay-back" class="btn btn-secondary">Back</button>
+        <button id="stay-next" class="btn btn-primary">Next</button>
+      </div>
+    </section>
+
+    <!-- S6: getting around (Club Balai guests only) -->
+    <section id="step-transport" class="step" aria-label="Getting around" tabindex="-1">
+      <h2 class="step-heading" tabindex="-1">getting around.</h2>
+      <div class="vans-note">
+        Vans run between Club Balai Isabel, Nuuk and Farmer's Table. They don't go to the airport.
+      </div>
+      <p class="step-sub">Need a ride from the airport (NAIA)?</p>
+      <p class="field-help" style="margin-bottom:12px">Not included. Say yes and we'll follow up.</p>
+      <fieldset>
+        <legend class="sr-only">Airport ride interest</legend>
+        <div class="choice-cards">
+          <label class="choice-card">
+            <input type="radio" name="transport" value="Yes" id="transport-yes">
+            <span class="choice-card-inner">Yes, follow up</span>
+          </label>
+          <label class="choice-card">
+            <input type="radio" name="transport" value="No" id="transport-no">
+            <span class="choice-card-inner">No thanks</span>
+          </label>
+        </div>
+      </fieldset>
+      <div class="error" id="transport-error" role="alert" aria-live="polite"></div>
+      <div class="actions">
+        <button id="transport-back" class="btn btn-secondary">Back</button>
+        <button id="transport-next" class="btn btn-primary">Next</button>
+      </div>
+    </section>
+
+    <!-- S7: phone number -->
+    <section id="step-phone" class="step" aria-label="Phone number" tabindex="-1">
+      <h2 class="step-heading" tabindex="-1">your number.</h2>
+      <p class="step-sub">We'll only use this if we need to reach you.</p>
+      <div class="field">
+        <input id="phone-input" type="tel" inputmode="tel"
+               placeholder="Phone number" autocomplete="tel" maxlength="15">
+      </div>
+      <div class="error" id="phone-error" role="alert" aria-live="polite"></div>
+      <div class="actions">
+        <button id="phone-back" class="btn btn-secondary">Back</button>
+        <button id="phone-next" class="btn btn-primary">Review</button>
+      </div>
+    </section>
+
+    <!-- Review -->
+    <section id="step-review" class="step" aria-label="Review your RSVP" tabindex="-1">
+      <h2 class="review-name" id="review-heading" tabindex="-1"></h2>
+      <div id="review-status-pill"></div>
+      <p id="review-guests" class="review-guests" hidden></p>
+      <div class="review-rows" id="review-rows"></div>
+      <div class="review-info" id="review-info"></div>
+      <div class="error" id="review-error" role="alert" aria-live="polite"></div>
+      <div class="actions">
+        <button id="review-back" class="btn btn-secondary">Back</button>
+        <button id="submit-btn" class="btn btn-primary">Submit RSVP</button>
+      </div>
+    </section>
+
+    <!-- Thanks -->
+    <section id="step-thanks" class="step" aria-label="RSVP confirmed" tabindex="-1">
+      <h2 class="step-heading" tabindex="-1" id="thanks-heading"></h2>
+      <p class="step-sub" id="thanks-sub"></p>
+      <div class="thanks-band" aria-hidden="true"></div>
+      <p class="thanks-contact">Questions? Message us at +1&nbsp;778&nbsp;977&nbsp;4975 (WhatsApp&nbsp;/&nbsp;Viber).</p>
+      <div class="actions" style="justify-content:center">
+        <button id="change-answer-btn" class="btn btn-secondary" style="flex:0 1 auto">Change my answer</button>
+      </div>
+    </section>
+
+    <!-- Closed -->
+    <section id="step-closed" class="step" aria-label="Replies closed" tabindex="-1">
+      <h2 class="step-heading" tabindex="-1">oh no.</h2>
+      <div class="info-box">
+        Replies closed on March 30. We're so sorry to have missed you.
+        Please contact us and we'll sort it out.
+        <div class="contact-line">+1 778 977 4975 (WhatsApp / Viber)</div>
+      </div>
+    </section>
+
+    <!-- Contact (no invite code) -->
+    <section id="step-contact" class="step" aria-label="Contact us" tabindex="-1">
+      <h2 class="step-heading" tabindex="-1">let's sort it.</h2>
+      <p class="step-sub">No invite code? Drop us a line and we'll figure it out.</p>
+      <div class="info-box">
+        +1 778 977 4975 (WhatsApp / Viber)
+      </div>
+      <div class="actions">
+        <button id="contact-back-btn" class="btn btn-secondary">Back</button>
+      </div>
+    </section>
+
+    <!-- Error -->
+    <section id="step-error" class="step" aria-label="Something went wrong" tabindex="-1">
+      <h2 class="step-heading" tabindex="-1">hmm.</h2>
+      <div class="info-box">
+        Something went wrong on our side. Try again, or message us.
+        <div class="contact-line">+1 778 977 4975 (WhatsApp / Viber)</div>
+      </div>
+      <div class="actions">
+        <button id="error-retry-btn" class="btn btn-primary">Try again</button>
+      </div>
+    </section>
+
+  </div><!-- /.card-inner -->
+</div><!-- /.card -->
+
+<script>
+(function () {
+'use strict';
+
+var API_URL     = 'https://rsvp-proxy.marsnbianca.workers.dev/';
+var DEV_MODE    = /[?&]dev=1/.test(location.search);
+var BALAI_EMAIL = 'sampleemail@clubbalaiisabel.com'; // ← update here
+
+var DEV_INVITES = {
+  'TEST01': {
+    ok:true, invite_name:'Solo Test', max_seats:1, skip_stay:false,
+    deadline:'March 30, 2027', closed:false,
+    existing:{ status:'', attending_count:0, attendee_names:[], phone:'', transportation:'', stay:'', oct14_count:null, oct16_count:null }
+  },
+  'TEST02': {
+    ok:true, invite_name:'Duo Test', max_seats:2, skip_stay:false,
+    deadline:'March 30, 2027', closed:false,
+    existing:{ status:'', attending_count:0, attendee_names:[], phone:'', transportation:'', stay:'', oct14_count:null, oct16_count:null }
+  },
+  'TEST03': {
+    ok:true, invite_name:'Family Test', max_seats:4, skip_stay:true,
+    deadline:'March 30, 2027', closed:false,
+    existing:{ status:'', attending_count:0, attendee_names:[], phone:'', transportation:'', stay:'', oct14_count:null, oct16_count:null }
+  },
+  'TEST04': {
+    ok:true, invite_name:'Declined Test', max_seats:1, skip_stay:false,
+    deadline:'March 30, 2027', closed:false,
+    existing:{ status:'Declined', attending_count:0, attendee_names:[], phone:'', transportation:'', stay:'', oct14_count:0, oct16_count:0 }
+  }
+};
+
+// ── State ─────────────────────────────────────────────────────────────────────
+var S = {
+  code:'', inviteName:'', maxSeats:1, skipStay:false,
+  status:'', attendingCount:1, attendeeNames:[], phone:'',
+  stay:'', transportation:'',
+  oct14Count:0, oct16Count:0,
+  returnToReview:false
+};
+
+var $ = function(id){ return document.getElementById(id); };
+
+var STEPS = {
+  code:$('step-code'), attendance:$('step-attendance'), count:$('step-count'),
+  events:$('step-events'), stay:$('step-stay'), transport:$('step-transport'),
+  phone:$('step-phone'), review:$('step-review'), thanks:$('step-thanks'),
+  closed:$('step-closed'), contact:$('step-contact'), error:$('step-error')
+};
+
+// Steps where the reply pill is shown
+var PILL_STEPS = { attendance:1, count:1, events:1, stay:1, transport:1, phone:1 };
+
+// ── Flow ──────────────────────────────────────────────────────────────────────
+function getFlow() {
+  if (S.status === 'Declined') return ['code','attendance','review','thanks'];
+  var f = ['code','attendance'];
+  if (S.maxSeats >= 2) f.push('count');
+  f.push('events');
+  if (!S.skipStay) {
+    f.push('stay');
+    if (S.stay === 'Balai') f.push('transport');
+  }
+  f.push('phone','review','thanks');
+  return f;
+}
+
+function showStep(name) {
+  Object.keys(STEPS).forEach(function(k){ var el=STEPS[k]; if(el) el.classList.remove('active'); });
+  var target = STEPS[name];
+  if (!target) return;
+  target.classList.add('active');
+
+  var pill = $('reply-pill-wrap');
+  if (pill) pill.hidden = !PILL_STEPS[name];
+
+  var heading = target.querySelector('[tabindex="-1"]');
+  if (heading) setTimeout(function(){ heading.focus({ preventScroll:false }); }, 60);
+
+  updateDots(name);
+  postHeight();
+}
+
+function goNext(from) {
+  if (S.returnToReview && from !== 'code' && from !== 'attendance') {
+    S.returnToReview = false; buildReview(); showStep('review'); return;
+  }
+  var flow = getFlow(), idx = flow.indexOf(from);
+  if (idx >= 0 && idx < flow.length-1) showStep(flow[idx+1]);
+}
+
+function goBack(from) {
+  if (S.returnToReview) { S.returnToReview = false; buildReview(); showStep('review'); return; }
+  var flow = getFlow(), idx = flow.indexOf(from);
+  if (idx > 0) showStep(flow[idx-1]);
+}
+
+// ── Dots ──────────────────────────────────────────────────────────────────────
+function updateDots(current) {
+  var el = $('step-dots'); if (!el) return;
+  var DOT_SKIP = { thanks:1, closed:1, contact:1, error:1 };
+  var flow = getFlow().filter(function(s){ return !DOT_SKIP[s]; });
+  var idx  = flow.indexOf(current);
+  var html = '';
+  for (var i=0; i<flow.length; i++) {
+    var cls = i < idx ? 'done' : (i===idx ? 'active' : '');
+    html += '<span class="step-dot'+(cls?' '+cls:'')+'"></span>';
+  }
+  el.innerHTML = html;
+}
+
+// ── postHeight ────────────────────────────────────────────────────────────────
+var _pht = null;
+function postHeight() {
+  if (_pht) clearTimeout(_pht);
+  _pht = setTimeout(function(){
+    try {
+      var h = document.documentElement.scrollHeight || document.body.scrollHeight;
+      window.parent.postMessage({ type:'RSVP:HEIGHT', height:h }, '*');
+    } catch(_){}
+  }, 60);
+}
+
+// ── API ───────────────────────────────────────────────────────────────────────
+function loading(on){ var el=$('loading'); if(el) el.classList.toggle('on',!!on); }
+
+function apiLookup(code, cb) {
+  if (DEV_MODE) {
+    var fake = DEV_INVITES[code.toUpperCase()];
+    if (!fake) { cb({ ok:false, error:"Hmm, that code doesn\u2019t ring a bell. Check it and try again?" }); return; }
+    cb(JSON.parse(JSON.stringify(fake))); return;
+  }
+  loading(true);
+  fetch(API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ action:'lookup', code:code }) })
+    .then(function(r){ return r.json(); })
+    .then(function(d){ loading(false); cb(d); })
+    .catch(function(){ loading(false); cb({ ok:false, error:'' }); });
+}
+
+function apiSubmit(payload, cb) {
+  if (DEV_MODE) { console.log('[dev] submit', payload); cb({ ok:true }); return; }
+  loading(true);
+  fetch(API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) })
+    .then(function(r){ return r.json(); })
+    .then(function(d){ loading(false); cb(d); })
+    .catch(function(){ loading(false); cb({ ok:false, error:'' }); });
+}
+
+function setErr(id,msg){ var el=$(id); if(!el) return; el.textContent=msg||''; el.classList.toggle('visible',!!msg); }
+function clearErr(id){ setErr(id,''); }
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Phone ─────────────────────────────────────────────────────────────────────
+function fmtPhone(v) {
+  var d=String(v||'').replace(/\D+/g,'');
+  if(d.indexOf('63')===0&&d.length>=12) d='0'+d.slice(2);
+  if(d.indexOf('9')===0&&d.length===10) d='0'+d;
+  d=d.slice(0,11);
+  if(d.length<=4) return d;
+  if(d.length<=7) return d.slice(0,4)+' '+d.slice(4);
+  return d.slice(0,4)+' '+d.slice(4,7)+' '+d.slice(7,11);
+}
+function normalizePhone(v) {
+  var d=String(v||'').replace(/\D+/g,'');
+  if(d.indexOf('63')===0&&d.length>=12) d='0'+d.slice(2);
+  if(d.indexOf('9')===0&&d.length===10) d='0'+d;
+  d=d.slice(0,11);
+  if(!/^09\d{9}$/.test(d)) return '';
+  return d.slice(0,4)+' '+d.slice(4,7)+' '+d.slice(7,11);
+}
+
+// ── S1: code ──────────────────────────────────────────────────────────────────
+var codeInput = $('code-input');
+var codeNext  = $('code-next');
+
+function doLookup() {
+  clearErr('code-error');
+  var code = (codeInput.value||'').trim();
+  if (!code) { setErr('code-error','Your invite code is on your invite.'); postHeight(); return; }
+  codeNext.disabled = true;
+  apiLookup(code, function(r) {
+    codeNext.disabled = false;
+    if (!r||!r.ok) {
+      if (r&&r.closed) { showStep('closed'); return; }
+      setErr('code-error', r&&r.error ? r.error : "Hmm, that code doesn\u2019t ring a bell. Check it and try again?");
+      postHeight(); return;
     }
-    updateDvh();
-    window.addEventListener('resize', updateDvh);
-    window.addEventListener('orientationchange', updateDvh);
-    if (window.visualViewport) {
-      try {
-        window.visualViewport.addEventListener('resize', updateDvh);
-        window.visualViewport.addEventListener('scroll', updateDvh);
-      } catch (_) {}
-    }
+    S.code       = code;
+    S.inviteName = r.invite_name || '';
+    S.maxSeats   = Math.max(1, parseInt(r.max_seats,10)||1);
+    S.skipStay   = !!r.skip_stay;
 
-    const steps = {
-      search: document.getElementById('step-search'),
-      matches: document.getElementById('step-matches'),
-      notInList: document.getElementById('step-not-in-list'),
-      attendance: document.getElementById('step-attendance'),
-      transport: document.getElementById('step-transport'),
-      phone: document.getElementById('step-phone'),
-      notes: document.getElementById('step-notes'),
-      review: document.getElementById('step-review'),
-      thanks: document.getElementById('step-thanks')
-    };
+    var nameEl = $('reply-name'); if (nameEl) nameEl.textContent = S.inviteName;
 
-    // refs
-    const nameInput = document.getElementById('nameInput');
-    const findBtn = document.getElementById('findBtn');
-    const searchErr = document.getElementById('searchErr');
-    const matchesEl = document.getElementById('matches');
+    // Reset all previous answers so a new lookup starts clean
+    S.status=''; S.attendingCount=1; S.attendeeNames=[];
+    S.phone=''; S.stay=''; S.transportation='';
+    S.oct14Count=null; S.oct16Count=null; S.returnToReview=false;
+    document.querySelectorAll('input[name="attendance"],input[name="stay"],input[name="transport"]').forEach(function(inp){ inp.checked=false; });
+    phoneInput.value='';
 
-    const dontSeeBtn = document.getElementById('dontSeeBtn');
-    const backToSearch = document.getElementById('backToSearch');
+    prefillFromExisting(r.existing||{});
 
-    const attendanceSelect = document.getElementById('attendanceSelect');
-    const attendanceDynamic = document.getElementById('attendanceDynamic');
-    const attendeeError = document.getElementById('attendeeError');
-    const attendanceBack = document.getElementById('attendanceBack');
-    const attendanceNext = document.getElementById('attendanceNext');
-
-    const transportSelect = document.getElementById('transportSelect');
-    const transportBack = document.getElementById('transportBack');
-    const transportNext = document.getElementById('transportNext');
-
-    const phoneInput = document.getElementById('phoneInput');
-    const phoneErr = document.getElementById('phoneErr');
-    const phoneBack = document.getElementById('phoneBack');
-    const phoneNext = document.getElementById('phoneNext');
-
-    const notesInput = document.getElementById('notesInput');
-    const notesBack = document.getElementById('notesBack');
-    const notesNext = document.getElementById('notesNext');
-
-    const reviewSummary = document.getElementById('reviewSummary');
-    const reviewError = document.getElementById('reviewError');
-    const reviewBack = document.getElementById('reviewBack');
-    const submitBtn = document.getElementById('submitBtn');
-
-    const thanksMessage = document.getElementById('thanksMessage');
-    const thanksClose = document.getElementById('thanksClose');
-
-    const notInListBack = document.getElementById('notInListBack');
-    const notInListClose = document.getElementById('notInListClose');
-
-    const loadingOverlay = document.getElementById('loading');
-
-    let currentInvite = null, currentMaxSeats = 1, selectedStatus = "", selectedNumber = 1, selectedAttendees = [], selectedTransport = "", selectedPhoneStored = "", selectedNotes = "";
-
-    // showStep now toggles 'active' class so CSS can center steps reliably
-    function showStep(name) {
-      // restore the matches-screen action buttons by default (they may have been hidden for locked flow)
-      try {
-        if (dontSeeBtn) dontSeeBtn.style.display = '';
-        if (backToSearch) backToSearch.style.display = '';
-      } catch (_) {}
-
-      Object.values(steps).forEach(function(s) {
-        if (!s) return;
-        s.classList.remove('active');
-        s.style.display = ''; // clear inline display to let CSS control visibility
-      });
-      if (steps[name]) {
-        steps[name].classList.add('active');
-        steps[name].style.display = ''; // ensure no inline blocking display
-      }
-      const stepsWithBottomClose = new Set(['notInList','thanks']);
-      notifyParentHasBottomClose(name, stepsWithBottomClose.has(name));
-      setTimeout(function() { focusFirstControl(name); postHeight(); }, 80);
-    }
-
-    function focusFirstControl(stepName){
-      try {
-        const step = steps[stepName];
-        if(!step) return;
-        const first = step.querySelector('input,select,button,textarea');
-        if(first) first.focus();
-      } catch(_) {}
-    }
-
-    function setError(el, msg){ if(!el) return; if(msg){ el.textContent = msg; el.style.display = 'block'; } else { el.textContent = ''; el.style.display = 'none'; } }
-    function loading(on){ loadingOverlay.style.display = on ? 'flex' : 'none'; }
-
-    async function jsonFetch(payload){
-      loading(true);
-      try {
-        const res = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-        const txt = await res.text();
-        try { return JSON.parse(txt); } catch(e){ return { ok:false, error:'Invalid server response' }; }
-      } catch(err){ console.error(err); return { ok:false, error:'Network error' }; } finally { loading(false); }
-    }
-
-    function titleCaseName(s){ s=String(s||'').replace(/\s+/g,' ').trim().toLowerCase(); if(!s) return ''; return s.split(/([\s\-'])/).map(p=> /[\s\-']/.test(p)?p: p.charAt(0).toUpperCase()+p.slice(1)).join(''); }
-    function formatPhoneInput(v){ var d=String(v||'').replace(/\D+/g,''); if(d.indexOf('63')===0 && d.length>=12) d='0'+d.slice(2); if(d.indexOf('9')===0 && d.length===10) d='0'+d; d=d.slice(0,11); if(d.length<=2) return d; if(d.length<=4) return d.slice(0,4); if(d.length<=7) return d.slice(0,4)+' '+d.slice(4); return d.slice(0,4)+' '+d.slice(4,7)+' '+d.slice(7,11); }
-    function normalizePhoneToStored(input){ var d=String(input||'').replace(/\D+/g,''); if(!d) return ''; if(d.indexOf('63')===0 && d.length>=12) d='0'+d.slice(2); if(d.indexOf('9')===0 && d.length===10) d='0'+d; d=d.slice(0,11); if(!/^09\d{9}$/.test(d)) return ''; return d.slice(0,4)+' '+d.slice(4,7)+' '+d.slice(7,11); }
-
-    function notifyParentHasBottomClose(stepName, hasBottom) { try { window.parent.postMessage({ type:'RSVP:HAS_BOTTOM_CLOSE', hasBottomClose: !!hasBottom }, '*'); } catch(_) {} }
-
-    var postTimer = null;
-    function postHeight() {
-      try {
-        if (postTimer) clearTimeout(postTimer);
-        postTimer = setTimeout(function(){
-          try {
-            var h = document.documentElement.scrollHeight || document.body.scrollHeight;
-            window.parent.postMessage({ type:'RSVP:HEIGHT', height: h }, '*');
-          } catch(e) {}
-        }, 80);
-      } catch(e){}
-    }
-
-    // Search
-    async function doFind(){
-      setError(searchErr,''); matchesEl.innerHTML = '';
-      const q = (nameInput.value||'').trim();
-      if(!q || q.length < 3){ setError(searchErr, 'Please type at least 3 characters.'); postHeight(); return; }
-      findBtn.disabled = true;
-      const r = await jsonFetch({ action:'find', name: q, client_id: 'guest-'+Date.now() });
-      findBtn.disabled = false;
-      if(!r || !r.ok){ setError(searchErr, r && r.error ? r.error : 'Server error'); postHeight(); return; }
-      if(!r.matches || r.matches.length === 0){ setError(searchErr, 'No matches found. Please try again.'); postHeight(); return; }
-      matchesEl.innerHTML = '';
-      r.matches.forEach(m=>{
-        const btn = document.createElement('button'); btn.type='button'; btn.className='match-btn';
-        btn.innerHTML = "<div><strong>"+escapeHtml(m.display_name)+"</strong></div>";
-        btn.addEventListener('click', ()=> selectInvite(m));
-        matchesEl.appendChild(btn);
-      });
-      showStep('matches');
-    }
-
-    // wire matches controls
-    if (dontSeeBtn) dontSeeBtn.addEventListener('click', ()=> showStep('notInList'));
-    if (backToSearch) backToSearch.addEventListener('click', ()=> showStep('search'));
-
-    // FIX: ensure notInList Back button works
-    if (notInListBack) {
-      notInListBack.addEventListener('click', function(){
-        showStep('matches');
-      });
-    }
-
-    async function selectInvite(m){
-      setError(searchErr,'');
-      const r = await jsonFetch({ action:'get', invite_id: m.invite_id });
-      if(!r || !r.ok){ setError(searchErr, r && r.error ? r.error : 'Server error'); postHeight(); return; }
-
-      if(r.locked){
-        // show locked message and ONLY bottom Close
-        matchesEl.innerHTML = "<div class='message'>This invitation has already been answered.</div>";
-        const wrapper = document.createElement('div'); wrapper.style.marginTop='0.6rem'; wrapper.style.display='flex'; wrapper.style.justifyContent='center';
-        const closeBtn = document.createElement('button'); closeBtn.className='btn primary'; closeBtn.textContent='Close';
-        closeBtn.addEventListener('click', function(){ try{ window.parent.postMessage({ type:'RSVP:CLOSE' }, '*'); }catch(_){} try{ window.close(); }catch(_){} });
-        wrapper.appendChild(closeBtn);
-        matchesEl.appendChild(wrapper);
-
-        // Hide the "I don't see my name" and "Back" buttons for this locked view
-        try {
-          if (dontSeeBtn) dontSeeBtn.style.display = 'none';
-          if (backToSearch) backToSearch.style.display = 'none';
-        } catch(_) {}
-
-        notifyParentHasBottomClose('matches', true);
-        postHeight();
-        return;
-      }
-
-      currentInvite = r.invite || m;
-      currentInvite.invite_id = m.invite_id;
-      currentMaxSeats = Math.min(currentInvite.max_seats ? parseInt(currentInvite.max_seats,10) : (m.max_seats || 1), 4);
-      selectedStatus=''; selectedNumber=1; selectedAttendees=[]; selectedTransport=''; selectedPhoneStored=''; selectedNotes='';
-      attendanceSelect.value=''; attendanceDynamic.innerHTML=''; setError(attendeeError,'');
-      notifyParentHasBottomClose('attendance', false);
+    var ex = r.existing||{};
+    if (ex.status) {
+      var target = firstIncompleteStep(ex);
+      if (target === 'events') initEventCtrls();
+      showStep(target);
+    } else {
       showStep('attendance');
     }
+  });
+}
 
-    // Attendance
-    attendanceBack.addEventListener('click', ()=> showStep('matches'));
+codeNext.addEventListener('click', doLookup);
+codeInput.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); doLookup(); } });
+$('no-code-btn').addEventListener('click', function(){ showStep('contact'); });
 
-    attendanceSelect.addEventListener('change', function(){
-      setError(attendeeError,''); attendanceDynamic.innerHTML = '';
-      const v=(attendanceSelect.value||'').trim();
-      if(v === 'Attending'){
-        if(currentMaxSeats <= 1){ postHeight(); return; }
-        const row=document.createElement('div'); row.className = 'form-row';
-        const lbl=document.createElement('label'); lbl.textContent='How many people are attending (including you)?';
-        const sel=document.createElement('select'); sel.id='numSelect';
-        const placeholder=document.createElement('option'); placeholder.value=''; placeholder.textContent='-- choose --'; sel.appendChild(placeholder);
-        for(let i=1;i<=currentMaxSeats;i++){ const opt=document.createElement('option'); opt.value=String(i); opt.textContent=String(i); sel.appendChild(opt); }
-        sel.value=''; sel.addEventListener('change', ()=> renderGuestInputs(parseInt(sel.value,10) || 0));
-        row.appendChild(lbl); row.appendChild(sel); attendanceDynamic.appendChild(row);
-        const gdiv=document.createElement('div'); gdiv.id='guestInputs'; gdiv.style.marginTop='0.5rem'; attendanceDynamic.appendChild(gdiv);
-        postHeight();
-      } else { attendanceDynamic.innerHTML=''; postHeight(); }
-    });
+// ── S2: attendance ────────────────────────────────────────────────────────────
+$('not-you-btn').addEventListener('click', function(){
+  S.code=''; S.inviteName=''; S.status=''; S.attendingCount=1;
+  S.attendeeNames=[]; S.phone=''; S.stay=''; S.transportation='';
+  S.oct14Count=null; S.oct16Count=null; S.returnToReview=false;
+  codeInput.value=''; phoneInput.value='';
+  document.querySelectorAll('input[name="attendance"],input[name="stay"],input[name="transport"]').forEach(function(r){ r.checked=false; });
+  showStep('code');
+});
 
-    function renderGuestInputs(n){
-      const gdiv=document.getElementById('guestInputs'); if(!gdiv) return; gdiv.innerHTML=''; if(!n || n<1){ postHeight(); return; }
-      for(let i=0;i<n;i++){ const input=document.createElement('input'); input.type='text'; input.placeholder='Guest full name'; input.className='guest-name-input'; input.style.marginBottom='0.5rem'; gdiv.appendChild(input); }
-      selectedNumber = n; postHeight();
+$('attendance-back').addEventListener('click', function(){ showStep('code'); });
+
+$('attendance-next').addEventListener('click', function(){
+  clearErr('attendance-error');
+  var checked = document.querySelector('input[name="attendance"]:checked');
+  if (!checked) { setErr('attendance-error','Choose one \u2014 we just want to know!'); postHeight(); return; }
+  S.status = checked.value;
+  if (S.status === 'Declined') {
+    buildReview(); goNext('attendance'); return;
+  }
+  renderCountStepper();
+  goNext('attendance');
+});
+
+// ── S3: count ─────────────────────────────────────────────────────────────────
+function renderCountStepper() {
+  var c = $('count-stepper-wrap'); if (!c) return;
+  if (!S.attendingCount || S.attendingCount < 1) S.attendingCount = 1;
+  S.attendingCount = Math.min(S.attendingCount, S.maxSeats);
+
+  var stpr   = document.createElement('div'); stpr.className = 'stepper';
+  var decBtn = document.createElement('button'); decBtn.type='button'; decBtn.className='stepper-btn'; decBtn.setAttribute('aria-label','Fewer'); decBtn.textContent='\u2212';
+  var valEl  = document.createElement('span');  valEl.className='stepper-val'; valEl.setAttribute('aria-live','polite');
+  var incBtn = document.createElement('button'); incBtn.type='button'; incBtn.className='stepper-btn'; incBtn.setAttribute('aria-label','More'); incBtn.textContent='+';
+  stpr.appendChild(decBtn); stpr.appendChild(valEl); stpr.appendChild(incBtn);
+  c.innerHTML = ''; c.appendChild(stpr);
+
+  function refresh() {
+    valEl.textContent = String(S.attendingCount);
+    decBtn.disabled = (S.attendingCount <= 1);
+    incBtn.disabled = (S.attendingCount >= S.maxSeats);
+  }
+  decBtn.addEventListener('click', function(){
+    if (S.attendingCount > 1) { S.attendingCount--; refresh(); renderAttendeeNameFields(); postHeight(); }
+  });
+  incBtn.addEventListener('click', function(){
+    if (S.attendingCount < S.maxSeats) { S.attendingCount++; refresh(); renderAttendeeNameFields(); postHeight(); }
+  });
+  refresh();
+  renderAttendeeNameFields();
+}
+
+function renderAttendeeNameFields() {
+  var container = $('attendee-name-fields'); if (!container) return;
+  if (S.attendingCount < 2) { container.innerHTML=''; postHeight(); return; }
+  var html='';
+  for (var i=0; i<S.attendingCount; i++) {
+    var defaultVal = i===0 ? S.inviteName : '';
+    var stored     = S.attendeeNames[i] !== undefined ? S.attendeeNames[i] : defaultVal;
+    var lbl = i===0 ? 'Guest 1 (you)' : 'Guest '+(i+1);
+    var pid = 'att-'+i;
+    html += '<div class="attendee-name-wrap">'
+          + '<label for="'+pid+'">'+escHtml(lbl)+'</label>'
+          + '<input type="text" id="'+pid+'" class="att-inp"'
+          + (i===0 ? ' readonly style="background:var(--ivory);cursor:default;opacity:.75"' : '')
+          + ' value="'+escHtml(stored)+'" placeholder="Full name" maxlength="80">'
+          + '</div>';
+  }
+  container.innerHTML = html;
+  postHeight();
+}
+
+$('count-back').addEventListener('click', function(){ goBack('count'); });
+
+$('count-next').addEventListener('click', function(){
+  clearErr('count-error');
+  if (S.attendingCount >= 2) {
+    var inputs = document.querySelectorAll('.att-inp');
+    var names=[]; var allFilled=true;
+    inputs.forEach(function(inp){ var v=(inp.value||'').trim(); if(!v) allFilled=false; names.push(v); });
+    if (!allFilled) { setErr('count-error','Please fill all name fields.'); postHeight(); return; }
+    S.attendeeNames = names;
+  } else {
+    S.attendeeNames = [];
+  }
+  initEventCtrls();
+  goNext('count');
+});
+
+// ── S4: events ────────────────────────────────────────────────────────────────
+function makeStepperInto(containerId, getV, setV, getMax) {
+  var c = $(containerId); if (!c) return function(){};
+  var wrap = document.createElement('div'); wrap.className='ev-ctrl-wrap';
+  var lbl  = document.createElement('div'); lbl.className='ev-ctrl-label'; lbl.textContent='How many?';
+  var stpr = document.createElement('div'); stpr.className='stepper';
+
+  var decBtn = document.createElement('button'); decBtn.type='button'; decBtn.className='stepper-btn'; decBtn.setAttribute('aria-label','Fewer'); decBtn.textContent='\u2212';
+  var valEl  = document.createElement('span');  valEl.className='stepper-val'; valEl.setAttribute('aria-live','polite');
+  var incBtn = document.createElement('button'); incBtn.type='button'; incBtn.className='stepper-btn'; incBtn.setAttribute('aria-label','More'); incBtn.textContent='+';
+
+  stpr.appendChild(decBtn); stpr.appendChild(valEl); stpr.appendChild(incBtn);
+  wrap.appendChild(lbl); wrap.appendChild(stpr);
+  c.innerHTML=''; c.appendChild(wrap);
+
+  function refresh() {
+    var v=getV(); valEl.textContent=String(v);
+    decBtn.disabled=(v<=0); incBtn.disabled=(v>=getMax());
+  }
+  decBtn.addEventListener('click', function(){ var v=getV(); if(v>0){ setV(v-1); refresh(); postHeight(); } });
+  incBtn.addEventListener('click', function(){ var v=getV(); if(v<getMax()){ setV(v+1); refresh(); postHeight(); } });
+  return refresh;
+}
+
+function makeCheckboxInto(containerId, getV, setV) {
+  var c = $(containerId); if (!c) return function(){};
+  var lbl = document.createElement('label'); lbl.className='event-chk-label';
+  var cb  = document.createElement('input'); cb.type='checkbox'; cb.checked=(getV()>0);
+  var sp  = document.createElement('span'); sp.textContent='Going';
+  lbl.appendChild(cb); lbl.appendChild(sp);
+  c.innerHTML=''; c.appendChild(lbl);
+  cb.addEventListener('change', function(){ setV(cb.checked?1:0); postHeight(); });
+  return function(){ cb.checked=(getV()>0); };
+}
+
+var refreshOct14 = function(){};
+var refreshOct16 = function(){};
+
+function initEventCtrls() {
+  if (S.oct14Count===null||S.oct14Count===undefined) S.oct14Count=S.attendingCount;
+  if (S.oct16Count===null||S.oct16Count===undefined) S.oct16Count=S.attendingCount;
+  S.oct14Count = Math.min(Math.max(0,S.oct14Count), S.attendingCount);
+  S.oct16Count = Math.min(Math.max(0,S.oct16Count), S.attendingCount);
+
+  if (S.attendingCount===1) {
+    refreshOct14 = makeCheckboxInto('oct14-ctrl', function(){ return S.oct14Count; }, function(v){ S.oct14Count=v; });
+    refreshOct16 = makeCheckboxInto('oct16-ctrl', function(){ return S.oct16Count; }, function(v){ S.oct16Count=v; });
+  } else {
+    refreshOct14 = makeStepperInto('oct14-ctrl', function(){ return S.oct14Count; }, function(v){ S.oct14Count=v; }, function(){ return S.attendingCount; });
+    refreshOct16 = makeStepperInto('oct16-ctrl', function(){ return S.oct16Count; }, function(v){ S.oct16Count=v; }, function(){ return S.attendingCount; });
+  }
+  refreshOct14(); refreshOct16();
+}
+
+$('events-back').addEventListener('click', function(){ goBack('events'); });
+$('events-next').addEventListener('click', function(){ goNext('events'); });
+
+// ── S5: stay ──────────────────────────────────────────────────────────────────
+function updateStayNote() {
+  var noteEl = $('stay-note'); if (!noteEl) return;
+  var checked = document.querySelector('input[name="stay"]:checked');
+  if (!checked) { noteEl.hidden = true; return; }
+  if (checked.value === 'Balai') {
+    noteEl.textContent = 'Want to stay a night before or after (Oct\u00a013 or 17)? Contact Club Balai Isabel directly at ' + BALAI_EMAIL + '.';
+  } else {
+    noteEl.textContent = 'Ideas are on the page above.';
+  }
+  noteEl.hidden = false;
+  postHeight();
+}
+document.querySelectorAll('input[name="stay"]').forEach(function(r){
+  r.addEventListener('change', updateStayNote);
+});
+
+$('stay-back').addEventListener('click', function(){ goBack('stay'); });
+$('stay-next').addEventListener('click', function(){
+  clearErr('stay-error');
+  var checked = document.querySelector('input[name="stay"]:checked');
+  if (!checked) { setErr('stay-error','Please choose one.'); postHeight(); return; }
+  S.stay = checked.value;
+  if (S.stay !== 'Balai') S.transportation = '';
+  goNext('stay');
+});
+
+// ── S6: transport ─────────────────────────────────────────────────────────────
+$('transport-back').addEventListener('click', function(){ goBack('transport'); });
+$('transport-next').addEventListener('click', function(){
+  clearErr('transport-error');
+  var checked = document.querySelector('input[name="transport"]:checked');
+  if (!checked) { setErr('transport-error','Let us know so we can plan.'); postHeight(); return; }
+  S.transportation = checked.value;
+  goNext('transport');
+});
+
+// ── S7: phone ─────────────────────────────────────────────────────────────────
+var phoneInput = $('phone-input');
+phoneInput.addEventListener('input', function(){ phoneInput.value = fmtPhone(phoneInput.value); });
+$('phone-back').addEventListener('click', function(){ goBack('phone'); });
+$('phone-next').addEventListener('click', function(){
+  clearErr('phone-error');
+  var ph = normalizePhone(phoneInput.value);
+  if (!ph) { setErr('phone-error','Phone must be 11 digits starting with 09 (e.g. 0917 123 4567)'); postHeight(); return; }
+  S.phone = ph; phoneInput.value = ph;
+  buildReview(); goNext('phone');
+});
+
+// ── Review ────────────────────────────────────────────────────────────────────
+function buildReview() {
+  var nameEl = $('review-heading'); if (nameEl) nameEl.textContent = S.inviteName;
+  var pillEl = $('review-status-pill'); if (pillEl) {
+    if (S.status === 'Attending') {
+      pillEl.innerHTML = '<span class="status-pill pill-attending">Attending</span>';
+    } else {
+      pillEl.innerHTML = '<span class="status-pill pill-declined">Not attending</span>';
     }
+  }
 
-    attendanceNext.addEventListener('click', function(){
-      setError(attendeeError,'');
-      const val=(attendanceSelect.value||'').trim();
-      if(!val){ setError(attendeeError,'Please choose whether you will attend or decline.'); postHeight(); return; }
-      selectedStatus = val;
-      if(selectedStatus === 'Declined'){ selectedAttendees = []; buildReview(); showStep('review'); return; }
-      if(currentMaxSeats <= 1){ selectedAttendees = []; showStep('transport'); return; }
-      const sel = document.getElementById('numSelect');
-      if(!sel || !sel.value){ setError(attendeeError,'Please choose how many people are attending.'); postHeight(); return; }
-      const gdiv=document.getElementById('guestInputs'); if(!gdiv){ setError(attendeeError,'Please choose how many people are attending.'); postHeight(); return; }
-      const inputs = Array.from(gdiv.querySelectorAll('.guest-name-input'));
-      const names = inputs.map(i=>i.value.trim()).filter(Boolean);
-      if(names.length < parseInt(sel.value,10)){ setError(attendeeError,'Please fill all guest name boxes.'); postHeight(); return; }
-      selectedAttendees = names.slice(0,parseInt(sel.value,10)).map(titleCaseName);
-      showStep('transport');
-    });
+  var guestsEl = $('review-guests');
+  var rowsEl   = $('review-rows');
+  var infoEl   = $('review-info');
 
-    // Transport
-    transportBack.addEventListener('click', ()=> showStep('attendance'));
-    transportNext.addEventListener('click', function(){ const v=(transportSelect.value||'').trim(); if(!v){ setError(attendeeError,'Please choose Yes or No for airport transfer.'); postHeight(); return; } selectedTransport = v==='Yes'?'Yes':'No'; setError(attendeeError,''); showStep('phone'); });
+  // Not attending — name + pill + buttons only
+  if (S.status === 'Declined') {
+    if (guestsEl) { guestsEl.hidden = true; }
+    if (rowsEl)   rowsEl.innerHTML = '';
+    if (infoEl)   infoEl.innerHTML = '';
+    clearErr('review-error'); postHeight(); return;
+  }
 
-    // Phone
-    phoneInput.addEventListener('input', ()=> { phoneInput.value = formatPhoneInput(phoneInput.value); postHeight(); });
-    phoneBack.addEventListener('click', ()=> showStep('transport'));
-    phoneNext.addEventListener('click', function(){ setError(phoneErr,''); if(selectedStatus==='Attending'){ const s = normalizePhoneToStored(phoneInput.value); if(!s){ setError(phoneErr,'Phone must be 11 digits starting with 09 (e.g. 0917 123 4567)'); postHeight(); return; } selectedPhoneStored = s; } else selectedPhoneStored=''; showStep('notes'); });
+  var n = S.maxSeats < 2 ? 1 : S.attendingCount;
 
-    // Notes
-    notesBack.addEventListener('click', ()=> showStep('phone'));
-    notesNext.addEventListener('click', ()=> { selectedNotes = (notesInput.value||'').trim(); buildReview(); showStep('review'); });
-
-    // Review
-    reviewBack.addEventListener('click', ()=> showStep('attendance'));
-    function buildReview(){
-      const statusText = selectedStatus === 'Attending' ? 'ATTENDING' : 'DECLINED';
-      let html = "<div style='font-weight:700'>"+escapeHtml(currentInvite.display_name)+"</div>";
-      html += "<div style='margin-top:0.4rem;font-weight:600'>"+statusText+"</div>";
-      if(selectedStatus === 'Attending'){
-        if(currentMaxSeats > 1){
-          html += "<div style='margin-top:.5rem'><strong>Guest names:</strong><ul style='list-style:none;padding:0;margin:8px 0'>";
-          selectedAttendees.forEach(n=> html += "<li>"+escapeHtml(n)+"</li>");
-          html += "</ul></div>";
-        }
-        html += "<div style='margin-top:0.25rem'><strong>Airport transfer:</strong> "+escapeHtml(selectedTransport)+"</div>";
-        html += "<div style='margin-top:0.25rem'><strong>Phone:</strong> "+escapeHtml(selectedPhoneStored)+"</div>";
+  // "with Guest 2, Guest 3" line
+  if (guestsEl) {
+    if (n >= 2 && S.attendeeNames.length >= 2) {
+      var extras = S.attendeeNames.slice(1, n).filter(Boolean);
+      if (extras.length) {
+        guestsEl.innerHTML = '<span class="review-guests-with">with</span>'
+          + '<span class="review-guests-names">' + escHtml(extras.join(', ')) + '</span>';
+        guestsEl.hidden = false;
+      } else {
+        guestsEl.hidden = true;
       }
-      if(selectedNotes) html += "<div style='margin-top:0.4rem'><strong>Notes:</strong> "+escapeHtml(selectedNotes)+"</div>";
-      reviewSummary.innerHTML = html;
-      reviewError.style.display = 'none';
-      postHeight();
+    } else {
+      guestsEl.hidden = true;
     }
+  }
 
-    // Submit
-    submitBtn.addEventListener('click', async function(){
-      reviewError.style.display = 'none';
-      const payload = { action:'submit', invite_id: currentInvite.invite_id, status:selectedStatus, attending_count:(selectedStatus==='Attending'?(currentMaxSeats<=1?1:Math.min(selectedAttendees.length,currentMaxSeats)):0), attendees:(selectedStatus==='Attending'?(currentMaxSeats<=1?[ titleCaseName(currentInvite.display_name) ]:selectedAttendees.slice(0,currentMaxSeats)):[]), phone:(selectedStatus==='Attending'?selectedPhoneStored:''), transportation:(selectedStatus==='Attending'?selectedTransport:''), notes:selectedNotes||'' };
-      submitBtn.disabled = true;
-      const r = await jsonFetch(payload);
-      submitBtn.disabled = false;
-      if(!r || !r.ok){ reviewError.textContent = (r && r.error) ? r.error : 'Server error'; reviewError.style.display = ''; postHeight(); return; }
-      if(r.locked){ reviewError.textContent = "This invitation has already been responded to."; reviewError.style.display = ''; postHeight(); return; }
-      if(selectedStatus === 'Attending') thanksMessage.innerHTML = "<strong>See you there — we're excited to celebrate with you!</strong><div class='small' style='margin-top:.4rem'>If you need to make changes, contact us: +1 778 977 4975 (WhatsApp/Viber)</div>";
-      else thanksMessage.innerHTML = "<strong>We're sorry you can't join us.</strong><div class='small' style='margin-top:.4rem'>If you need to make changes, contact us: +1 778 977 4975 (WhatsApp/Viber)</div>";
-      notifyParentHasBottomClose('thanks', true);
-      showStep('thanks');
-    });
+  // Events 3-col grid
+  var oct14Lbl, oct15Lbl, oct16Lbl;
+  if (n === 1) {
+    oct14Lbl = S.oct14Count > 0 ? 'Going' : 'Not going';
+    oct15Lbl = 'Going';
+    oct16Lbl = S.oct16Count > 0 ? 'Going' : 'Not going';
+  } else {
+    oct14Lbl = S.oct14Count > 0 ? S.oct14Count + '\u00a0going' : 'Not going';
+    oct15Lbl = n + '\u00a0going';
+    oct16Lbl = S.oct16Count > 0 ? S.oct16Count + '\u00a0going' : 'Not going';
+  }
 
-    if (thanksClose) thanksClose.addEventListener('click', function(){ try{ window.parent.postMessage({ type:'RSVP:CLOSE' }, '*'); }catch(_){} try{ window.close(); }catch(_){} });
-    if (notInListClose) notInListClose.addEventListener('click', function(){ try{ window.parent.postMessage({ type:'RSVP:CLOSE' }, '*'); }catch(_){} try{ window.close(); }catch(_){} });
+  if (rowsEl) {
+    rowsEl.innerHTML = '<div class="events-pills">'
+      + '<div class="events-pill-wrap"><div class="events-pill" style="background:var(--cherry-tint)"><div class="events-pill-name">Welcome Dinner</div><div class="events-pill-date">Oct 14</div></div><div class="events-pill-count">'+escHtml(oct14Lbl)+'</div></div>'
+      + '<div class="events-pill-wrap"><div class="events-pill" style="background:var(--butter-tint)"><div class="events-pill-name">Wedding</div><div class="events-pill-date">Oct 15</div></div><div class="events-pill-count">'+escHtml(oct15Lbl)+'</div></div>'
+      + '<div class="events-pill-wrap"><div class="events-pill" style="background:var(--garden-tint)"><div class="events-pill-name">Farewell Lunch</div><div class="events-pill-date">Oct 16</div></div><div class="events-pill-count">'+escHtml(oct16Lbl)+'</div></div>'
+      + '</div>';
+  }
 
-    findBtn.addEventListener('click', doFind);
-    nameInput.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); doFind(); } });
+  // Info block: Stay, Airport ride, Phone — centred lines, no dividers
+  if (infoEl) {
+    var html = '';
+    if (!S.skipStay) {
+      var stayLbl = S.stay === 'Balai' ? 'Club Balai Isabel' : 'Somewhere else';
+      html += '<div class="review-info-item"><span class="review-info-label">Stay</span><span class="review-info-val">'+escHtml(stayLbl)+'</span></div>';
+      if (S.stay === 'Balai') {
+        var rideLbl = S.transportation === 'Yes' ? 'Yes, follow up' : 'No thanks';
+        html += '<div class="review-info-item"><span class="review-info-label">Airport ride</span><span class="review-info-val">'+escHtml(rideLbl)+'</span></div>';
+      }
+    }
+    html += '<div class="review-info-item"><span class="review-info-label">Phone</span><span class="review-info-val">'+escHtml(S.phone)+'</span></div>';
+    infoEl.innerHTML = html;
+  }
 
-    window.addEventListener('load', function(){ setTimeout(postHeight, 60); });
-    try { var mo = new MutationObserver(function(){ postHeight(); }); mo.observe(document.body, { childList:true, subtree:true, attributes:true, characterData:true }); } catch(e){}
-    try { var ro = new ResizeObserver(function(){ postHeight(); }); ro.observe(document.documentElement); } catch(e){}
-    setInterval(postHeight, 1200);
+  clearErr('review-error');
+  postHeight();
+}
 
-    window.addEventListener('message', function (e) { try { if (e && e.data && e.data.type === 'RSVP:REQUEST_HEIGHT') postHeight(); } catch (_) {} });
+// Add Back handler on review
+$('review-back').addEventListener('click', function(){ goBack('review'); });
 
-    function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+$('submit-btn').addEventListener('click', function(){
+  clearErr('review-error');
+  var btn=$('submit-btn'); btn.disabled=true;
+  var n = S.maxSeats < 2 ? 1 : S.attendingCount;
 
-    showStep('search');
-    try { nameInput.focus(); } catch(_) {}
+  var attendeesPayload;
+  if (n === 1) {
+    attendeesPayload = [S.inviteName];
+  } else {
+    attendeesPayload = S.attendeeNames.slice(0,n);
+  }
 
-  })();
-  </script>
+  var payload = {
+    action:'submit', invite_id:S.code, status:S.status,
+    attending_count: S.status==='Attending' ? n : 0,
+    attendees:       S.status==='Attending' ? attendeesPayload : [],
+    phone:           S.status==='Attending' ? S.phone : '',
+    stay:            S.status==='Attending' && !S.skipStay ? S.stay : '',
+    transportation:  S.status==='Attending' && !S.skipStay && S.stay==='Balai' ? S.transportation : '',
+    oct14_count:     S.status==='Attending' ? S.oct14Count : 0,
+    oct16_count:     S.status==='Attending' ? S.oct16Count : 0
+  };
+
+  apiSubmit(payload, function(r){
+    btn.disabled=false;
+    if (!r||!r.ok) {
+      if (r&&r.closed) { showStep('closed'); return; }
+      setErr('review-error', r&&r.error ? r.error : 'Something went wrong on our side. Try again, or message us.');
+      postHeight(); return;
+    }
+    buildThanks(); showStep('thanks');
+  });
+});
+
+// ── Thanks ────────────────────────────────────────────────────────────────────
+function buildThanks() {
+  var h=$('thanks-heading'), sub=$('thanks-sub');
+  if (S.status==='Attending') {
+    if(h)   h.textContent = 'see you there.';
+    if(sub) sub.textContent = 'Can\u2019t wait for October 14\u201316.';
+  } else {
+    if(h)   h.textContent = 'sorry we\u2019ll miss you.';
+    if(sub) sub.textContent = 'Drinks soon, we hope.';
+  }
+}
+
+$('change-answer-btn').addEventListener('click', function(){
+  S.code=''; S.inviteName=''; S.status=''; S.attendingCount=1;
+  S.attendeeNames=[]; S.phone=''; S.stay=''; S.transportation='';
+  S.oct14Count=null; S.oct16Count=null; S.returnToReview=false;
+  codeInput.value=''; phoneInput.value='';
+  document.querySelectorAll('input[name="attendance"],input[name="stay"],input[name="transport"]').forEach(function(r){ r.checked=false; });
+  showStep('code');
+});
+
+// ── Contact / Error ───────────────────────────────────────────────────────────
+$('contact-back-btn').addEventListener('click', function(){ showStep('code'); });
+$('error-retry-btn').addEventListener('click', function(){ showStep('code'); });
+
+// ── Pre-fill from existing ────────────────────────────────────────────────────
+function prefillFromExisting(ex) {
+  if (!ex) return;
+  if (ex.status) {
+    S.status = ex.status;
+    var r = document.querySelector('input[name="attendance"][value="'+ex.status+'"]');
+    if (r) r.checked = true;
+  }
+  if (ex.attending_count >= 1) {
+    S.attendingCount = Math.min(ex.attending_count, 4);
+  }
+  if (ex.attendee_names && ex.attendee_names.length) S.attendeeNames = ex.attendee_names;
+  if (ex.phone) { S.phone = ex.phone; phoneInput.value = ex.phone; }
+  if (ex.stay) {
+    var stayVal = ex.stay === 'Club Balai' ? 'Balai' : ex.stay; // map old value
+    S.stay = stayVal;
+    var sr = document.querySelector('input[name="stay"][value="'+stayVal+'"]');
+    if (sr) sr.checked = true;
+    updateStayNote();
+  }
+  if (ex.transportation) {
+    S.transportation = ex.transportation;
+    var tr = document.querySelector('input[name="transport"][value="'+ex.transportation+'"]');
+    if (tr) tr.checked = true;
+  }
+  S.oct14Count = (ex.oct14_count!==null && ex.oct14_count!==undefined) ? ex.oct14_count : null;
+  S.oct16Count = (ex.oct16_count!==null && ex.oct16_count!==undefined) ? ex.oct16_count : null;
+}
+
+function firstIncompleteStep(ex) {
+  if (!ex || !ex.status) return 'attendance';
+  if (ex.status === 'Declined') { buildReview(); return 'review'; }
+  if (S.maxSeats >= 2 && (!ex.attending_count || ex.attending_count < 1)) return 'count';
+  if (ex.oct14_count === null || ex.oct16_count === null) return 'events';
+  if (!S.skipStay && !ex.stay) return 'stay';
+  if (!S.skipStay && ex.stay === 'Balai' && !ex.transportation) return 'transport';
+  if (!ex.phone) return 'phone';
+  buildReview(); return 'review';
+}
+
+// ── showStep wrapper (init event ctrls on navigate) ───────────────────────────
+var _origShow = showStep;
+showStep = function(name) {
+  if (name==='events') initEventCtrls();
+  if (name==='count')  renderCountStepper();
+  if (name==='stay')   updateStayNote();
+  _origShow(name);
+};
+
+// ── Resize & height ───────────────────────────────────────────────────────────
+window.addEventListener('resize', postHeight);
+window.addEventListener('orientationchange', function(){ setTimeout(postHeight, 400); });
+window.addEventListener('message', function(e){
+  try { if (e&&e.data&&e.data.type==='RSVP:REQUEST_HEIGHT') postHeight(); } catch(_){}
+});
+try { var ro=new ResizeObserver(postHeight); ro.observe(document.body); } catch(_){}
+setInterval(postHeight, 2000);
+
+// ── Keep Next visible when keyboard opens ─────────────────────────────────────
+document.addEventListener('focusin', function(e) {
+  if (!e.target || e.target.tagName !== 'INPUT') return;
+  setTimeout(function() {
+    var step = e.target.closest && e.target.closest('.step');
+    var actions = step && step.querySelector('.actions');
+    if (actions) actions.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, 350);
+}, true);
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+showStep('code');
+try { codeInput.focus(); } catch(_){}
+
+if (DEV_MODE) {
+  console.log('%c[RSVP dev] No network calls. Codes: TEST01 TEST02 TEST03 TEST04', 'color:#A8323A;font-weight:bold');
+  codeInput.placeholder = 'TEST01, TEST02, TEST03, TEST04';
+}
+
+})();
+</script>
 </body>
 </html>

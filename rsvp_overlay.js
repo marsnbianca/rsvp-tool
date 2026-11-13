@@ -127,7 +127,7 @@
       console.warn("rsvp-overlay: ignoring message from origin", e.origin);
       return;
     }
-    if (e.data === "RSVP:CLOSE") {
+    if (e.data === "RSVP:CLOSE" || (e.data && e.data.type === "RSVP:CLOSE")) {
       console.log("rsvp-overlay: received RSVP:CLOSE — closing overlay");
       closeRSVP();
     }
