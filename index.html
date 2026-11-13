@@ -679,6 +679,11 @@ var DEV_INVITES = {
     ok:true, invite_name:'Declined Test', max_seats:1, skip_stay:false,
     deadline:'March 30, 2027', closed:false,
     existing:{ status:'Declined', attending_count:0, attendee_names:[], phone:'', transportation:'', stay:'', oct14_count:0, oct16_count:0 }
+  },
+  'TEST05': {
+    ok:true, invite_name:'Returning Attending', max_seats:2, skip_stay:false,
+    deadline:'March 30, 2027', closed:false,
+    existing:{ status:'Attending', attending_count:2, attendee_names:['Mars Dela Cruz','Bianca Matira'], phone:'0917 123 4567', transportation:'Yes', stay:'Balai', oct14_count:2, oct16_count:1 }
   }
 };
 
@@ -688,7 +693,8 @@ var S = {
   status:'', attendingCount:1, attendeeNames:[], phone:'',
   stay:'', transportation:'',
   oct14Count:0, oct16Count:0,
-  returnToReview:false
+  returnToReview:false,
+  returningGuest:false   // true when lookup found a fully-answered RSVP
 };
 
 var $ = function(id){ return document.getElementById(id); };
@@ -701,7 +707,7 @@ var STEPS = {
 };
 
 // Steps where the reply pill is shown
-var PILL_STEPS = { attendance:1, count:1, events:1, stay:1, transport:1, phone:1 };
+var PILL_STEPS = { attendance:1, count:1, events:1, stay:1, transport:1, phone:1, thanks:1 };
 
 // ── Flow ──────────────────────────────────────────────────────────────────────
 function getFlow() {
@@ -850,14 +856,21 @@ function doLookup() {
     // Reset all previous answers so a new lookup starts clean
     S.status=''; S.attendingCount=1; S.attendeeNames=[];
     S.phone=''; S.stay=''; S.transportation='';
-    S.oct14Count=null; S.oct16Count=null; S.returnToReview=false;
+    S.oct14Count=null; S.oct16Count=null; S.returnToReview=false; S.returningGuest=false;
     document.querySelectorAll('input[name="attendance"],input[name="stay"],input[name="transport"]').forEach(function(inp){ inp.checked=false; });
     phoneInput.value='';
 
     prefillFromExisting(r.existing||{});
 
     var ex = r.existing||{};
-    if (ex.status) {
+    if (ex.status && isCompleteRsvp(ex)) {
+      // Fully answered — returning guest
+      if (r.closed) { showStep('closed'); return; }
+      S.returningGuest = true;
+      buildThanks();
+      showStep('thanks');
+    } else if (ex.status) {
+      // Partial answer — route to first incomplete step
       var target = firstIncompleteStep(ex);
       if (target === 'events') initEventCtrls();
       showStep(target);
@@ -875,7 +888,7 @@ $('no-code-btn').addEventListener('click', function(){ showStep('contact'); });
 $('not-you-btn').addEventListener('click', function(){
   S.code=''; S.inviteName=''; S.status=''; S.attendingCount=1;
   S.attendeeNames=[]; S.phone=''; S.stay=''; S.transportation='';
-  S.oct14Count=null; S.oct16Count=null; S.returnToReview=false;
+  S.oct14Count=null; S.oct16Count=null; S.returnToReview=false; S.returningGuest=false;
   codeInput.value=''; phoneInput.value='';
   document.querySelectorAll('input[name="attendance"],input[name="stay"],input[name="transport"]').forEach(function(r){ r.checked=false; });
   showStep('code');
@@ -1196,6 +1209,13 @@ function buildThanks() {
 }
 
 $('change-answer-btn').addEventListener('click', function(){
+  if (S.returningGuest) {
+    // Keep all pre-filled state; jump straight to attendance so they can change their answer
+    S.returningGuest = false;
+    showStep('attendance');
+    return;
+  }
+  // After a fresh submission — back to the code screen
   S.code=''; S.inviteName=''; S.status=''; S.attendingCount=1;
   S.attendeeNames=[]; S.phone=''; S.stay=''; S.transportation='';
   S.oct14Count=null; S.oct16Count=null; S.returnToReview=false;
@@ -1235,6 +1255,21 @@ function prefillFromExisting(ex) {
   }
   S.oct14Count = (ex.oct14_count!==null && ex.oct14_count!==undefined) ? ex.oct14_count : null;
   S.oct16Count = (ex.oct16_count!==null && ex.oct16_count!==undefined) ? ex.oct16_count : null;
+}
+
+// Returns true when an existing RSVP is fully answered (no steps left to fill).
+// Uses S.maxSeats and S.skipStay which must be set before calling.
+function isCompleteRsvp(ex) {
+  if (!ex || !ex.status) return false;
+  if (ex.status === 'Declined') return true;
+  // Attending path
+  if (S.maxSeats >= 2 && (!ex.attending_count || ex.attending_count < 1)) return false;
+  if (ex.oct14_count === null || ex.oct14_count === undefined ||
+      ex.oct16_count === null || ex.oct16_count === undefined) return false;
+  if (!S.skipStay && !ex.stay) return false;
+  if (!S.skipStay && ex.stay === 'Balai' && !ex.transportation) return false;
+  if (!ex.phone) return false;
+  return true;
 }
 
 function firstIncompleteStep(ex) {
@@ -1281,8 +1316,8 @@ showStep('code');
 try { codeInput.focus(); } catch(_){}
 
 if (DEV_MODE) {
-  console.log('%c[RSVP dev] No network calls. Codes: TEST01 TEST02 TEST03 TEST04', 'color:#A8323A;font-weight:bold');
-  codeInput.placeholder = 'TEST01, TEST02, TEST03, TEST04';
+  console.log('%c[RSVP dev] No network calls. Codes: TEST01 TEST02 TEST03 TEST04(returning-declined) TEST05(returning-attending)', 'color:#A8323A;font-weight:bold');
+  codeInput.placeholder = 'TEST01–TEST05';
 }
 
 })();
