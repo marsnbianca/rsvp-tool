@@ -26,6 +26,11 @@
       --garden-tint: #DCE5D0;
       --radius:      0.875rem;
       --card-max:    460px;
+      /* ── fixed card heights (review worst-case: group-of-4, stay + airport + phone)
+         measured with Playwright; +4px sub-pixel buffer added to each          ── */
+      --card-h-desktop: 337px;   /* viewport > 600px                               */
+      --card-h-tablet:  378px;   /* viewport 431–600px (worst case at 431–432px)   */
+      --card-h-phone:   369px;   /* viewport ≤ 430px                               */
       /* ── card appearance — adjust these if needed ── */
       --card-opacity:   .5;    /* 0 = fully transparent · 1 = fully opaque */
       --card-blur:      6px;   /* backdrop blur behind the card */
@@ -60,6 +65,7 @@
       box-shadow: 0 4px 32px rgba(100,40,40,.10);
       width: 100%;
       max-width: var(--card-max);
+      height: var(--card-h-desktop);
       position: relative;
       overflow: hidden;
     }
@@ -389,6 +395,7 @@
     @media (max-width: 600px) {
       :root { --ui-scale: 0.9; }
       body { padding: 0.75rem; }
+      .card { height: var(--card-h-tablet); }
     }
 
     /* ── Phone (≤430px) — full-bleed native-app feel ──
@@ -396,7 +403,7 @@
        Overrides the padding set above; card becomes edge-to-edge.            */
     @media (max-width: 430px) {
       body { padding: 0; }
-      .card { border-radius: 0; box-shadow: none; min-height: 100vh; }
+      .card { border-radius: 0; box-shadow: none; height: var(--card-h-phone); }
       .card-inner { padding: 1rem 1rem 1.25rem; }
       .thanks-band { margin-left: -1rem; margin-right: -1rem; }
       /* Physical 44px tap targets */
