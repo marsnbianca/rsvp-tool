@@ -31,6 +31,7 @@
     html, body { background: transparent; min-height: 100%; }
     body {
       font-family: 'DM Sans', system-ui, sans-serif;
+      font-size: 17px;
       color: var(--cherry-dark);
       display: flex;
       justify-content: center;
@@ -48,7 +49,7 @@
       position: relative;
       overflow: hidden;
     }
-    .card-inner { padding: 20px 22px 24px; }
+    .card-inner { padding: 20px 22px 24px; text-align: center; }
 
     .card-scallop {
       height: 10px;
@@ -72,22 +73,23 @@
 
     /* ── Shared reply pill ── */
     .reply-pill {
-      display: flex; align-items: center; justify-content: center;
-      gap: 6px; flex-wrap: wrap;
+      display: inline-flex; align-items: center; justify-content: center;
       background: var(--cherry-tint);
       color: var(--cherry-dark);
-      font-size: .78rem; font-weight: 500;
-      padding: 5px 10px 5px 14px;
+      font-size: 15px; font-weight: 500;
+      padding: 5px 14px;
       border-radius: 100px;
-      margin: 0 auto 14px;
-      width: fit-content; max-width: 100%;
+      margin: 0 auto 4px;
+      max-width: 100%;
     }
     .reply-pill strong { color: var(--cherry); }
+    #reply-pill-wrap { text-align: center; margin-bottom: 14px; }
     .not-you-link {
       background: none; border: none;
-      color: var(--cherry); font-size: .75rem;
+      color: var(--cherry); font-size: 14px;
       cursor: pointer; text-decoration: underline;
-      padding: 0; font-family: inherit;
+      padding: 2px 4px; font-family: inherit;
+      display: inline-block;
     }
     .not-you-link:focus-visible { outline: 2px solid var(--butter); border-radius: 2px; }
 
@@ -99,14 +101,14 @@
     .step-heading {
       font-family: 'Fraunces', Georgia, serif;
       font-variation-settings: 'SOFT' 100;
-      font-size: 1.75rem; color: var(--cherry);
+      font-size: 38px; color: var(--cherry);
       line-height: 1.1; margin-bottom: 6px;
       font-weight: 600; outline: none;
     }
     .step-sub {
       font-family: 'Fraunces', Georgia, serif;
       font-variation-settings: 'SOFT' 100;
-      color: var(--cherry-dark); font-size: .95rem;
+      color: var(--cherry-dark); font-size: 17px;
       margin-bottom: 12px; line-height: 1.4;
     }
     .deadline-note { font-size: .8rem; color: var(--garden); margin-bottom: 18px; }
@@ -114,14 +116,14 @@
     /* ── Fields ── */
     .field { margin-bottom: 14px; }
     label, .field-label {
-      display: block; font-size: .85rem; font-weight: 500;
+      display: block; font-size: 15px; font-weight: 500;
       margin-bottom: 5px; color: var(--cherry-dark);
     }
     .field-help { font-size: .76rem; color: var(--garden); margin-top: 3px; }
 
     input[type="text"], input[type="tel"] {
       width: 100%; padding: 10px 13px;
-      font-size: 1rem; font-family: 'DM Sans', system-ui, sans-serif;
+      font-size: 18px; font-family: 'DM Sans', system-ui, sans-serif;
       color: var(--cherry-dark); background: white;
       border: 2px solid #ddd0c4; border-radius: var(--radius);
       outline: none; transition: border-color .15s; -webkit-appearance: none;
@@ -139,7 +141,7 @@
     .btn {
       display: inline-flex; align-items: center; justify-content: center;
       font-family: 'DM Sans', system-ui, sans-serif;
-      font-size: .92rem; font-weight: 600; letter-spacing: .02em;
+      font-size: 18px; font-weight: 600; letter-spacing: .02em;
       border: none; border-radius: 100px;
       padding: 11px 24px; min-height: 46px;
       cursor: pointer; transition: transform .12s, background .12s;
@@ -168,21 +170,23 @@
     .link-btn:focus-visible { outline: 3px solid var(--butter); outline-offset: 2px; border-radius: 3px; }
 
     /* ── Big choice cards (attendance, stay, transport) ── */
-    .choice-cards { display: flex; flex-direction: column; gap: 8px; margin: 12px 0 4px; }
-    .choice-card { display: block; cursor: pointer; }
+    .choice-cards { display: flex; flex-direction: row; gap: 8px; margin: 12px 0 4px; }
+    .choice-card { display: flex; cursor: pointer; flex: 1; }
     .choice-card input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
     .choice-card-inner {
       padding: 13px 16px; border-radius: var(--radius);
       border: 2px solid #ddd0c4; background: white;
-      font-size: .95rem; font-weight: 500; color: var(--cherry-dark);
+      font-size: 17px; font-weight: 500; color: var(--cherry-dark);
       transition: border-color .15s, background .15s; line-height: 1.35;
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      text-align: center; flex-direction: column; min-height: 60px;
     }
     .choice-card input[type="radio"]:checked + .choice-card-inner {
-      background: var(--cherry); border-color: var(--cherry); color: var(--ivory);
+      background: var(--garden); border-color: var(--garden); color: var(--ivory);
     }
     .choice-card input[type="radio"]:checked + .choice-card-inner .choice-sub { color: rgba(255,255,255,.8); }
     .choice-card input[type="radio"]:focus-visible + .choice-card-inner { box-shadow: 0 0 0 3px var(--butter); }
-    .choice-sub { display: block; font-size: .78rem; font-weight: 400; color: var(--garden); margin-top: 1px; }
+    .choice-sub { display: block; font-size: 13px; font-weight: 400; color: var(--garden); margin-top: 2px; }
 
     /* ── Count chips ── */
     .chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 14px; }
@@ -195,7 +199,7 @@
       display: flex; align-items: center; justify-content: center;
       transition: background .15s, border-color .15s, color .15s;
     }
-    .chip.selected { background: var(--cherry); border-color: var(--cherry); color: var(--ivory); }
+    .chip.selected { background: var(--garden); border-color: var(--garden); color: var(--ivory); }
     .chip:focus-visible { outline: 3px solid var(--butter); outline-offset: 3px; }
 
     /* ── Attendee name fields ── */
@@ -244,7 +248,7 @@
       justify-content: center;
     }
     .event-chk-label input[type="checkbox"] {
-      width: 20px; height: 20px; accent-color: var(--cherry); cursor: pointer;
+      width: 20px; height: 20px; accent-color: var(--garden); cursor: pointer;
     }
     .event-chk-label span { font-size: .72rem; color: var(--cherry-dark); }
 
@@ -348,8 +352,8 @@
     <div class="step-dots" id="step-dots" aria-hidden="true"></div>
 
     <!-- Shared reply pill (screens 2–7) -->
-    <div id="reply-pill" class="reply-pill" hidden>
-      Replying as <strong id="reply-name"></strong>
+    <div id="reply-pill-wrap" hidden>
+      <div id="reply-pill" class="reply-pill">Replying as <strong id="reply-name"></strong></div>
       <button type="button" id="not-you-btn" class="not-you-link">not you?</button>
     </div>
 
@@ -379,11 +383,11 @@
         <div class="choice-cards">
           <label class="choice-card">
             <input type="radio" name="attendance" value="Attending" id="attend-yes">
-            <span class="choice-card-inner">Present!</span>
+            <span class="choice-card-inner">Yes, I'll be there</span>
           </label>
           <label class="choice-card">
             <input type="radio" name="attendance" value="Declined" id="attend-no">
-            <span class="choice-card-inner">Absent, sadly</span>
+            <span class="choice-card-inner">Sadly, no</span>
           </label>
         </div>
       </fieldset>
@@ -638,7 +642,7 @@ function showStep(name) {
   if (!target) return;
   target.classList.add('active');
 
-  var pill = $('reply-pill');
+  var pill = $('reply-pill-wrap');
   if (pill) pill.hidden = !PILL_STEPS[name];
 
   var heading = target.querySelector('[tabindex="-1"]');
@@ -762,6 +766,13 @@ function doLookup() {
 
     var nameEl = $('reply-name'); if (nameEl) nameEl.textContent = S.inviteName;
 
+    // Reset all previous answers so a new lookup starts clean
+    S.status=''; S.attendingCount=1; S.attendeeNames=[];
+    S.phone=''; S.stay=''; S.transportation='';
+    S.oct14Count=null; S.oct16Count=null; S.returnToReview=false;
+    document.querySelectorAll('input[name="attendance"],input[name="stay"],input[name="transport"]').forEach(function(inp){ inp.checked=false; });
+    phoneInput.value='';
+
     prefillFromExisting(r.existing||{});
 
     var ex = r.existing||{};
@@ -781,9 +792,11 @@ $('no-code-btn').addEventListener('click', function(){ showStep('contact'); });
 
 // ── S2: attendance ────────────────────────────────────────────────────────────
 $('not-you-btn').addEventListener('click', function(){
-  S.code=''; S.inviteName=''; S.status=''; S.returnToReview=false;
-  codeInput.value='';
-  document.querySelectorAll('input[name="attendance"]').forEach(function(r){ r.checked=false; });
+  S.code=''; S.inviteName=''; S.status=''; S.attendingCount=1;
+  S.attendeeNames=[]; S.phone=''; S.stay=''; S.transportation='';
+  S.oct14Count=null; S.oct16Count=null; S.returnToReview=false;
+  codeInput.value=''; phoneInput.value='';
+  document.querySelectorAll('input[name="attendance"],input[name="stay"],input[name="transport"]').forEach(function(r){ r.checked=false; });
   showStep('code');
 });
 
@@ -958,9 +971,9 @@ function buildReview() {
   var nameEl = $('review-heading'); if (nameEl) nameEl.textContent = S.inviteName;
   var pillEl = $('review-status-pill'); if (pillEl) {
     if (S.status === 'Attending') {
-      pillEl.innerHTML = '<span class="status-pill pill-attending">Present!</span>';
+      pillEl.innerHTML = '<span class="status-pill pill-attending">Attending</span>';
     } else {
-      pillEl.innerHTML = '<span class="status-pill pill-declined">Absent, sadly</span>';
+      pillEl.innerHTML = '<span class="status-pill pill-declined">Not attending</span>';
     }
   }
 
