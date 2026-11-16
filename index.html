@@ -24,8 +24,8 @@
       --radius:      14px;
       --card-max:    560px;
       /* ── card appearance — adjust these if needed ── */
-      --card-opacity:   .5;    /* 0 = fully transparent · 1 = fully opaque */
-      --card-blur:      6px;   /* backdrop blur behind the card */
+      --card-opacity:   1;     /* 0 = fully transparent · 1 = fully opaque */
+      --card-blur:      0px;   /* backdrop blur behind the card */
       --page-bg-image:  none;  /* testing: set to url("…") to preview over a photo */
     }
 
@@ -48,9 +48,7 @@
 
     /* ── Card ── */
     .card {
-      background: rgba(249,244,234, var(--card-opacity));
-      -webkit-backdrop-filter: blur(var(--card-blur));
-      backdrop-filter: blur(var(--card-blur));
+      background: #F9F4EA;
       border-radius: var(--radius);
       box-shadow: 0 4px 32px rgba(100,40,40,.10);
       width: 100%;
@@ -63,7 +61,7 @@
     .card-scallop {
       height: 10px;
       background:
-        radial-gradient(circle at 10px 10px, rgba(249,244,234,var(--card-opacity)) 10px, transparent 11px) 0 0 / 20px 20px repeat-x,
+        radial-gradient(circle at 10px 10px, #F9F4EA 10px, transparent 11px) 0 0 / 20px 20px repeat-x,
         var(--cherry-tint);
     }
 
@@ -541,8 +539,8 @@
       <div class="vans-note">
         Vans run between Club Balai Isabel, Nuuk and Farmer's Table. They don't go to the airport.
       </div>
-      <p class="step-sub">Need a ride from the airport (NAIA)?</p>
-      <p class="field-help" style="margin-bottom:12px">Not included. Say yes and we'll follow up.</p>
+      <p class="step-sub">Flying into NAIA?</p>
+      <p class="field-help" style="margin-bottom:12px">We're still working on rides. Say yes and we'll follow up.</p>
       <fieldset>
         <legend class="sr-only">Airport ride interest</legend>
         <div class="choice-cards">
@@ -1012,9 +1010,9 @@ function updateStayNote() {
   var checked = document.querySelector('input[name="stay"]:checked');
   if (!checked) { noteEl.hidden = true; return; }
   if (checked.value === 'Balai') {
-    noteEl.textContent = 'Want to stay a night before or after (Oct\u00a013 or 17)? Contact Club Balai Isabel directly at ' + BALAI_EMAIL + '.';
+    noteEl.textContent = 'Want to stay longer, before or after Oct\u00a014 to 17? Please contact Club Balai Isabel directly at ' + BALAI_EMAIL + '.';
   } else {
-    noteEl.textContent = 'Ideas are on the page above.';
+    noteEl.textContent = 'Ideas are on the map above.';
   }
   noteEl.hidden = false;
   postHeight();
