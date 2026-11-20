@@ -757,7 +757,8 @@ var S = {
   stay:'', transportation:'',
   oct14Count:0, oct16Count:0,
   returnToReview:false,
-  returningGuest:false   // true when lookup found a fully-answered RSVP
+  returningGuest:false,  // true when lookup found a fully-answered RSVP
+  changeAnswerMode:false // true when "Change my answer" sent the guest to re-enter their code
 };
 
 var $ = function(id){ return document.getElementById(id); };
@@ -931,10 +932,12 @@ function doLookup() {
 
     var nameEl = $('reply-name'); if (nameEl) nameEl.textContent = S.inviteName;
 
+    var changeMode = S.changeAnswerMode; // capture before reset
+
     // Reset all previous answers so a new lookup starts clean
     S.status=''; S.attendingCount=1; S.attendeeNames=[];
     S.phone=''; S.stay=''; S.transportation='';
-    S.oct14Count=null; S.oct16Count=null; S.returnToReview=false; S.returningGuest=false;
+    S.oct14Count=null; S.oct16Count=null; S.returnToReview=false; S.returningGuest=false; S.changeAnswerMode=false;
     document.querySelectorAll('input[name="attendance"],input[name="stay"],input[name="transport"]').forEach(function(inp){ inp.checked=false; });
     phoneInput.value='';
 
@@ -944,9 +947,14 @@ function doLookup() {
     if (ex.status && isCompleteRsvp(ex)) {
       // Fully answered — returning guest
       if (r.closed) { showStep('closed'); return; }
-      S.returningGuest = true;
-      buildThanks();
-      showStep('thanks');
+      if (changeMode) {
+        // Guest arrived via "Change my answer" — skip confirmation, go straight to form
+        showStep('attendance');
+      } else {
+        S.returningGuest = true;
+        buildThanks();
+        showStep('thanks');
+      }
     } else if (ex.status) {
       // Partial answer — route to first incomplete step
       var target = firstIncompleteStep(ex);
@@ -966,7 +974,7 @@ $('no-code-btn').addEventListener('click', function(){ showStep('contact'); });
 $('not-you-btn').addEventListener('click', function(){
   S.code=''; S.inviteName=''; S.status=''; S.attendingCount=1;
   S.attendeeNames=[]; S.phone=''; S.stay=''; S.transportation='';
-  S.oct14Count=null; S.oct16Count=null; S.returnToReview=false; S.returningGuest=false;
+  S.oct14Count=null; S.oct16Count=null; S.returnToReview=false; S.returningGuest=false; S.changeAnswerMode=false;
   codeInput.value=''; phoneInput.value='';
   document.querySelectorAll('input[name="attendance"],input[name="stay"],input[name="transport"]').forEach(function(r){ r.checked=false; });
   showStep('code');
@@ -1310,12 +1318,13 @@ $('change-answer-btn').addEventListener('click', function(){
     showStep('attendance');
     return;
   }
-  // After a fresh submission — back to the code screen
+  // After a fresh submission — back to the code screen to re-identify
   S.code=''; S.inviteName=''; S.status=''; S.attendingCount=1;
   S.attendeeNames=[]; S.phone=''; S.stay=''; S.transportation='';
   S.oct14Count=null; S.oct16Count=null; S.returnToReview=false;
   codeInput.value=''; phoneInput.value='';
   document.querySelectorAll('input[name="attendance"],input[name="stay"],input[name="transport"]').forEach(function(r){ r.checked=false; });
+  S.changeAnswerMode = true; // skip thanks screen on next successful lookup
   showStep('code');
 });
 
